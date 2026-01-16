@@ -1,4 +1,3 @@
-import sys
 from typing import Any
 from rpcio import search_input
 ALL_MODES = {'-', '+', '++', '*', '@', 'regen'}

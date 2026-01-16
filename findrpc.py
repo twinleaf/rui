@@ -1,13 +1,12 @@
 #!/usr/bin/python
-
 import os, sys
 from rpc import RPC 
 from rpclist import RPCList
 from rpccli import rpcCLI 
 from rpcio import select_input, arg_input
 from slider import slider
-MATCH_ERR = lambda x: f"Couldn't find {x[0] if len(x) == 1 else 'a match'}.\n"
 
+MATCH_ERR = lambda x: f"Couldn't find {x[0] if len(x) == 1 else 'a match'}.\n"
 def find_targets(cli: rpcCLI, all_rpcs: RPCList):
     ''' fuzzy search all_rpcs for cli.terms or input and update all_rpcs '''
     all_rpcs.search(cli.terms()) 
@@ -31,17 +30,17 @@ def input_arg(cli: rpcCLI, rpc: RPC): # -> rpc.data_type
 def input_call_output(cli: rpcCLI, selected_rpcs: RPCList):
     ''' loop through call list '''
     for rpc in selected_rpcs:
-        while True:                                 
-            if cli.slider(): 
-                slider(rpc)
+        print()                                 # spacer
+        if len(selected_rpcs) > 1: print(rpc)   # print where we are in call list
+
+        if cli.slider(): slider(rpc)
+        else:
+            while True:     # loop for possible + mode
+                arg = input_arg(cli, rpc)           # ask user for argument to rpc
+                output = rpc.call(arg)              # make call
+                if len(output) > 1: print(output)   # print if not just newline
+                if cli.plus(): continue             # keep looping if + mode
                 break
-            print()                                 # spacer
-            if len(selected_rpcs) > 1: print(rpc)   # print where we are in call list
-            arg = input_arg(cli, rpc)                # ask user for argument to rpc
-            output = rpc.call(arg)                  # make call
-            if cli.plus(): continue                  # keep looping if + mode
-            if len(output) > 1: print(output)       # print if not just newline
-            break                                   # leave while True loop if not + mode
 
 if __name__ == "__main__":
     dirname     = os.path.expanduser("~/.rpc-lists/")
