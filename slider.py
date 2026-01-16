@@ -1,29 +1,30 @@
+import os, sys, subprocess
+from rpc import RPC
+from rpcio import arg_input
+
 from PyQt6.QtWidgets import QApplication, QWidget, QSlider, QLabel, QVBoxLayout, QHBoxLayout
 from PyQt6.QtCore import Qt, QRect
 from PyQt6.QtGui import QFont
 
-from rpc import RPC
-from rpcio import arg_input
-import os, sys, subprocess
-
-def slider(rpc: RPC):
+def slider(rpc: RPC, fork=True):
     try: min_val = RPC(rpc.name+'.min', rpc.type_ext).value()
     except RuntimeError: min_val = arg_input(rpc, prompt="min value")
     try: max_val = RPC(rpc.name+'.max', rpc.type_ext).value()
     except RuntimeError: max_val = arg_input(rpc, prompt="max value")
 
-    pid = os.fork()
-    if pid > 0: return      # we're a parent, go back to main
-    os.setsid()             # detach from terminal
-    sys.stdin.close()       # close streams
-    sys.stdout.close()
-    sys.stderr.close()
+    if fork:
+        pid = os.fork()
+        if pid > 0: return      # we're a parent, go back to main
+        os.setsid()             # detach from terminal
+        sys.stdin.close()       # close streams
+        sys.stdout.close()
+        sys.stderr.close()
 
     app = QApplication([sys.argv[0]])
     window = MainWindow(rpc, min_val, max_val)
     window.show()
 
-    # make slider floating for chris's window manager
+    # make slider floating for i3wm
     try: subprocess.run(["i3-msg", "floating", "toggle"], capture_output=True)
     except FileNotFoundError: pass  
 

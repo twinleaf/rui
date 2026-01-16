@@ -1,6 +1,6 @@
 from typing import Any
 from rpcio import search_input
-ALL_MODES = {'-', '+', '++', '*', '@', 'regen'}
+ALL_MODES = {'-', '+', '++', '*', '@', 'debug', 'regen'}
 
 class rpcCLI:
     '''Interface to parse and store command line input to findrpc'''
@@ -33,4 +33,4 @@ class rpcCLI:
     def slider(self) -> bool: return '++' in self.modes #Qt slider
     def exact(self) -> bool: return '@' in self.modes # exact instead of fuzzy match
     def regen(self) -> bool: return 'regen' in self.modes # regenerate rpc-list file
-
+    def debug(self) -> bool: return 'debug' in self.modes # debug options
