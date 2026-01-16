@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QApplication, QWidget, QSlider, QLabel, QFormLayout
+from PyQt6.QtWidgets import QApplication, QWidget, QSlider, QLabel, QVBoxLayout, QHBoxLayout
 from PyQt6.QtCore import Qt, QRect
 from PyQt6.QtGui import QFont
 
@@ -34,19 +34,18 @@ class MainWindow(QWidget):
         super().__init__()
         self.rpc = rpc
 
-        layout = QFormLayout()
+        layout = QVBoxLayout()
         self.setLayout(layout)
         self.setWindowTitle(rpc.name)
         self.setMinimumWidth(500)
 
-        self.updating = False
-        self.slider = self.__make_slider(min_val, max_val)
         self.result_label = QLabel('', self)
         self.result_label.setFont(QFont('Arial', 20))
         self.result_label.adjustSize()
+        self.__make_slider(min_val, max_val)
 
-        layout.addRow(self.slider)
-        layout.addRow(self.result_label)
+        layout.addLayout(self.container)
+        layout.addWidget(self.result_label)
 
     def __update(self, value: int):
         if not self.updating: # don't recursively call this
@@ -58,16 +57,24 @@ class MainWindow(QWidget):
             self.updating = False
 
     def __make_slider(self, min_val, max_val):
-        slider = QSlider(Qt.Orientation.Horizontal, self)
-        slider.setRange(_scale(min_val), _scale(max_val))
-        slider.setValue(_scale(self.rpc.value()))
-        slider.setSingleStep(1)
-        slider.setPageStep(10)
-        slider.setTickPosition(QSlider.TickPosition.TicksAbove)
-        slider.setTickInterval(50)
-        slider.valueChanged.connect(self.__update)
-        slider.setStyleSheet(SLIDER_QSS)
-        return slider
+        min_label = QLabel(str(min_val), self)
+        max_label = QLabel(str(max_val), self)
+
+        self.updating = False
+        self.slider = QSlider(Qt.Orientation.Horizontal, self)
+        self.slider.setRange(_scale(min_val), _scale(max_val))
+        self.slider.setValue(_scale(self.rpc.value()))
+        self.slider.setSingleStep(1)
+        self.slider.setPageStep(10)
+        self.slider.setTickPosition(QSlider.TickPosition.TicksAbove)
+        self.slider.setTickInterval(50)
+        self.slider.valueChanged.connect(self.__update)
+        self.slider.setStyleSheet(SLIDER_QSS)
+
+        self.container = QHBoxLayout()
+        self.container.addWidget(min_label)
+        self.container.addWidget(self.slider)
+        self.container.addWidget(max_label)
 
 SLIDER_QSS="""
         QSlider::groove:horizontal {
