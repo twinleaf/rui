@@ -21,13 +21,13 @@ SELECT_TEST = lambda rpclist: lambda x: rpclist.select(x)
 
 ARG_PROMPT = lambda x: f"Enter {x}: "
 ARG_ERR = lambda rpc: f"Invalid. Argument should be of {str(rpc.data_type)[1:-1]}.\n"
-ARG_TEST = lambda rpc: lambda x: str(rpc.data_type(x)) if x!='-' else None
+ARG_TEST = lambda rpc: lambda x: str(rpc.data_type(x)) if x not in {'-', ''} else None
 
 def _input(msg: str, default: Any=None) -> Any:
     if default is not None: return default
     try:
         i = input(msg)
-        if i == '' or i == "quit" or i == "exit": sys.exit(0)
+        if i == "quit" or i == "exit": sys.exit(0)
         return i
     except (EOFError, KeyboardInterrupt):
         print("\nInterrupted, exiting")

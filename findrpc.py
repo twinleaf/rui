@@ -21,7 +21,7 @@ def input_rpc(cli: rpcCLI, found_rpcs: RPCList, spacer=False):
     done = select_input(found_rpcs)
     if not done: input_rpc(cli, found_rpcs, spacer=True)
 
-def input_arg(cli: rpcCLI, rpc: RPC): # -> rpc.data_type 
+def print_get_arg(cli: rpcCLI, rpc: RPC): # -> rpc.data_type
     ''' print current rpc value and ask user for what to change it to if any '''
     if cli.dash() or not rpc.data_type: return None 
     print("Previously:" if cli.rpc_arg is not None else "Currently:", rpc.value())
@@ -33,14 +33,12 @@ def input_call_output(cli: rpcCLI, selected_rpcs: RPCList):
     for rpc in selected_rpcs:
         print()                                 # spacer
         if len(selected_rpcs) > 1: print(rpc)   # print where we are in call list
-
-        else:
-            while True:     # loop for possible + mode
-                arg = input_arg(cli, rpc)           # ask user for argument to rpc
-                output = rpc.call(arg)              # make call
-                if len(output) > 1: print(output)   # print if not just newline
-                if cli.plus(): continue             # keep looping if + mode
-                break
+        while True:     # loop for possible + mode
+            arg = print_get_arg(cli, rpc)       # ask user for argument to rpc
+            output = rpc.call(arg)              # make call
+            if len(output) > 1: print(output)   # print if not just newline
+            if cli.plus(): continue             # keep looping if + mode
+            break
 
 if __name__ == "__main__":
     dirname     = os.path.expanduser("~/.rpc-lists/")
