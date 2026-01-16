@@ -1,6 +1,17 @@
 from typing import Any
 from rpcio import search_input
-ALL_MODES = {'-', '+', '++', '*', '@', '|', 'debug', 'regen'}
+ALL_MODES = {'-', '+', '++', '*', '@', '|', '/', 'debug', 'regen'}
+FLAGS = {
+        '--no-arg': '-',
+        '--continuous': '+',
+        '--sliders': '++',
+        '--select-all': '*',
+        '--exact': '@',
+        '--match-any': '|',
+        '--keep-searching': '/',
+        '--debug': 'debug',
+        '--regen': 'regen'
+        }
 
 class rpcCLI:
     '''Interface to parse and store command line input to findrpc'''
@@ -14,6 +25,8 @@ class rpcCLI:
         for arg in argv:
             if arg in ALL_MODES: 
                 self.add_mode(arg)
+            elif arg in FLAGS:
+                self.add_mode(FLAGS[arg])
             else: 
                 try: 
                     # assume numeric datatype
@@ -31,6 +44,7 @@ class rpcCLI:
     def star(self) -> bool: return '*' in self.modes # select all rpcs
     def dash(self) -> bool: return '-' in self.modes # no argument
     def plus(self) -> bool: return '+' in self.modes # loop calls forever
+    def search(self) -> bool: return '/' in self.modes # keep searching until \
     def slider(self) -> bool: return '++' in self.modes #Qt slider
     def exact(self) -> bool: return '@' in self.modes # exact instead of fuzzy match
     def regen(self) -> bool: return 'regen' in self.modes # regenerate rpc-list file

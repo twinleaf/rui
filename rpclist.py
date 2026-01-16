@@ -4,10 +4,8 @@ from tio import tio_tool
 
 class RPCList:
     ''' Mutable list class that diminishes as you search & select '''
-    def __init__(self, dirname: str, regen: bool=False):
-        filepath = _get_gen_file(dirname, regen)
-        with open(filepath, 'r') as f:
-            self.list = [_line_to_rpc(line) for line in f.readlines()]
+    def __init__(self, rpcs: list[RPC]):
+        self.list = rpcs
 
     def search(self, search_terms: list[str], match_any=False):
         selector = any if match_any else all
@@ -43,7 +41,12 @@ class RPCList:
     def __getitem__(self, key): return self.list[key]
     def __contains__(self, item): return item in self.list
 
-def _line_to_rpc(rpc_list_line: str) -> RPC:
+def rpclist_from_file(dirname: str, regen: bool=False) -> RPCList:
+    filepath = _get_gen_file(dirname, regen)
+    with open(filepath, 'r') as f:
+        return RPCList([__line_to_rpc(line) for line in f.readlines()])
+
+def __line_to_rpc(rpc_list_line: str) -> RPC:
     base_string = rpc_list_line.split()[1] # ignore RWP
     open_index = base_string.index('(')
     close_index = base_string.index(')')

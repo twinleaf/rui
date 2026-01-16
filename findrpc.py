@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import os, sys
 from rpc import RPC 
-from rpclist import RPCList
+from rpclist import RPCList, rpclist_from_file
 from rpccli import rpcCLI 
 from rpcio import select_input, arg_input
 from slider import slider
@@ -44,7 +44,8 @@ if __name__ == "__main__":
     dirname     = os.path.expanduser("~/.rpc-lists/")
     cli_args    = sys.argv[1:]
     cli         = rpcCLI(cli_args)
-    LIST        = RPCList(dirname, cli.regen())
+    LIST        = rpclist_from_file(dirname, cli.regen())
+
     find_targets     (cli, LIST)
     input_rpc        (cli, LIST)
     input_call_output(cli, LIST)
