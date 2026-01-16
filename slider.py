@@ -1,6 +1,7 @@
 import os, sys, subprocess, random
 from typing import Callable
 from rpc import RPC
+from rpclist import RPCList
 from rpcio import arg_input
 
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout
@@ -8,22 +9,17 @@ from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit
 from PyQt6.QtCore import Qt, QRect
 from PyQt6.QtGui import QFont, QDoubleValidator
 
-def slider(rpc: RPC, fork=True):
-    try: min_val = RPC(rpc.name+'.min', rpc.type_ext).value()
-    except RuntimeError: min_val = arg_input(rpc, prompt="min value")
-    try: max_val = RPC(rpc.name+'.max', rpc.type_ext).value()
-    except RuntimeError: max_val = arg_input(rpc, prompt="max value")
-
+def slider(rpcs: RPCList, fork=True):
     if fork:
         pid = os.fork()
-        if pid > 0: return      # we're a parent, go back to main
+        if pid > 0: sys.exit()  # we're a parent, exit
         os.setsid()             # detach from terminal
         sys.stdin.close()       # close streams
         sys.stdout.close()
         sys.stderr.close()
 
     app = QApplication([sys.argv[0]])
-    window = MainWindow(rpc, min_val, max_val)
+    window = MainWindow(rpcs)
     window.show()
 
     # make slider floating for i3wm
@@ -33,109 +29,126 @@ def slider(rpc: RPC, fork=True):
     sys.exit(app.exec())
 
 class MainWindow(QWidget):
-    def __init__(self, rpc: RPC, min_val: float, max_val: float):
+    def __init__(self, rpcs: RPCList):
         super().__init__()
-        self.rpc, self.min_val, self.max_val = rpc, min_val, max_val
 
         layout = QVBoxLayout()
+        layout.addStretch()
         self.setLayout(layout)
-        self.setWindowTitle(rpc.name)
+        self.setWindowTitle('findrpc GUI')
         self.setMinimumWidth(500)
-        self.qfont = QFont('Ubuntu', 16)
 
-        self.slider, self.container = self.__make_slider(min_val, max_val)
-        self.name_label = self.__make_label(self.rpc.name)
-        self.result_label = self.__make_label(RESULT_LABEL(self.value))
+        for rpc in rpcs:
+            try: min_val = RPC(rpc.name+'.min', rpc.type_ext).value()
+            except RuntimeError: min_val = 0 #arg_input(rpc, prompt="min value")
+            try: max_val = RPC(rpc.name+'.max', rpc.type_ext).value()
+            except RuntimeError: max_val = rpc.value() #arg_input(rpc, prompt="max value")
 
-        layout.addWidget(self.name_label)
-        layout.addLayout(self.container)
-        layout.addWidget(self.result_label)
+            display = RPCDisplay(rpc, min_val, max_val)
+            layout.addLayout(display.label_container)
+            layout.addLayout(display.slider_container)
+            layout.addStretch()
 
-    def __make_label(self, name) -> QLabel:
-        label = QLabel(name, self)
+class RPCDisplay():
+    def __init__(self, rpc: RPC, min_val: float, max_val: float):
+        self.rpc = rpc
+        self.scale = 100
+        self.__get_value()
+
+        self.name_label = self.make_label(rpc.name)
+        self.result_label = self.make_label(self.__result_display())
+
+        self.label_container = QHBoxLayout()
+        self.label_container.addWidget(self.name_label)
+        self.label_container.addWidget(self.result_label)
+
+        self.slider = self.make_slider(min_val, max_val)
+        self.min_label = self.make_edit(str(min_val), self.slider.setMinimum)
+        self.max_label = self.make_edit(str(max_val), self.slider.setMaximum)
+
+        self.slider_container = QHBoxLayout()
+        self.slider_container.addWidget(self.min_label)
+        self.slider_container.addWidget(self.slider)
+        self.slider_container.addWidget(self.max_label)
+
+    def make_label(self, name) -> QLabel:
+        label = QLabel(name)
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        label.setFont(self.qfont)
+        label.setFont(self.__qfont())
         label.adjustSize()
         return label
 
-    def __make_edit(self, default: str, submit_text: Callable[[int], None]) -> QLineEdit:
-        edit = QLineEdit(self)
+    def make_edit(self, default: str, edit_func: Callable[[int], None]) -> QLineEdit:
+        edit = QLineEdit()
         edit.setText(default)
-        edit.setFont(self.qfont)
+        edit.setFont(self.__qfont())
         edit.adjustSize()
         edit.setFixedWidth(50)
         edit.setValidator(QDoubleValidator())
-        edit.returnPressed.connect(lambda: submit_text(_scale(edit.text())))
+        edit.returnPressed.connect(lambda: edit_func(self.__scale(edit.text())))
         return edit
 
-    def __make_slider(self, min_val, max_val) -> tuple[QSlider, QHBoxLayout]:
-        r, g, b = (hex(random.randint(128,255))[2:] for _ in range(3))
-        self.slider_color = f'#{r}{g}{b}'
-        r, g, b = (hex(random.randint(96,160))[2:] for _ in range(3))
-        self.handle_color = f'#{r}{g}{b}'
+    def make_slider(self, min_val: float, max_val: float) -> QSlider:
+        r, g, b = (_random_hex(128,160) for _ in range(3))
+        slider_color = f'#{r}{g}{b}'
+        r, g, b = (_random_hex(0,128) for _ in range(3))
+        handle_color = f'#{r}{g}{b}'
 
         self.updating = False
-        self.__get_value()
-        slider = QSlider(Qt.Orientation.Horizontal, self)
-        slider.setRange(_scale(min_val), _scale(max_val))
-        slider.setValue(_scale(self.value))
+        slider = QSlider(Qt.Orientation.Horizontal)
+        slider.setRange(self.__scale(min_val), self.__scale(max_val))
+        slider.setValue(self.value_scaled)
         slider.setSingleStep(1)
         slider.setPageStep(10)
-        slider.valueChanged.connect(self.__update)
-        slider.setStyleSheet(self.__generate_qss())
+        slider.valueChanged.connect(self.update_slider)
+        slider.setStyleSheet(_generate_qss(slider_color, handle_color))
 
-        min_label = self.__make_edit(str(min_val), slider.setMinimum)
-        max_label = self.__make_edit(str(max_val), slider.setMaximum)
-        container = QHBoxLayout()
-        container.addWidget(min_label)
-        container.addWidget(slider)
-        container.addWidget(max_label)
+        return slider
 
-        return slider, container
-
-    def __update(self, value: int):
+    def update_slider(self, value: int):
         if not self.updating: # don't recursively call this
             self.updating = True
-            self.rpc.call(_descale(value))
+            self.rpc.call(self.__descale(value))
             self.__get_value()
-            self.result_label.setText(RESULT_LABEL(self.value))
-            self.slider.setValue(_scale(self.value))
+            self.result_label.setText(self.__result_display())
+            self.slider.setValue(self.value_scaled)
             self.updating = False
 
-    def __get_value(self):
+    def __get_value(self): 
         self.value = self.rpc.value()
+        self.value_scaled = self.__scale(self.value)
+    def __result_display(self): return f"Current value: {self.value}"
+    def __qfont(self, size: int=14): return QFont('Ubuntu', size)
+    def __scale(self, val: float | str) -> int: return int(float(val) * self.scale)
+    def __descale(self, val: int) -> str: return str(float(val) / self.scale)
 
-    def __generate_qss(self):
-        return f"""
-        QSlider::groove:horizontal {{
-            border: 3px solid #999999;
-            height: 8px; /* the groove height */
-            background: #e0e0e0;
-            margin: 2px 0;
-            border-radius: 4px;
-        }}
+def _generate_qss(slider_color: str, handle_color: str) -> str:
+    return f"""
+    QSlider::groove:horizontal {{
+        border: 3px solid #999999;
+        height: 8px; /* the groove height */
+        background: #e0e0e0;
+        margin: 2px 0;
+        border-radius: 4px;
+    }}
 
-        QSlider::handle:horizontal {{
-            background: {self.handle_color};
-            border: 3px solid #5c5c5c;
-            width: 18px;
-            height: 18px;
-            margin: -6px 0; /* center the handle vertically within the groove */
-            border-radius: 9px; /* makes the handle circular */
-        }}
+    QSlider::handle:horizontal {{
+        background: {handle_color};
+        border: 3px solid #5c5c5c;
+        width: 18px;
+        height: 18px;
+        margin: -6px 0; /* center the handle vertically within the groove */
+        border-radius: 9px; /* makes the handle circular */
+    }}
 
-        QSlider::add-page:horizontal {{
-            background: #b0b0b0; /* color for the part after the handle */
-        }}
+    QSlider::add-page:horizontal {{
+        background: #b0b0b0; /* color for the part after the handle */
+    }}
 
-        QSlider::sub-page:horizontal {{
-            background: {self.slider_color}; /* color for the part before the handle */
-        }}
-        """
+    QSlider::sub-page:horizontal {{
+        background: {slider_color}; /* color for the part before the handle */
+    }}
+    """
 
-SCALE = 100
-RESULT_LABEL = lambda x: f'Current value: {x}'
-def _scale(val: float | str) -> int:
-    return int(float(val) * SCALE)
-def _descale(val: int) -> str:
-    return str(float(val) / SCALE)
+def _random_hex(min: int, max:int) -> str:
+    return hex(random.randint(128,160))[2:].zfill(2)

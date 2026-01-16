@@ -11,9 +11,6 @@ class RPC:
         try: self.data_type = TYPES_DICT[data_char] 
         except KeyError: raise TypeError(DATA_ERR(data_char))
 
-    def input_to_arg(self, x):
-        return str(self.data_type(x)) if x!='-' else None
-
     def call(self, arg: str | None=None) -> str: 
         result = tio_tool('rpc', self.name, arg)
         lines = result.splitlines()
@@ -23,7 +20,12 @@ class RPC:
         word = self.call().split()[1] # second word of first line
         if word[0] == '"': word = word[1:]
         if word[-1] == '"': word = word[:-1]
-        return self.data_type(word)
+        value = self.data_type(word)
+        self.value_cache = value
+        return value
+
+    def input_to_arg(self, x): # test conversion to data_type, - means no arg
+        return str(self.data_type(x)) if x!='-' else None
 
     def __len__(self): return len(self.name)
     def __str__(self): return self.name + self.type_ext

@@ -29,11 +29,11 @@ def input_arg(cli: rpcCLI, rpc: RPC): # -> rpc.data_type
 
 def input_call_output(cli: rpcCLI, selected_rpcs: RPCList):
     ''' loop through call list '''
+    if cli.slider(): slider(selected_rpcs, fork=not cli.debug())
     for rpc in selected_rpcs:
         print()                                 # spacer
         if len(selected_rpcs) > 1: print(rpc)   # print where we are in call list
 
-        if cli.slider(): slider(rpc, fork=not cli.debug())
         else:
             while True:     # loop for possible + mode
                 arg = input_arg(cli, rpc)           # ask user for argument to rpc
