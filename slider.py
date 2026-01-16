@@ -1,11 +1,10 @@
-import sys
 from PyQt6.QtWidgets import QApplication, QWidget, QSlider, QLabel, QFormLayout
 from PyQt6.QtCore import Qt, QRect
 from PyQt6.QtGui import QFont
 
 from rpc import RPC
 from rpcio import arg_input
-import subprocess
+import os, sys, subprocess
 
 def slider(rpc: RPC):
     try: min_val = RPC(rpc.name+'.min', rpc.type_ext).value()
@@ -13,21 +12,22 @@ def slider(rpc: RPC):
     try: max_val = RPC(rpc.name+'max', rpc.type_ext).value()
     except RuntimeError: max_val = arg_input(rpc, prompt="max value")
 
+    pid = os.fork()
+    if pid > 0: sys.exit(0) # we're a parent, return
+    os.setsid()             # detach from terminal
+    sys.stdin.close()       # close streams
+    sys.stdout.close()
+    sys.stderr.close()
+
     app = QApplication([sys.argv[0]])
     window = MainWindow(rpc, min_val, max_val)
     window.show()
 
     # make slider floating for chris's window manager
-    try: subprocess.run(["i3-msg", "floating", "toggle"])
+    try: subprocess.run(["i3-msg", "floating", "toggle"], capture_output=True)
     except FileNotFoundError: pass  
 
     sys.exit(app.exec())
-
-SCALE = 100
-def _scale(val: float | str) -> int:
-    return int(float(val) * SCALE)
-def _descale(val: int) -> str:
-    return str(float(val) / SCALE)
 
 class MainWindow(QWidget):
     def __init__(self, rpc: RPC, min_val: float, max_val: float):
@@ -95,3 +95,10 @@ SLIDER_QSS="""
             background: #1dc996; /* color for the part before the handle */
         }
         """
+
+SCALE = 100
+def _scale(val: float | str) -> int:
+    return int(float(val) * SCALE)
+def _descale(val: int) -> str:
+    return str(float(val) / SCALE)
+
