@@ -1,10 +1,12 @@
-import os, sys, subprocess
+import os, sys, subprocess, random
+from typing import Callable
 from rpc import RPC
 from rpcio import arg_input
 
-from PyQt6.QtWidgets import QApplication, QWidget, QSlider, QLabel, QVBoxLayout, QHBoxLayout
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout
+from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit
 from PyQt6.QtCore import Qt, QRect
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QDoubleValidator
 
 def slider(rpc: RPC, fork=True):
     try: min_val = RPC(rpc.name+'.min', rpc.type_ext).value()
@@ -33,7 +35,7 @@ def slider(rpc: RPC, fork=True):
 class MainWindow(QWidget):
     def __init__(self, rpc: RPC, min_val: float, max_val: float):
         super().__init__()
-        self.rpc = rpc
+        self.rpc, self.min_val, self.max_val = rpc, min_val, max_val
 
         layout = QVBoxLayout()
         self.setLayout(layout)
@@ -49,11 +51,28 @@ class MainWindow(QWidget):
         layout.addLayout(self.container)
         layout.addWidget(self.result_label)
 
-    def __make_slider(self, min_val, max_val):
-        min_label = QLabel(str(min_val), self)
-        min_label.setFont(self.qfont)
-        max_label = QLabel(str(max_val), self)
-        max_label.setFont(self.qfont)
+    def __make_label(self, name) -> QLabel:
+        label = QLabel(name, self)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        label.setFont(self.qfont)
+        label.adjustSize()
+        return label
+
+    def __make_edit(self, default: str, submit_text: Callable[[int], None]) -> QLineEdit:
+        edit = QLineEdit(self)
+        edit.setText(default)
+        edit.setFont(self.qfont)
+        edit.adjustSize()
+        edit.setFixedWidth(50)
+        edit.setValidator(QDoubleValidator())
+        edit.returnPressed.connect(lambda: submit_text(_scale(edit.text())))
+        return edit
+
+    def __make_slider(self, min_val, max_val) -> tuple[QSlider, QHBoxLayout]:
+        r, g, b = (hex(random.randint(128,255))[2:] for _ in range(3))
+        self.slider_color = f'#{r}{g}{b}'
+        r, g, b = (hex(random.randint(96,160))[2:] for _ in range(3))
+        self.handle_color = f'#{r}{g}{b}'
 
         self.updating = False
         self.__get_value()
@@ -63,8 +82,10 @@ class MainWindow(QWidget):
         slider.setSingleStep(1)
         slider.setPageStep(10)
         slider.valueChanged.connect(self.__update)
-        slider.setStyleSheet(SLIDER_QSS)
+        slider.setStyleSheet(self.__generate_qss())
 
+        min_label = self.__make_edit(str(min_val), slider.setMinimum)
+        max_label = self.__make_edit(str(max_val), slider.setMaximum)
         container = QHBoxLayout()
         container.addWidget(min_label)
         container.addWidget(slider)
@@ -81,41 +102,35 @@ class MainWindow(QWidget):
             self.slider.setValue(_scale(self.value))
             self.updating = False
 
-    def __make_label(self, name):
-        label = QLabel(name, self)
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        label.setFont(self.qfont)
-        label.adjustSize()
-        return label
-
     def __get_value(self):
         self.value = self.rpc.value()
 
-SLIDER_QSS="""
-        QSlider::groove:horizontal {
+    def __generate_qss(self):
+        return f"""
+        QSlider::groove:horizontal {{
             border: 3px solid #999999;
             height: 8px; /* the groove height */
             background: #e0e0e0;
             margin: 2px 0;
             border-radius: 4px;
-        }
+        }}
 
-        QSlider::handle:horizontal {
-            background: #1de9b6; /* a cyan color */
+        QSlider::handle:horizontal {{
+            background: {self.handle_color};
             border: 3px solid #5c5c5c;
             width: 18px;
             height: 18px;
             margin: -6px 0; /* center the handle vertically within the groove */
             border-radius: 9px; /* makes the handle circular */
-        }
+        }}
 
-        QSlider::add-page:horizontal {
+        QSlider::add-page:horizontal {{
             background: #b0b0b0; /* color for the part after the handle */
-        }
+        }}
 
-        QSlider::sub-page:horizontal {
-            background: #1dc996; /* color for the part before the handle */
-        }
+        QSlider::sub-page:horizontal {{
+            background: {self.slider_color}; /* color for the part before the handle */
+        }}
         """
 
 SCALE = 100
