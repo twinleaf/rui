@@ -9,9 +9,10 @@ class RPCList:
         with open(filepath, 'r') as f:
             self.list = [_line_to_rpc(line) for line in f.readlines()]
 
-    def search(self, search_terms: list[str]):
+    def search(self, search_terms: list[str], match_any=False):
+        selector = any if match_any else all
         self.list = [rpc for rpc in self if 
-                     all(_fuzzy_match(term, rpc.name) for term in search_terms)]
+                     selector(_fuzzy_match(term, rpc.name) for term in search_terms)]
 
     def select(self, x: str) -> bool: # returns True if done searching else False
         if x[0] == '/': 

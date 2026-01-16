@@ -50,9 +50,9 @@ class MainWindow(QWidget):
             layout.addStretch()
 
 class RPCDisplay():
-    def __init__(self, rpc: RPC, min_val: float, max_val: float):
+    def __init__(self, rpc: RPC, min_val: float | int, max_val: float | int):
         self.rpc = rpc
-        self.scale = 100
+        self.scale = 100 if rpc.data_type == float else 1
         self.__get_value()
 
         self.name_label = self.make_label(rpc.name)
@@ -88,7 +88,7 @@ class RPCDisplay():
         edit.returnPressed.connect(lambda: edit_func(self.__scale(edit.text())))
         return edit
 
-    def make_slider(self, min_val: float, max_val: float) -> QSlider:
+    def make_slider(self, min_val: float | int, max_val: float | int) -> QSlider:
         r, g, b = (_random_hex(128,160) for _ in range(3))
         slider_color = f'#{r}{g}{b}'
         r, g, b = (_random_hex(0,128) for _ in range(3))
@@ -119,8 +119,10 @@ class RPCDisplay():
         self.value_scaled = self.__scale(self.value)
     def __result_display(self): return f"Current value: {self.value}"
     def __qfont(self, size: int=14): return QFont('Ubuntu', size)
-    def __scale(self, val: float | str) -> int: return int(float(val) * self.scale)
-    def __descale(self, val: int) -> str: return str(float(val) / self.scale)
+    def __scale(self, val: float | int | str) -> int:
+        return int(self.rpc.data_type(val) * self.scale)
+    def __descale(self, val: int) -> str:
+        return str(self.rpc.data_type(val / self.scale))
 
 def _generate_qss(slider_color: str, handle_color: str) -> str:
     return f"""

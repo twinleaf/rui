@@ -1,6 +1,6 @@
 from typing import Any
 from rpcio import search_input
-ALL_MODES = {'-', '+', '++', '*', '@', 'debug', 'regen'}
+ALL_MODES = {'-', '+', '++', '*', '@', '|', 'debug', 'regen'}
 
 class rpcCLI:
     '''Interface to parse and store command line input to findrpc'''
@@ -27,6 +27,7 @@ class rpcCLI:
         return terms
 
     def add_mode(self, mode: str): self.modes.add(mode)
+    def any(self) -> bool: return '|' in self.modes # match any search term instead of all
     def star(self) -> bool: return '*' in self.modes # select all rpcs
     def dash(self) -> bool: return '-' in self.modes # no argument
     def plus(self) -> bool: return '+' in self.modes # loop calls forever

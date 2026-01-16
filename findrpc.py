@@ -9,7 +9,7 @@ from slider import slider
 MATCH_ERR = lambda x: f"Couldn't find {x[0] if len(x) == 1 else 'a match'}.\n"
 def find_targets(cli: rpcCLI, all_rpcs: RPCList):
     ''' fuzzy search all_rpcs for cli.terms or input and update all_rpcs '''
-    all_rpcs.search(cli.terms()) 
+    all_rpcs.search(cli.terms(), cli.any())
     if all_rpcs.empty(): 
         print(MATCH_ERR(cli.terms()), end='')
         sys.exit(1)
