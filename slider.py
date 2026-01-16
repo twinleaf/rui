@@ -9,7 +9,7 @@ import os, sys, subprocess
 def slider(rpc: RPC):
     try: min_val = RPC(rpc.name+'.min', rpc.type_ext).value()
     except RuntimeError: min_val = arg_input(rpc, prompt="min value")
-    try: max_val = RPC(rpc.name+'max', rpc.type_ext).value()
+    try: max_val = RPC(rpc.name+'.max', rpc.type_ext).value()
     except RuntimeError: max_val = arg_input(rpc, prompt="max value")
 
     pid = os.fork()
