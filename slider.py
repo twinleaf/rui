@@ -13,7 +13,7 @@ def slider(rpc: RPC):
     except RuntimeError: max_val = arg_input(rpc, prompt="max value")
 
     pid = os.fork()
-    if pid > 0: sys.exit(0) # we're a parent, return
+    if pid > 0: return      # we're a parent, go back to main
     os.setsid()             # detach from terminal
     sys.stdin.close()       # close streams
     sys.stdout.close()
