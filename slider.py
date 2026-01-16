@@ -16,7 +16,11 @@ def slider(rpc: RPC):
     app = QApplication([sys.argv[0]])
     window = MainWindow(rpc, min_val, max_val)
     window.show()
-    subprocess.run(["i3-msg", "floating", "toggle"])
+
+    # make slider floating for chris's window manager
+    try: subprocess.run(["i3-msg", "floating", "toggle"])
+    except FileNotFoundError: pass  
+
     sys.exit(app.exec())
 
 SCALE = 100
