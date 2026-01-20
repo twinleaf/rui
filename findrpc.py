@@ -10,7 +10,7 @@ MATCH_ERR = lambda x: f"Couldn't find {x[0] if len(x) == 1 else 'a match'}."
 def find_targets(all_rpcs: RPCList, cli: rpcCLI) -> RPCList:
     ''' fuzzy search all_rpcs for cli.terms or input and update all_rpcs '''
     matched = all_rpcs.search(cli.terms())
-    if matched.empty(): 
+    if matched.empty():
         print(MATCH_ERR(cli.terms()))
         sys.exit(1)
     return matched
