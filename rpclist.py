@@ -1,49 +1,39 @@
 import os
 from typing import Callable
-from rpc import RPC, TYPES_DICT, RPC_DATA_ERR
+from rpc import RPC
 from tio import tio_tool
 
 class RPCList:
     ''' List class with filtering methods '''
-    def __init__(self, rpcs: list[RPC]):
+    def __init__(self, rpcs: list[RPC]=[]):
         self.list = rpcs
 
     def filter(self, cond: Callable[[str], bool]): # -> RPCList
         return RPCList([rpc for rpc in self if cond(rpc.name)])
-    def pick(self, indices: list[int]) -> RPCList:
+    def pick(self, indices: list[int]): # -> RPCList
         return RPCList([self[i] for i in indices])
 
-    def search(self, search_terms: list[str], match_any=False): # -> RPCList
-        selector = any if match_any else all
-        return self.filter(lambda x: selector(_fuzzy_match(term, x) for term in search_terms))
+    def search(self, search_terms: list[str]): # -> RPCList
+        return self.filter(lambda x: all(_fuzzy_match(term, x) for term in search_terms))
 
-    def select(self, selection: str) -> tuple[RPCList, bool]: # True if done searching 
-        if selection[0] == '/': 
-            return self.filter(lambda x: _fuzzy_match(selection, x)), False
-        elif selection == '*':            
-            return self.filter(lambda x: True), True
-        elif len(selection.split()) == 1: 
-            return self.pick([int(selection)-1]), True
-        else:                   
-            return self.pick([int(s)-1 for s in selection.split()]), True
-
-    def print(self, spacer: bool=False):
-        if spacer: print()
-        if len(self) == 1: 
-            print(self[0])
+    def print(self):
+        if len(self) == 0: return
+        if len(self) == 1: print(self[0])
         else:
             for i in range(len(self)): 
                 print(f"{i+1}.", self[i])
             print() #spacer
 
     def empty(self): return len(self) == 0
-    def single(self): return len(self) == 1
+    def lonely(self): return len(self) <= 1
+    def __str__(self): return str([str(rpc) for rpc in self.list])
     def __len__(self): return len(self.list)
     def __iter__(self): return self.list.__iter__()
     def __next__(self): return self.list.__next__()
     def __getitem__(self, key): return self.list[key]
     def __contains__(self, item): return item in self.list
-    def __plus__(self, other): self.list += other.list
+    def __plus__(self, other): return RPCList(self.list + other.list)
+    def __iadd__(self, other): self.list += other.list
 
 def rpclist_from_file(dirname: str, regen: bool=False) -> RPCList:
     filepath = _get_gen_file(dirname, regen)
@@ -57,10 +47,7 @@ def __line_to_rpc(rpc_list_line: str) -> RPC:
 
     name = base_string[:open_index]
     ext = base_string[open_index:]
-    type_char = ext[1]
-    try: data_type = TYPES_DICT[type_char]
-    except KeyError: raise TypeError(RPC_DATA_ERR(data_char))
-    return RPC[data_type](name, ext)
+    return RPC(name, ext)
 
 '''                      ''
     rpc list helpers

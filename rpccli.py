@@ -1,16 +1,15 @@
 from typing import Any
 from rpcio import search_input
-ALL_MODES = {'-', '+', '++', '*', '@', '|', '/', 'debug', 'regen'}
+ALL_MODES = {'-', '+', '++', '*', '@', '/', 'debug', 'regen'}
 FLAGS = {
-        '--no-arg': '-',
-        '--continuous': '+',
-        '--sliders': '++',
-        '--select-all': '*',
-        '--exact': '@',
-        '--match-any': '|',
-        '--keep-searching': '/',
-        '--debug': 'debug',
-        '--regen': 'regen'
+        'no-arg': '-',
+        'continuous': '+',
+        'sliders': '++',
+        'select-all': '*',
+        'exact': '@',
+        'keep-searching': '/',
+        'debug': 'debug',
+        'regen': 'regen'
         }
 
 class rpcCLI:
@@ -25,7 +24,7 @@ class rpcCLI:
         for arg in argv:
             if arg in ALL_MODES: 
                 self.add_mode(arg)
-            elif arg in FLAGS:
+            elif arg[:2] == '--' and arg[2:] in FLAGS:
                 self.add_mode(FLAGS[arg])
             else: 
                 try: 
@@ -40,7 +39,6 @@ class rpcCLI:
         return terms
 
     def add_mode(self, mode: str): self.modes.add(mode)
-    def any(self) -> bool: return '|' in self.modes # match any search term instead of all
     def star(self) -> bool: return '*' in self.modes # select all rpcs
     def dash(self) -> bool: return '-' in self.modes # no argument
     def plus(self) -> bool: return '+' in self.modes # loop calls forever

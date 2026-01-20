@@ -40,9 +40,9 @@ class MainWindow(QWidget):
 
         for rpc in rpcs:
             try: min_val = RPC(rpc.name+'.min', rpc.type_ext).value()
-            except RuntimeError: min_val = 0 #arg_input(rpc, prompt="min value")
+            except RuntimeError: min_val = 0 
             try: max_val = RPC(rpc.name+'.max', rpc.type_ext).value()
-            except RuntimeError: max_val = rpc.value() #arg_input(rpc, prompt="max value")
+            except RuntimeError: max_val = rpc.value() 
 
             display = RPCDisplay(rpc, min_val, max_val)
             layout.addLayout(display.label_container)
