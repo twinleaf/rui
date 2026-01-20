@@ -13,8 +13,9 @@ class RPCList:
     def pick(self, indices: list[int]): # -> RPCList
         return RPCList([self[i] for i in indices])
 
-    def search(self, search_terms: list[str]): # -> RPCList
-        return self.filter(lambda x: all(_fuzzy_match(term, x) for term in search_terms))
+    def search(self, search_terms: list[str], match_any: bool=False): # -> RPCList
+        selector = any if match_any else all
+        return self.filter(lambda x: selector(_fuzzy_match(term, x) for term in search_terms))
 
     def print(self):
         if len(self) == 0: return

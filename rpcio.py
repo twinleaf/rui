@@ -17,11 +17,11 @@ def __terms_to_list(terms: str | list[str]) -> list[str]:
 
 SELECT_PROMPT = "Select rpc, or /[search] to keep searching: "
 SELECT_ERR = lambda l: f"Invalid. Select a number from 1 to {len(l)}.\n"
-SELECT_TEST = lambda l: lambda x: __select_rpcs(l, x)
-def __select_rpcs(rpcs: RPCList, selection: str) -> RPCList:
+SELECT_TEST = lambda l, m: lambda x: __select_rpcs(l, x, m) if x != '\\' else RPCList()
+def __select_rpcs(rpcs: RPCList, selection: str, match_any: bool=False) -> RPCList:
     if selection[0] == '/':
         # narrow search by recursively calling select_input
-        return select_input(rpcs.search(selection.split()))
+        return select_input(rpcs.search(selection.split(), match_any))
     elif selection == '*':
         return rpcs.filter(lambda x: True)
     elif len(selection.split()) == 1:
@@ -54,10 +54,10 @@ def valid_input(input_msg: str, error_msg: str,
 def search_input(search_terms: list[str]) -> list[str]:
     return valid_input(SEARCH_PROMPT, SEARCH_ERR, SEARCH_TEST, default=search_terms)
 
-def select_input(rpclist: RPCList, star: bool=False) -> RPCList:
+def select_input(rpclist: RPCList, star: bool=False, slash: bool=False) -> RPCList:
     rpclist.print()
     if rpclist.lonely() or star: return rpclist
-    else: return valid_input(SELECT_PROMPT, SELECT_ERR(rpclist), SELECT_TEST(rpclist))
+    else: return valid_input(SELECT_PROMPT, SELECT_ERR(rpclist), SELECT_TEST(rpclist, slash))
 
 def arg_input(rpc: RPC, default: Any=None): # -> rpc.data_type
     return valid_input(ARG_PROMPT, ARG_ERR(rpc), ARG_TEST(rpc), default=default)

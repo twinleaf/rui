@@ -1,6 +1,6 @@
 from typing import Any
 from rpcio import search_input
-ALL_MODES = {'-', '+', '++', '*', '@', '/', 'debug', 'regen'}
+ALL_MODES = {'-', '+', '++', '*', '@', '/', '|', 'debug', 'regen'}
 FLAGS = {
         'no-arg': '-',
         'continuous': '+',
@@ -8,6 +8,7 @@ FLAGS = {
         'select-all': '*',
         'exact': '@',
         'keep-searching': '/',
+        'match-any': '|',
         'debug': 'debug',
         'regen': 'regen'
         }
@@ -39,10 +40,11 @@ class rpcCLI:
         return terms
 
     def add_mode(self, mode: str): self.modes.add(mode)
+    def any(self) -> bool: return '|' in self.modes # match any term, not just all
     def star(self) -> bool: return '*' in self.modes # select all rpcs
     def dash(self) -> bool: return '-' in self.modes # no argument
     def plus(self) -> bool: return '+' in self.modes # loop calls forever
-    def search(self) -> bool: return '/' in self.modes # keep searching until \
+    def slash(self) -> bool: return '/' in self.modes # keep searching until \
     def slider(self) -> bool: return '++' in self.modes #Qt slider
     def exact(self) -> bool: return '@' in self.modes # exact instead of fuzzy match
     def regen(self) -> bool: return 'regen' in self.modes # regenerate rpc-list file

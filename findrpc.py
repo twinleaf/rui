@@ -9,7 +9,7 @@ from slider import slider
 MATCH_ERR = lambda x: f"Couldn't find {x[0] if len(x) == 1 else 'a match'}."
 def find_targets(all_rpcs: RPCList, cli: rpcCLI) -> RPCList:
     ''' fuzzy search all_rpcs for cli.terms or input and update all_rpcs '''
-    matched = all_rpcs.search(cli.terms())
+    matched = all_rpcs.search(cli.terms(), cli.any())
     if matched.empty():
         print(MATCH_ERR(cli.terms()))
         sys.exit(1)
@@ -36,7 +36,7 @@ def input_call_output(selected_rpcs: RPCList, cli: rpcCLI):
 
 def find_and_select(full_list: RPCList, cli: rpcCLI) -> RPCList:
     matched   = find_targets(full_list, cli)
-    selected  = select_input(matched, cli.star())
+    selected  = select_input(matched, cli.star(), cli.slash())
     return selected
 
 if __name__ == "__main__":
@@ -45,9 +45,10 @@ if __name__ == "__main__":
     cli         = rpcCLI(cli_args)
     full_list   = rpclist_from_file(dirname, cli.regen())
     selected    = find_and_select(full_list, cli)
-    while cli.search():
+    while cli.slash():
         cli.search_terms = []
-        if cli.terms()[0] == '\\': break
+        if cli.terms()[0] == '\\': break # \ during search
         next_selection = find_and_select(full_list, cli)
+        if next_selection.empty(): break # \ during select
         selected += next_selection
     input_call_output(selected, cli)
