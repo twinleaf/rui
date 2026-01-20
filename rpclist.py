@@ -33,7 +33,7 @@ class RPCList:
     def __getitem__(self, key): return self.list[key]
     def __contains__(self, item): return item in self.list
     def __plus__(self, other): return RPCList(self.list + other.list)
-    def __iadd__(self, other): self.list += other.list
+    def __iadd__(self, other): return RPCList(self.list + other.list)
 
 def rpclist_from_file(dirname: str, regen: bool=False) -> RPCList:
     filepath = _get_gen_file(dirname, regen)
