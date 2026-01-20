@@ -24,9 +24,6 @@ class RPC:
         self.value_cache = value
         return value
 
-    def input_to_arg(self, x): # test conversion to data_type, - means no arg
-        return str(self.data_type(x)) if x!='-' else None
-
     def __len__(self): return len(self.name)
     def __str__(self): return self.name + self.type_ext
     def __getitem__(self, key): return self.name[key]

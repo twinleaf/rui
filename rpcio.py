@@ -21,7 +21,7 @@ SELECT_TEST = lambda rpclist: lambda x: rpclist.select(x)
 
 ARG_PROMPT = lambda x: f"Enter {x}: "
 ARG_ERR = lambda rpc: f"Invalid. Argument should be of {str(rpc.data_type)[1:-1]}.\n"
-ARG_TEST = lambda rpc: lambda x: str(rpc.data_type(x)) if x not in {'-', ''} else None
+ARG_TEST = lambda rpc: lambda x: rpc.data_type(x) if x not in {'-', ''} else None
 
 def _input(msg: str, default: Any=None) -> Any:
     if default is not None: return default
@@ -47,5 +47,5 @@ def select_input(rpclist: RPCList) -> RPCList:
 def search_input(search_terms: list[str]) -> list[str]:
     return valid_input(SEARCH_PROMPT, SEARCH_ERR, SEARCH_TEST, default=search_terms)
 
-def arg_input(rpc: RPC, default: Any=None, prompt: str="argument"): # -> rpc.data_type
-    return valid_input(ARG_PROMPT(prompt), ARG_ERR(rpc), ARG_TEST(rpc), default=default)
+def arg_input[DT](rpc: RPC[DT], default: Any=None) -> DT:
+    return valid_input(ARG_PROMPT, ARG_ERR(rpc), ARG_TEST(rpc), default=default)

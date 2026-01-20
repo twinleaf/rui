@@ -1,11 +1,12 @@
 import os, sys, subprocess
+from typing import Any
 
 '''                      ''
     rust tool interface
 ''                      '''
 
-def tio_tool(tool: str, *args: str | None, test: bool=False) -> str:
-    argv = ['tio-tool', tool, '--'] + [arg for arg in args if arg is not None]
+def tio_tool(tool: str, *args: Any, test: bool=False) -> str:
+    argv = ['tio-tool', tool, '--'] + [str(arg) for arg in args if arg is not None]
 
     try: result = __sh(argv, test) # run in shell or test
     except FileNotFoundError: sys.exit("tio-tool not found, install or check PATH") 

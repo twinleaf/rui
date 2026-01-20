@@ -1,28 +1,31 @@
 import os
-from rpc import RPC 
+from typing import Callable
+from rpc import RPC, TYPES_DICT, RPC_DATA_ERR
 from tio import tio_tool
 
 class RPCList:
-    ''' Mutable list class that diminishes as you search & select '''
+    ''' List class with filtering methods '''
     def __init__(self, rpcs: list[RPC]):
         self.list = rpcs
 
-    def search(self, search_terms: list[str], match_any=False):
-        selector = any if match_any else all
-        self.list = [rpc for rpc in self if 
-                     selector(_fuzzy_match(term, rpc.name) for term in search_terms)]
+    def filter(self, cond: Callable[[str], bool]): # -> RPCList
+        return RPCList([rpc for rpc in self if cond(rpc.name)])
+    def pick(self, indices: list[int]) -> RPCList:
+        return RPCList([self[i] for i in indices])
 
-    def select(self, x: str) -> bool: # returns True if done searching else False
-        if x[0] == '/': 
-            self.list = [rpc for rpc in self if _fuzzy_match(x, rpc.name)]
-            return False
-        if x == '*':            
-            self.list = self.list
-        elif len(x.split()) == 1: 
-            self.list = [self[int(x)-1]]
+    def search(self, search_terms: list[str], match_any=False): # -> RPCList
+        selector = any if match_any else all
+        return self.filter(lambda x: selector(_fuzzy_match(term, x) for term in search_terms))
+
+    def select(self, selection: str) -> tuple[RPCList, bool]: # True if done searching 
+        if selection[0] == '/': 
+            return self.filter(lambda x: _fuzzy_match(selection, x)), False
+        elif selection == '*':            
+            return self.filter(lambda x: True), True
+        elif len(selection.split()) == 1: 
+            return self.pick([int(selection)-1]), True
         else:                   
-            self.list = [self[int(x)-1] for x in x.split()]
-        return True
+            return self.pick([int(s)-1 for s in selection.split()]), True
 
     def print(self, spacer: bool=False):
         if spacer: print()
@@ -40,6 +43,7 @@ class RPCList:
     def __next__(self): return self.list.__next__()
     def __getitem__(self, key): return self.list[key]
     def __contains__(self, item): return item in self.list
+    def __plus__(self, other): self.list += other.list
 
 def rpclist_from_file(dirname: str, regen: bool=False) -> RPCList:
     filepath = _get_gen_file(dirname, regen)
@@ -53,7 +57,10 @@ def __line_to_rpc(rpc_list_line: str) -> RPC:
 
     name = base_string[:open_index]
     ext = base_string[open_index:]
-    return RPC(name, ext)
+    type_char = ext[1]
+    try: data_type = TYPES_DICT[type_char]
+    except KeyError: raise TypeError(RPC_DATA_ERR(data_char))
+    return RPC[data_type](name, ext)
 
 '''                      ''
     rpc list helpers
