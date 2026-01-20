@@ -120,8 +120,12 @@ class RPCDisplay():
     def __result_display(self): return f"Current value: {self.value}"
     def __qfont(self, size: int=14): return QFont('Ubuntu', size)
     def __scale(self, val: float | int | str) -> int:
+        if self.rpc.data_type not in {float, int}:
+            raise TypeError('Data type for slider must be numeric')
         return int(self.rpc.data_type(val) * self.scale)
     def __descale(self, val: int) -> str:
+        if self.rpc.data_type not in {float, int}:
+            raise TypeError('Data type for slider must be numeric')
         return str(self.rpc.data_type(val / self.scale))
 
 def _generate_qss(slider_color: str, handle_color: str) -> str:
