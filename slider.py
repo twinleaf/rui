@@ -89,11 +89,6 @@ class RPCDisplay():
         return edit
 
     def make_slider(self, min_val: float | int, max_val: float | int) -> QSlider:
-        r, g, b = (_random_hex(128,160) for _ in range(3))
-        slider_color = f'#{r}{g}{b}'
-        r, g, b = (_random_hex(0,128) for _ in range(3))
-        handle_color = f'#{r}{g}{b}'
-
         self.updating = False
         slider = QSlider(Qt.Orientation.Horizontal)
         slider.setRange(self.__scale(min_val), self.__scale(max_val))
@@ -101,7 +96,7 @@ class RPCDisplay():
         slider.setSingleStep(1)
         slider.setPageStep(10)
         slider.valueChanged.connect(self.update_slider)
-        slider.setStyleSheet(_generate_qss(slider_color, handle_color))
+        slider.setStyleSheet(_generate_qss())
 
         return slider
 
@@ -128,7 +123,7 @@ class RPCDisplay():
             raise TypeError('Data type for slider must be numeric')
         return str(self.rpc.data_type(val / self.scale))
 
-def _generate_qss(slider_color: str, handle_color: str) -> str:
+def _generate_qss() -> str:
     return f"""
     QSlider::groove:horizontal {{
         border: 3px solid #999999;
@@ -139,7 +134,7 @@ def _generate_qss(slider_color: str, handle_color: str) -> str:
     }}
 
     QSlider::handle:horizontal {{
-        background: {handle_color};
+        background: #ffffff;
         border: 3px solid #5c5c5c;
         width: 18px;
         height: 18px;
@@ -152,9 +147,14 @@ def _generate_qss(slider_color: str, handle_color: str) -> str:
     }}
 
     QSlider::sub-page:horizontal {{
-        background: {slider_color}; /* color for the part before the handle */
+        background: {_random_hex(500)}; /* color for the part before the handle */
     }}
     """
 
-def _random_hex(min: int, max:int) -> str:
-    return hex(random.randint(128,160))[2:].zfill(2)
+def _random_hex(total: int) -> str:
+    ret = "#"
+    for i in range(3):
+        max = 255 if total > 255 else total
+        r = random.randint(0, max)
+        ret += hex(r)[2:].zfill(2)
+    return ret
