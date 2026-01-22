@@ -1,8 +1,8 @@
+# TODO: Better float display 
+# TODO: if we have the speed, fetch value at intervals i/s/o every call
 import os, sys, subprocess, random
 from typing import Callable
-from lib.rpc import RPC
-from lib.rpclist import RPCList
-from lib.rpcio import arg_input
+from rpclib.rpc import RPC, RPCList
 
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit
@@ -39,9 +39,9 @@ class MainWindow(QWidget):
         self.setMinimumWidth(500)
 
         for rpc in rpcs:
-            try: min_val = RPC(rpc.name+'.min', rpc.type_ext).value()
+            try: min_val = rpc.arg_type(RPC(rpc.name+'.min', rpc.arg_type).value())
             except RuntimeError: min_val = 0
-            try: max_val = RPC(rpc.name+'.max', rpc.type_ext).value()
+            try: max_val = rpc.arg_type(RPC(rpc.name+'.max', rpc.arg_type).value())
             except RuntimeError: max_val = rpc.value()
 
             display = RPCDisplay(rpc, min_val, max_val)
@@ -52,7 +52,7 @@ class MainWindow(QWidget):
 class RPCDisplay():
     def __init__(self, rpc: RPC, min_val: float | int, max_val: float | int):
         self.rpc = rpc
-        self.scale = 100 if rpc.data_type == float else 1
+        self.scale = 100 if rpc.arg_type == float else 1
         self.__get_value()
 
         self.name_label = self.make_label(rpc.name)
@@ -115,13 +115,13 @@ class RPCDisplay():
     def __result_display(self): return f"Current value: {self.value}"
     def __qfont(self, size: int=14): return QFont('Ubuntu', size)
     def __scale(self, val: float | int | str) -> int:
-        if self.rpc.data_type not in {float, int}:
-            raise TypeError('Data type for slider must be numeric')
-        return int(self.rpc.data_type(val) * self.scale)
+        if self.rpc.arg_type not in {float, int}:
+            raise TypeError('Argument type for slider must be numeric')
+        return int(self.rpc.arg_type(val) * self.scale)
     def __descale(self, val: int) -> str:
-        if self.rpc.data_type not in {float, int}:
-            raise TypeError('Data type for slider must be numeric')
-        return str(self.rpc.data_type(val / self.scale))
+        if self.rpc.arg_type not in {float, int}:
+            raise TypeError('Argument type for slider must be numeric')
+        return str(self.rpc.arg_type(val / self.scale))
 
 def _generate_qss() -> str:
     return f"""

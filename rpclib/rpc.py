@@ -1,8 +1,28 @@
-import os
 from typing import Callable
 from difflib import get_close_matches
-from .rpc import RPC
-from .tio import tio_tool
+from .tio import daemon_shell_rpc
+
+class RPC:
+    ''' Interface for an RPC, supporting name, calling, and search; doesn't convert types '''
+    def __init__(self, name: str, arg_type: type):
+        self.name, self.arg_type = name, arg_type
+
+    def call(self, arg: str | None=None) -> str: 
+        return daemon_shell_rpc(self.name, self.arg_type, arg)
+
+    def value(self) -> str:
+        word = self.call().split()[1] # second word of first line
+        if word[0] == '"': word = word[1:]
+        if word[-1] == '"': word = word[:-1]
+        self.cache = word
+        return word
+
+    def __repr__(self): 
+        type_name = '' if self.arg_type == type(None) else self.arg_type.__name__
+        return self.name + '(' + type_name + ')'
+    def __len__(self): return len(self.name)
+    def __getitem__(self, key): return self.name[key]
+    def __contains__(self, item): return item in self.name
 
 class RPCList:
     ''' List class with filtering methods '''
@@ -16,7 +36,7 @@ class RPCList:
 
     def search(self, terms: list[str], match_any: bool): # -> RPCList
         selector = any if match_any else all
-        sieve = lambda x: selector(_fuzzy_match(term, x) for term in terms)
+        sieve = lambda x: selector(fuzzy_match(term, x) for term in terms)
         return self.filter(sieve)
 
     def print(self):
@@ -29,8 +49,8 @@ class RPCList:
 
     def empty(self): return len(self) == 0
     def lonely(self): return len(self) <= 1
-    def __str__(self): return str([str(rpc) for rpc in self.list])
     def __len__(self): return len(self.list)
+    def __repr__(self): return str([str(rpc) for rpc in self.list])
     def __iter__(self): return self.list.__iter__()
     def __next__(self): return self.list.__next__()
     def __getitem__(self, key): return self.list[key]
@@ -38,7 +58,7 @@ class RPCList:
     def __plus__(self, other): return RPCList(self.list + other.list)
     def __iadd__(self, other): return RPCList(self.list + other.list)
 
-def _fuzzy_match(search_for: str, search_in: str) -> bool:
+def fuzzy_match(search_for: str, search_in: str) -> bool:
     if search_for[0] == '/': search_for = search_for[1:] # ignore /
     if search_for[0] == '@': return search_for[1:] in search_in
     if search_for[0] == '.': return search_for in search_in
@@ -47,6 +67,6 @@ def _fuzzy_match(search_for: str, search_in: str) -> bool:
     name = search_in.replace('.', '..')
     substrings = [name[i:i+len(st)] for i in range(len(name)-len(st)+1)]
 
-    chars_per_mistake = 4    # match 'ferq' to 'freq' but not 'fer' to 'fre'
+    chars_per_mistake = 4 # match 'ferq' to 'freq' but not 'fer' to 'fre'
     cutoff = 1 - 1/chars_per_mistake # 0.75
     return get_close_matches(st, substrings, cutoff=cutoff) != []

@@ -1,7 +1,6 @@
 import sys
-from typing import Any, Callable, TypeVar
-from .rpc import RPC
-from .rpclist import RPCList
+from typing import TypeVar, Callable
+from .rpc import RPC, RPCList
 
 '''           ''
     I/O core
@@ -23,17 +22,17 @@ def __select_rpcs(rpcs: RPCList, selection: str, match_any: bool=False) -> RPCLi
         # narrow search by recursively calling select_input
         return select_input(rpcs.search(selection.split(), match_any))
     elif selection == '*':
-        return rpcs.filter(lambda x: True)
+        return rpcs.pick([i for i in range(len(rpcs))]) # pick all
     elif len(selection.split()) == 1:
         return rpcs.pick([int(selection)-1])
     else:
         return rpcs.pick([int(s)-1 for s in selection.split()])
 
 ARG_PROMPT = "Enter argument: "
-ARG_ERR = lambda r: f"Invalid. Argument should be of {str(r.data_type)[1:-1]}.\n"
-ARG_TEST = lambda r: lambda x: r.data_type(x) if x not in {'-', ''} else None
+ARG_ERR = lambda r: f"Invalid. Argument should be of {str(r.arg_type)[1:-1]}.\n"
+ARG_TEST = lambda r: lambda x: r.arg_type(x) if x not in {'-', ''} else None
 
-def __input(msg: str, default: Any=None) -> Any:
+def __input(msg: str, default=None):
     if default is not None: return default
     try:
         i = input(msg)
@@ -45,7 +44,7 @@ def __input(msg: str, default: Any=None) -> Any:
 
 RT = TypeVar('RT')
 def valid_input(input_msg: str, error_msg: str,
-                test: Callable[[str], RT], default: Any=None) -> RT:
+                test: Callable[[str], RT], default=None) -> RT:
     try: return test(__input(input_msg, default))
     except (ValueError, IndexError):
         print(error_msg, end='')
@@ -59,5 +58,5 @@ def select_input(rpclist: RPCList, star: bool=False, slash: bool=False) -> RPCLi
     if rpclist.lonely() or star: return rpclist
     else: return valid_input(SELECT_PROMPT, SELECT_ERR(rpclist), SELECT_TEST(rpclist, slash))
 
-def arg_input(rpc: RPC, default: Any=None): # -> rpc.data_type
+def arg_input(rpc: RPC, default=None): # -> rpc.arg_type
     return valid_input(ARG_PROMPT, ARG_ERR(rpc), ARG_TEST(rpc), default=default)

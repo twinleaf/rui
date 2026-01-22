@@ -1,12 +1,10 @@
 #!/usr/bin/python
 import os, sys
-from lib.rpc import RPC 
-from lib.rpclist import RPCList
-from lib.rpccli import rpcCLI 
-
-from lib.listfiles import rpclist_from_file
-from lib.rpcio import select_input, arg_input
-from slider import slider
+from rpclib.rpc import RPC, RPCList
+from rpclib.rpccli import rpcCLI 
+from rpclib.listfiles import rpclist_from_file
+from rpclib.rpcio import select_input, arg_input
+from gui import slider
 
 MATCH_ERR = lambda x: f"Couldn't find {x[0] if len(x) == 1 else 'a match'}."
 def find_targets(all_rpcs: RPCList, cli: rpcCLI) -> RPCList:
@@ -17,9 +15,9 @@ def find_targets(all_rpcs: RPCList, cli: rpcCLI) -> RPCList:
         sys.exit(1)
     return matched
 
-def print_get_arg(rpc: RPC, cli: rpcCLI): # -> rpc.data_type
+def print_get_arg(rpc: RPC, cli: rpcCLI): # -> rpc.arg_type
     ''' print current rpc value and ask user for what to change it to if any '''
-    if cli.dash() or rpc.data_type is None: return None 
+    if cli.dash() or rpc.arg_type == type(None): return None 
     print("Previously:" if cli.rpc_arg is not None else "Currently:", rpc.value())
     return arg_input(rpc, cli.rpc_arg)
 
@@ -27,7 +25,6 @@ def input_call_output(selected_rpcs: RPCList, cli: rpcCLI):
     ''' loop through call list '''
     if cli.slider(): slider(selected_rpcs, fork=not cli.debug())
     for rpc in selected_rpcs:
-        print()                                 # spacer
         if len(selected_rpcs) > 1: print(rpc)   # print where we are in call list
         while True:                             # loop for possible + mode
             arg = print_get_arg(rpc, cli)           # ask user for argument to rpc
@@ -35,6 +32,7 @@ def input_call_output(selected_rpcs: RPCList, cli: rpcCLI):
             if len(output) > 1: print(output)       # print if not just newline
             if cli.plus(): continue                 # keep looping if + mode
             else: break
+        print()                                 # spacer
 
 def find_and_select(full_list: RPCList, cli: rpcCLI) -> RPCList:
     matched   = find_targets(full_list, cli)

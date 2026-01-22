@@ -1,46 +1,53 @@
-class TestRPC:
-    def __init__(self, string: str, dt: type, value=0):
-        self.string = string
-        self.type = dt
-        self.value = value
+# TODO: actually write tests
 
-    def call(self, arg=None):
-        if arg is None: 
-            return self.value
-        else: 
-            if arg == 444:
-                raise RuntimeError
-            self.value = self.type(arg)
-            return self.value
+def call_test_rpc(rpc, arg: str | float | None): # -> rpc._ret_type
+    if arg is None: 
+        return rpc._value
+    elif arg == 444: # simulate errors
+        raise RuntimeError
+    else:
+        rpc._value = rpc._ret_type(arg)
+        return rpc._value
+
+class TestRPC:
+    def __init__(self, string: str, arg_type: type, ret_type: type, value=0):
+        self._string = string
+        self._arg_type = arg_type
+        self._ret_type  = ret_type
+        self._value = value
+        self.__call__ = lambda arg=None: call_test_rpc(self, arg)
+        self.__call__.__annotations__['arg'] = arg_type
 
 class TestSurvey:
     def __init__(self, string: str):
-        self.string = string
+        self._string = string
 
-    def get_path(self, string):
+    def _get_path(self, string):
         path = string.split('.')
         parent = self
         for survey in path[:-1]: 
             try:
                 parent = getattr(parent, survey)
             except AttributeError:
-                parent.add_survey(survey)
+                parent._add_survey(survey)
                 parent = getattr(parent, survey)
         return parent, path[-1]
 
-    def add_survey(self, path: str):
-        parent, child = self.get_path(path)
+    def _add_survey(self, path: str):
+        parent, child = self._get_path(path)
         survey = TestSurvey(child)
         setattr(parent, child, survey)
 
-    def add_rpc(self, path: str, dt: type, value=0):
-        parent, child = self.get_path(path)
-        rpc = TestRPC(child, dt, value)
-        setattr(parent, child, rpc.call)
+    def _add_rpc(self, path: str, arg_type: type, ret_type: type, value=0):
+        parent, child = self._get_path(path)
+        rpc = TestRPC(child, arg_type, ret_type, value)
+        setattr(parent, child, rpc.__call__)
 
 class TestDevice:
     def __init__(self):
         self.settings = TestSurvey("settings")
-        self.settings.add_rpc("dev.name", str, value=b"TEST")
-        self.settings.add_rpc("mode.autostart", int)
-        self.settings.add_rpc("pump.lock.control.Kp", float)
+        self.settings._add_rpc("dev.name", type(None), str, value=b"TEST")
+        self.settings._add_rpc("mode.autostart", int, int)
+        self.settings._add_rpc("pump.lock.control.Kp", float, float)
+        self.settings._add_rpc("pump.therm.control.autotune.start", 
+                               type(None), type(None), value=b"OK")
