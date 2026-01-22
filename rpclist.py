@@ -60,8 +60,10 @@ REGEN_MSG = lambda x: f"Re-generating {os.path.basename(x)} ..."
 NOFILE_MSG = lambda x: f"{os.path.basename(x)} not found, generating..."
 
 def _get_gen_file(dirname: str, regen: bool=False) -> str:
-    try: devname = RPC("dev.name", "(string)").value()
-    except RuntimeError: sys.exit(DEV_ERR)
+    try: 
+        devname = RPC("dev.name", "(string)").value()
+    except RuntimeError: 
+        sys.exit(DEV_ERR)
     filepath = os.path.join(dirname, devname + ".rpcs")
     if regen or not os.path.exists(filepath):
         __gen_msg(filepath, regen)

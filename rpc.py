@@ -1,6 +1,6 @@
-from tio import tio_tool 
-DATA_ERR = lambda x: f"unknown data type: {x}"
-RPC_ERR = "rpc call failed"
+import json
+from tio import shell_rpc, daemon_rpc, ProxyError, DaemonError
+DATA_ERR = lambda x: f"Unknown data type: {x}"
 TYPES_DICT = {'f': float, 'u': int, 'i': int, 's': str, ')': None}
 
 class RPC:
@@ -8,13 +8,23 @@ class RPC:
     def __init__(self, name: str, type_ext: str='()'):
         self.name, self.type_ext = name, type_ext
         data_char = type_ext[1] # first char after open paren
-        try: self.data_type = TYPES_DICT[data_char] 
-        except KeyError: raise TypeError(DATA_ERR(data_char))
+        try: 
+            self.data_type = TYPES_DICT[data_char] 
+        except KeyError: 
+            raise TypeError(DATA_ERR(data_char))
 
     def call(self, arg: str | None=None) -> str: 
-        result = tio_tool('rpc', self.name, arg)
-        lines = result.splitlines()
-        return '\n'.join([line for line in lines if line.split()[0] not in {'Unknown', 'OK'}])
+        try:
+            return daemon_rpc(self.name, arg)
+        except ConnectionRefusedError:
+            # TODO: background daemon yourself
+            print("Server not found, try starting it?")
+        except DaemonError:
+            print("Error in daemon loop")
+        except ProxyError:
+            print("Using shell rpc")
+        finally:
+            return shell_rpc(self.name, arg)
 
     def value(self): #-> self.data_type
         word = self.call().split()[1] # second word of first line
