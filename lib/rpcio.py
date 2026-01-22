@@ -1,7 +1,7 @@
 import sys
 from typing import Any, Callable, TypeVar
-from rpc import RPC
-from rpclist import RPCList
+from .rpc import RPC
+from .rpclist import RPCList
 
 '''           ''
     I/O core

@@ -1,5 +1,5 @@
 from typing import Any
-from rpcio import search_input
+from .rpcio import search_input
 ALL_MODES = {'-', '+', '++', '*', '@', '/', '|', 'debug', 'regen'}
 FLAGS = {
         'no-arg': '-',

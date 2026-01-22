@@ -1,5 +1,5 @@
 import json
-from tio import shell_rpc, daemon_rpc, ProxyError, DaemonError
+from .tio import shell_rpc, daemon_rpc, ProxyError, DaemonError
 DATA_ERR = lambda x: f"Unknown data type: {x}"
 TYPES_DICT = {'f': float, 'u': int, 'i': int, 's': str, ')': None}
 
@@ -23,8 +23,8 @@ class RPC:
             print("Error in daemon loop")
         except ProxyError:
             print("Using shell rpc")
-        finally:
-            return shell_rpc(self.name, arg)
+        # only get here if error
+        return shell_rpc(self.name, arg)
 
     def value(self): #-> self.data_type
         word = self.call().split()[1] # second word of first line

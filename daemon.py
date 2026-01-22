@@ -1,19 +1,22 @@
-import os, time, json, socket, threading
+import os, sys, time, json, socket, threading
 from struct import error as StructError
 from inspect import getfullargspec
 from typing import get_args, Callable, TypeVar
-from tio import SOCKET_PATH, PROXY_ERROR
+
+from testdev import TestDevice
+from lib.tio import SOCKET_PATH, PROXY_ERROR
 import twinleaf
 
-class RPCServer():
+class RPCDaemon:
     def __init__(self):
+        self.dev_constructor = twinleaf.Device
         self.get_device()
 
     def get_device(self):
         while True:
             try:
                 print("Looking for device...")
-                self.dev = twinleaf.Device()
+                self.dev = self.dev_constructor()
                 print(f"Got device {self.dev.settings.dev.name().decode()}")
                 return
             except RuntimeError:
@@ -21,7 +24,7 @@ class RPCServer():
                 print("Device not found, trying again in 5s...")
                 time.sleep(5)
 
-    def server_program(self):
+    def server_loop(self):
         if os.path.exists(SOCKET_PATH): os.remove(SOCKET_PATH)
 
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
@@ -63,11 +66,12 @@ class RPCServer():
         # find our rpc from string by traversing the survey tree
         rpc = self.dev.settings
         try:
-            for survey in req_name.split('.'): rpc = getattr(rpc, survey)
-
-            # we should now have a callable twinleaf.rpc
+            for survey in req_name.split('.'): 
+                rpc = getattr(rpc, survey)
             arg = cast_arg(rpc, req_arg) 
-            return str(rpc()) if arg is None else str(rpc(arg))
+            value = rpc() if arg is None else rpc(arg)
+            value = value.decode() if type(value) is bytes else str(value)
+            return value
         except AttributeError as e: # getattr fails on nonexistent RPC
             return "RPC does not exist"
         except (ValueError, StructError) as e: # type conversion error
@@ -75,7 +79,13 @@ class RPCServer():
         except RuntimeError as e: # rpc fails on proxy disconnect
             return PROXY_ERROR
 
-def cast_arg[RT](func: Callable[[RT | None], RT], arg: str | None) -> RT | None:
+class TestDaemon(RPCDaemon):
+    def __init__(self):
+        self.dev_constructor = TestDevice
+        self.get_device()
+
+RT = TypeVar("RT")
+def cast_arg(func: Callable[[RT | None], RT], arg: str | None) -> RT | None:
     # cast arg to the input type of func
     if arg is None: return None
     spec = getfullargspec(func)
@@ -89,7 +99,10 @@ def cast_arg[RT](func: Callable[[RT | None], RT], arg: str | None) -> RT | None:
 
 if __name__ == "__main__":
     try: 
-        server = RPCServer()
-        while True: server.server_program()
+        if len(sys.argv) > 1 and sys.argv[1] == 'test':
+            daemon = TestDaemon()
+        else:
+            daemon = RPCDaemon()
+        while True: daemon.server_loop()
     except (EOFError, KeyboardInterrupt):
         print("Interrupted, exiting")

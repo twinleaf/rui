@@ -1,8 +1,8 @@
 import os, sys, subprocess, random
 from typing import Callable
-from rpc import RPC
-from rpclist import RPCList
-from rpcio import arg_input
+from lib.rpc import RPC
+from lib.rpclist import RPCList
+from lib.rpcio import arg_input
 
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit

@@ -1,9 +1,11 @@
 #!/usr/bin/python
 import os, sys
-from rpc import RPC 
-from rpclist import RPCList, rpclist_from_file
-from rpccli import rpcCLI 
-from rpcio import select_input, arg_input
+from lib.rpc import RPC 
+from lib.rpclist import RPCList
+from lib.rpccli import rpcCLI 
+
+from lib.listfiles import rpclist_from_file
+from lib.rpcio import select_input, arg_input
 from slider import slider
 
 MATCH_ERR = lambda x: f"Couldn't find {x[0] if len(x) == 1 else 'a match'}."
