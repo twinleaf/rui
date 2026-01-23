@@ -2,25 +2,22 @@ from __future__ import annotations
 from typing import Callable
 from difflib import get_close_matches
 from .tio import daemon_shell_rpc
+from .rpctypes import rpc_arg_type, rpc_ret_type
+from .rpctypes import TYPE_NAME, IS_ARG_TYPE, IS_RET_TYPE
 
 class RPC:
-    ''' Interface for an RPC, supporting name, calling, and search; doesn't convert types '''
-    def __init__(self, name: str, arg_type: type):
+    ''' Interface for an RPC, supporting name, calling, type, and search '''
+    def __init__(self, name: str, arg_type: type | None):
+        assert IS_ARG_TYPE(arg_type)
         self.name, self.arg_type = name, arg_type
 
-    def call(self, arg: str | None=None) -> str: 
-        return daemon_shell_rpc(self.name, self.arg_type, arg)
+    def call(self, arg: rpc_arg_type=None) -> rpc_ret_type: 
+        assert IS_ARG_TYPE(arg)
+        ret = daemon_shell_rpc(self.name, self.arg_type, arg)
+        assert IS_RET_TYPE(ret)
+        return ret
 
-    def value(self) -> str:
-        word = self.call().split()[1] # second word of first line
-        if word[0] == '"': word = word[1:]
-        if word[-1] == '"': word = word[:-1]
-        self.cache = word
-        return word
-
-    def __repr__(self): 
-        type_name = '' if self.arg_type == type(None) else self.arg_type.__name__
-        return self.name + '(' + type_name + ')'
+    def __repr__(self): return self.name + '(' + TYPE_NAME(self.arg_type) + ')'
     def __len__(self): return len(self.name)
     def __getitem__(self, key): return self.name[key]
     def __contains__(self, item): return item in self.name
@@ -71,24 +68,3 @@ class RPCList:
     def __contains__(self, item): return item in self.list
     def __plus__(self, other): return RPCList(self.list + other.list)
     def __iadd__(self, other): return RPCList(self.list + other.list)
-
-'''                          ''
-    type processing helpers
-''                          '''
-rpc_arg_type = int | float | None
-TYPE_ERROR = lambda x: f"Unknown data type: {x}"
-TYPES_DICT = {'f': float, 'u': int, 'i': int, 's': type(None), ')': type(None), '': type(None)}
-# TODO: what to do with bytes rpcs
-CHARS_DICT = {float: 'f', int: 'i', bytes: '', str: 's', type(None): ''}
-
-def char_to_type(char: str) -> type:
-    try:
-        return TYPES_DICT[char]
-    except KeyError:
-        raise TypeError(TYPE_ERROR(char))
-
-def type_to_char(t: type) -> str:
-    try:
-        return CHARS_DICT[t]
-    except KeyError:
-        raise TypeError(TYPE_ERROR(t))

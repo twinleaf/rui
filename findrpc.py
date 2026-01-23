@@ -1,9 +1,10 @@
 #!/usr/bin/python
-import os, sys
+import os, sys, socket
 from rpclib.rpc import RPC, RPCList
 from rpclib.rpccli import rpcCLI 
-from rpclib.listfiles import rpclist_from_file
 from rpclib.rpcio import select_input, arg_input
+from rpclib.listfiles import rpclist_from_file
+from rpclib.rpctypes import rpc_arg_type
 from gui import slider
 
 MATCH_ERR = lambda x: f"Couldn't find {x[0] if len(x) == 1 else 'a match'}."
@@ -15,11 +16,11 @@ def find_targets(all_rpcs: RPCList, cli: rpcCLI) -> RPCList:
         sys.exit(1)
     return matched
 
-def print_get_arg(rpc: RPC, cli: rpcCLI) -> int | float | None:
+def print_get_arg(rpc: RPC, cli: rpcCLI) -> rpc_arg_type:
     ''' print current rpc value and ask user for what to change it to if any '''
-    if cli.dash() or rpc.arg_type == type(None): return None 
-    print("Previously:" if cli.rpc_arg is not None else "Currently:", rpc.value())
-    return arg_input(rpc, cli.rpc_arg)
+    if cli.dash() or rpc.arg_type == None: return None 
+    print("Previously:" if cli.default_arg is not None else "Currently:", rpc.call())
+    return arg_input(rpc, cli.default_arg)
 
 def input_call_output(selected_rpcs: RPCList, cli: rpcCLI):
     ''' loop through call list '''
@@ -29,7 +30,7 @@ def input_call_output(selected_rpcs: RPCList, cli: rpcCLI):
         while True:                             # loop for possible + mode
             arg = print_get_arg(rpc, cli)           # ask user for argument to rpc
             output = rpc.call(arg)                  # make call
-            if len(output) > 1: print(output)       # print if not just newline
+            print("Reply:", output)                 # print current value
             if cli.plus(): continue                 # keep looping if + mode
             else: break
         print()                                 # spacer

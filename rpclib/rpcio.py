@@ -1,6 +1,8 @@
 import sys
 from typing import TypeVar, Callable
 from .rpc import RPC, RPCList
+from .rpctypes import rpc_arg_type
+# TODO: this file is deeply evil, split it up
 
 '''           ''
     I/O core
@@ -28,6 +30,7 @@ def __select_rpcs(rpcs: RPCList, selection: str, match_any: bool=False) -> RPCLi
     else:
         return rpcs.pick([int(s)-1 for s in selection.split()])
 
+# TODO: make sure NoneType arg rpcs never get here
 ARG_PROMPT = "Enter argument: "
 ARG_ERR = lambda r: f"Invalid. Argument should be of {str(r.arg_type)[1:-1]}.\n"
 ARG_TEST = lambda r: lambda x: r.arg_type(x) if x not in {'-', ''} else None
@@ -58,5 +61,5 @@ def select_input(rpclist: RPCList, star: bool=False, slash: bool=False) -> RPCLi
     if rpclist.lonely() or star: return rpclist
     else: return valid_input(SELECT_PROMPT, SELECT_ERR(rpclist), SELECT_TEST(rpclist, slash))
 
-def arg_input(rpc: RPC, default=None) -> int | float | None:
+def arg_input(rpc: RPC, default=None) -> rpc_arg_type:
     return valid_input(ARG_PROMPT, ARG_ERR(rpc), ARG_TEST(rpc), default=default)

@@ -1,8 +1,9 @@
 # TODO: Better float display 
-# TODO: if we have the speed, fetch value at intervals i/s/o every call
+# TODO: if we have the speed, fetch value at intervals i/s/o every call (value cache)
 import os, sys, subprocess, random
 from typing import Callable
 from rpclib.rpc import RPC, RPCList
+from rpclib.rpctypes import rpc_arg_type, rpc_ret_type
 
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit
@@ -39,10 +40,10 @@ class MainWindow(QWidget):
         self.setMinimumWidth(500)
 
         for rpc in rpcs:
-            try: min_val = rpc.arg_type(RPC(rpc.name+'.min', rpc.arg_type).value())
+            try: min_val = RPC(rpc.name+'.min', rpc.arg_type).call()
             except RuntimeError: min_val = 0
-            try: max_val = rpc.arg_type(RPC(rpc.name+'.max', rpc.arg_type).value())
-            except RuntimeError: max_val = rpc.value()
+            try: max_val = RPC(rpc.name+'.max', rpc.arg_type).call()
+            except RuntimeError: max_val = rpc.call()
 
             display = RPCDisplay(rpc, min_val, max_val)
             layout.addLayout(display.label_container)
@@ -50,8 +51,9 @@ class MainWindow(QWidget):
             layout.addStretch()
 
 class RPCDisplay():
-    def __init__(self, rpc: RPC, min_val: float | int, max_val: float | int):
+    def __init__(self, rpc: RPC, min_val: rpc_ret_type, max_val: rpc_ret_type):
         self.rpc = rpc
+        assert self.rpc.arg_type in {int, float}
         self.scale = 100 if rpc.arg_type == float else 1
         self.__get_value()
 
@@ -88,7 +90,7 @@ class RPCDisplay():
         edit.returnPressed.connect(lambda: edit_func(self.__scale(edit.text())))
         return edit
 
-    def make_slider(self, min_val: float | int, max_val: float | int) -> QSlider:
+    def make_slider(self, min_val: rpc_ret_type, max_val: rpc_ret_type) -> QSlider:
         self.updating = False
         slider = QSlider(Qt.Orientation.Horizontal)
         slider.setRange(self.__scale(min_val), self.__scale(max_val))
@@ -110,18 +112,16 @@ class RPCDisplay():
             self.updating = False
 
     def __get_value(self): 
-        self.value = self.rpc.value()
+        self.value = self.rpc.call()
         self.value_scaled = self.__scale(self.value)
     def __result_display(self): return f"Current value: {self.value}"
     def __qfont(self, size: int=14): return QFont('Ubuntu', size)
-    def __scale(self, val: float | int | str) -> int:
-        if self.rpc.arg_type not in {float, int}:
-            raise TypeError('Argument type for slider must be numeric')
+    def __scale(self, val: rpc_ret_type ) -> int:
+        assert self.rpc.arg_type in {int, float}
         return int(self.rpc.arg_type(val) * self.scale)
-    def __descale(self, val: int) -> str:
-        if self.rpc.arg_type not in {float, int}:
-            raise TypeError('Argument type for slider must be numeric')
-        return str(self.rpc.arg_type(val / self.scale))
+    def __descale(self, val: int) -> rpc_arg_type:
+        assert self.rpc.arg_type in {int, float}
+        return self.rpc.arg_type(val / self.scale)
 
 def _generate_qss() -> str:
     return f"""

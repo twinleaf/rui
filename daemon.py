@@ -7,7 +7,8 @@ import twinleaf
 
 from rpclib.tio import SOCKET_PATH, PROXY_ERROR
 from rpclib.tio import RPC_DNE_ERROR, RPC_TYPE_ERROR
-from rpclib.rpc import char_to_type, type_to_char
+from rpclib.rpctypes import rpc_arg_type, rpc_ret_type
+from rpclib.rpctypes import TYPES_DICT, TYPE_NAME, TYPE_CAST, IS_ARG_TYPE
 
 class RPCDaemon:
     '''Handles starting daemon, twinleaf.Device, & receiving client requests'''
@@ -71,8 +72,8 @@ class TestDaemon(RPCDaemon):
 '''                    ''
      daemon methods
 ''                    '''
-def process_request(dev, req: dict[str, str]) -> str:
-    ''' server receives request from client, calls it, and replies with value '''
+def process_request(dev, req: dict[str, str | rpc_arg_type ]) -> rpc_ret_type:
+    ''' receives request from client tio.send_request, calls it, and replies with value '''
     # first check that we can do anything
     if not dev: return PROXY_ERROR
     # TODO: handle request errors & document error handling between daemon & client
@@ -82,11 +83,22 @@ def process_request(dev, req: dict[str, str]) -> str:
             return process_rpc(dev, req)
         case 'list':
             return process_rpc_list(dev)
+        case 'itl':
+            def toJSON(dev):
+                return json.dumps(
+                    dev,
+                    default=lambda o: o.__dict__, 
+                    sort_keys=True,
+                    indent=4)
+            return toJSON(dev)
         case _:
             return "Unknown request: " + str(req)
 
-def process_rpc(dev, req: dict[str, str]) -> str:
-    req_name, req_type_char, req_arg = req['name'], req['type_char'], req['arg']
+def process_rpc(dev, req: dict[str, str | rpc_arg_type]) -> rpc_ret_type:
+    req_name, req_type_name, req_arg = req['name'], req['type'], req['arg']
+    assert type(req_name) is str
+    assert type(req_type_name) is str
+    assert IS_ARG_TYPE(req_arg)
 
     # find our rpc from string by traversing the survey tree
     rpc = dev.settings
@@ -99,24 +111,26 @@ def process_rpc(dev, req: dict[str, str]) -> str:
 
     # call rpc with type conversion
     try:
-        req_type = char_to_type(req_type_char)
-        arg = None if req_type is type(None) or arg is None else req_type(arg)
+        req_type = TYPES_DICT[req_type_name]
+        arg = TYPE_CAST(req_arg, req_type)
         value = rpc() if arg is None else rpc(arg)
-        return str(value) if type(value) is not bytes else value.decode()
+        value = TYPE_CAST(value, str)
+        assert value is not None
+        return value
     except RuntimeError as e: 
         # rpc fails on proxy disconnect
         return PROXY_ERROR
 
 def process_rpc_list(dev) -> str:
     names, nodes = member_dfs(dev.settings, "", lambda x: "urvey" not in str(type(x)))
-    types = [type_to_char(get_arg_type(node)) for node in nodes]
+    types = [TYPE_NAME(get_arg_type(node)) for node in nodes]
     return '\n'.join([n + '(' + t + ')' for n, t in zip(names, types)])
 
 '''                 ''
     daemon helpers
 ''                 '''
 
-def get_arg_type(func: Callable) -> type:
+def get_arg_type(func: Callable) -> type | None:
     # we don't care about return type
     try:
         sig = signature(func)
@@ -125,8 +139,9 @@ def get_arg_type(func: Callable) -> type:
         # remove union
         if arg_type == int | None: arg_type = int
         if arg_type == float | None: arg_type = float
+        if arg_type == bytes: raise NotImplementedError("Don't know what to do with bytes yet")
     except KeyError:
-        arg_type = type(None)
+        arg_type = None
 
     return arg_type
 

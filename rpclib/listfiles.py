@@ -1,6 +1,7 @@
 import os, sys
-from .rpc import RPC, RPCList, char_to_type
+from .rpc import RPC, RPCList
 from .tio import daemon_shell_list
+from .rpctypes import TYPES_DICT
 
 '''                             ''
     ~/.rpc-lists r/w interface
@@ -22,15 +23,15 @@ def __line_to_rpc(rpc_list_line: str) -> RPC:
     close_index = rpc_list_line.index(')')
 
     name = rpc_list_line[:open_index]
-    ext = rpc_list_line[open_index:]
-    arg_type = char_to_type(ext[1])
+    arg_type = TYPES_DICT[rpc_list_line[open_index+1]]
     return RPC(name, arg_type)
 
 # TODO: figure out these runtime errors
 def __get_gen_file(dirname: str, regen: bool=False) -> str:
     # get name of file to write to
     try: 
-        devname = RPC("dev.name", type(None)).value()
+        devname = RPC("dev.name", None).call()
+        assert type(devname) is str
     except RuntimeError: 
         sys.exit(DEV_ERR)
     filepath = os.path.join(dirname, devname + ".rpcs")

@@ -1,4 +1,5 @@
 from .rpcio import search_input
+from .rpctypes import rpc_arg_type
 ALL_MODES = {'-', '+', '++', '*', '@', '/', '|', 'debug', 'regen'}
 FLAGS = {
         'no-arg': '-',
@@ -16,19 +17,18 @@ class rpcCLI:
     '''Interface to parse and store command line input to findrpc'''
     def __init__(self, argv: list[str]):
         self.search_terms:  list[str] = []      # list of search terms
-        self.rpc_arg: float | int | None = None  # argument to call rpc with, should be numeric
+        self.default_arg:   rpc_arg_type = None # argument to call rpc with, should be numeric
         self.modes:         set[str]  = set()   # set of options from ALL_MODES
         self.__parse_args(argv)
     
     def __parse_args(self, argv: list[str]):
-        # TODO: try calling int rpc with float arg
         for arg in argv:
             if arg in ALL_MODES: 
                 self.add_mode(arg)
             elif arg[:2] == '--' and arg[2:] in FLAGS:
                 self.add_mode(FLAGS[arg])
             else: 
-                try: self.rpc_arg = float(arg) if '.' in arg else int(arg)
+                try: self.default_arg = float(arg) if '.' in arg else int(arg)
                 except ValueError: self.search_terms.append(arg)
 
     def terms(self) -> list[str]: 
