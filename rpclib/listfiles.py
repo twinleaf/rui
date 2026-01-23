@@ -1,7 +1,7 @@
 import os, sys
 from .rpc import RPC, RPCList
-from .tio import daemon_shell_list
 from .rpctypes import TYPES_DICT
+from .tio import send_request
 
 '''                             ''
     ~/.rpc-lists r/w interface
@@ -23,7 +23,8 @@ def __line_to_rpc(rpc_list_line: str) -> RPC:
     close_index = rpc_list_line.index(')')
 
     name = rpc_list_line[:open_index]
-    arg_type = TYPES_DICT[rpc_list_line[open_index+1]]
+    type_name = rpc_list_line[open_index+1:close_index]
+    arg_type = TYPES_DICT[type_name]
     return RPC(name, arg_type)
 
 # TODO: figure out these runtime errors
@@ -40,12 +41,13 @@ def __get_gen_file(dirname: str, regen: bool=False) -> str:
     if regen or not os.path.exists(filepath):
         print(REGEN_MSG(filepath) if regen else NOFILE_MSG(filepath))
         try: 
-            rpc_list: list[str] = daemon_shell_list()
+            daemon_list = send_request({'op': 'list'})
+            assert type(daemon_list) is str
         except RuntimeError: 
             sys.exit(RPCLIST_ERR)
 
         with open(filepath, 'w') as f: 
-            f.write('\n'.join(rpc_list))
+            f.write(daemon_list+'\n')
 
     # return where to get what we just wrote
     return filepath

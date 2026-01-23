@@ -47,7 +47,7 @@ class RPCDaemon:
             try:
                 while True:
                     # receive, process, and reply
-                    request = json.loads(client.recv(4096).decode())
+                    request = json.loads(client.recv(8192).decode())
                     reply = process_request(self.dev, request)
                     client.sendall( json.dumps({"rep": reply}).encode() )
 
@@ -139,14 +139,15 @@ def get_arg_type(func: Callable) -> type | None:
         # remove union
         if arg_type == int | None: arg_type = int
         if arg_type == float | None: arg_type = float
-        if arg_type == bytes: raise NotImplementedError("Don't know what to do with bytes yet")
+        if arg_type == type(None): arg_type = None # Not using NoneType
+        #if arg_type == bytes: raise NotImplementedError("Don't know what to do with bytes yet")
     except KeyError:
         arg_type = None
 
     return arg_type
 
 PT, LT = TypeVar("PT"), TypeVar("LT")
-def member_dfs[PT, LT](parent: PT, path: str,
+def member_dfs[PT, LT](parent: PT | LT, path: str,
                is_leaf: Callable[[PT | LT], bool]
                ) -> tuple[list[str], list[LT]]:
     ret_names, ret_nodes = [], []
@@ -155,11 +156,12 @@ def member_dfs[PT, LT](parent: PT, path: str,
         if is_leaf(node):
             ret_names += [path + '.' + name]
             ret_nodes += [node]
-        else:
-            new_path = name if path == '' else path + '.' + name
-            new_names, new_nodes = member_dfs(node, new_path, is_leaf)
-            ret_names += new_names
-            ret_nodes += new_nodes
+
+        # rpcs can also have children
+        new_path = name if path == '' else path + '.' + name
+        new_names, new_nodes = member_dfs(node, new_path, is_leaf)
+        ret_names += new_names
+        ret_nodes += new_nodes
     return ret_names, ret_nodes
 
 # TODO: move execution of daemon into separate script

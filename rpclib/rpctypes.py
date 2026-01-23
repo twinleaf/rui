@@ -16,11 +16,10 @@ def IS_RET_TYPE(x: Any):
     return t in {int, float, str}
 
 # TODO: add typeerrors to people who use this, or wrap this in typeerror handler
-TYPES_DICT = {'f': float, 'i': int,
-              'u': int,  # unsigned ints from shell list
-              's': None, # string in shell list means None -> str
-              ')': None, # () in shell list means None -> None
-              'N': None  # for python list, None.__name__
+TYPES_DICT = {'float': float, 'int': int,
+              'bytes': None, # bytes will be None for now as well
+              'str': None, # string in shell list means None -> str
+              '':  None  # () as well
              }
 
 def TYPE_NAME(t: type | None) -> str:
