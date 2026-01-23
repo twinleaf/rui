@@ -1,6 +1,6 @@
 # TODO: actually write tests
 
-def call_test_rpc(rpc, arg: str | float | None): # -> rpc._ret_type
+def call_test_rpc(rpc, arg: int | float | None) -> int | float | None:
     if arg is None: 
         return rpc._value
     elif arg == 444: # simulate errors

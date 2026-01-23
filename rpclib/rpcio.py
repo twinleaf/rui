@@ -58,5 +58,5 @@ def select_input(rpclist: RPCList, star: bool=False, slash: bool=False) -> RPCLi
     if rpclist.lonely() or star: return rpclist
     else: return valid_input(SELECT_PROMPT, SELECT_ERR(rpclist), SELECT_TEST(rpclist, slash))
 
-def arg_input(rpc: RPC, default=None): # -> rpc.arg_type
+def arg_input(rpc: RPC, default=None) -> int | float | None:
     return valid_input(ARG_PROMPT, ARG_ERR(rpc), ARG_TEST(rpc), default=default)

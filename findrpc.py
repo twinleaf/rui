@@ -15,7 +15,7 @@ def find_targets(all_rpcs: RPCList, cli: rpcCLI) -> RPCList:
         sys.exit(1)
     return matched
 
-def print_get_arg(rpc: RPC, cli: rpcCLI): # -> rpc.arg_type
+def print_get_arg(rpc: RPC, cli: rpcCLI) -> int | float | None:
     ''' print current rpc value and ask user for what to change it to if any '''
     if cli.dash() or rpc.arg_type == type(None): return None 
     print("Previously:" if cli.rpc_arg is not None else "Currently:", rpc.value())

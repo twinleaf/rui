@@ -1,6 +1,5 @@
 import os, sys, subprocess
-from typing import Callable, TypeVar
-from struct import error as StructError
+from typing import Callable, TypeVar, Any
 
 '''                          ''
     choose daemon or shell
@@ -105,9 +104,10 @@ def daemon_rpc_list() -> list[str]:
 '''                          ''
     type processing helpers
 ''                          '''
+rpc_arg_type = int | float | None
 TYPE_ERROR = lambda x: f"Unknown data type: {x}"
 TYPES_DICT = {'f': float, 'u': int, 'i': int, 's': type(None), ')': type(None), '': type(None)}
-# TODO: skip bytes rpcs
+# TODO: what to do with bytes rpcs
 CHARS_DICT = {float: 'f', int: 'i', bytes: '', str: 's', type(None): ''}
 
 def char_to_type(char: str) -> type:
@@ -121,10 +121,3 @@ def type_to_char(t: type) -> str:
         return CHARS_DICT[t]
     except KeyError:
         raise TypeError(TYPE_ERROR(t))
-
-def char_to_typecast(char: str): # -> Callable[[Any], t | None]:
-    t = char_to_type(char)
-    if t is None: 
-        return lambda x: None
-    else:
-        return lambda x: t(x) if x is not None else None

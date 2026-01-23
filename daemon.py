@@ -6,7 +6,7 @@ from typing import Callable, TypeVar
 import twinleaf
 
 from rpclib.tio import SOCKET_PATH, PROXY_ERROR
-from rpclib.tio import char_to_typecast, type_to_char
+from rpclib.tio import char_to_type, type_to_char
 from rpclib.tio import RPC_DNE_ERROR, RPC_TYPE_ERROR
 
 class RPCDaemon:
@@ -78,14 +78,14 @@ def process_request(dev, req: dict[str, str]) -> str:
     # first check that we can do anything
     if not dev: return PROXY_ERROR
     # TODO: handle request errors & document error handling between daemon & client
-    elif 'op' not in req: return "Malformed request: " + req
+    elif 'op' not in req: return "Malformed request: " + str(req)
     match req['op']:
         case 'rpc':
             return process_rpc(dev, req)
         case 'list':
             return process_rpc_list(dev)
         case _:
-            return "Unknown request: " + req
+            return "Unknown request: " + str(req)
 
 def process_rpc(dev, req: dict[str, str]) -> str:
     req_name, req_type_char, req_arg = req['name'], req['type_char'], req['arg']
@@ -101,13 +101,10 @@ def process_rpc(dev, req: dict[str, str]) -> str:
 
     # call rpc with type conversion
     try:
-        arg = char_to_typecast(req_type_char)(req_arg)
+        req_type = char_to_type(req_type_char)
+        arg = None if req_type is type(None) or arg is None else req_type(arg)
         value = rpc() if arg is None else rpc(arg)
         return str(value) if type(value) is not bytes else value.decode()
-    # TODO: see if this actually happens
-    except (ValueError, StructError) as e: 
-        # type conversion error
-        return RPC_TYPE_ERROR
     except RuntimeError as e: 
         # rpc fails on proxy disconnect
         return PROXY_ERROR
@@ -162,4 +159,3 @@ if __name__ == "__main__":
         while True: daemon.server_loop()
     except (EOFError, KeyboardInterrupt):
         print("Interrupted, exiting")
-

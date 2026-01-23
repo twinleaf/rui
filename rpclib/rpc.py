@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Callable
 from difflib import get_close_matches
 from .tio import daemon_shell_rpc
@@ -29,12 +30,12 @@ class RPCList:
     def __init__(self, rpcs: list[RPC]=[]):
         self.list = rpcs
 
-    def filter(self, cond: Callable[[str], bool]): # -> RPCList
+    def filter(self, cond: Callable[[str], bool]) -> RPCList:
         return RPCList([rpc for rpc in self if cond(rpc.name)])
-    def pick(self, indices: list[int]): # -> RPCList
+    def pick(self, indices: list[int]) -> RPCList:
         return RPCList([self[i] for i in indices])
 
-    def search(self, terms: list[str], match_any: bool): # -> RPCList
+    def search(self, terms: list[str], match_any: bool) -> RPCList:
         selector = any if match_any else all
         sieve = lambda x: selector(fuzzy_match(term, x) for term in terms)
         return self.filter(sieve)
