@@ -1,6 +1,6 @@
 import os, sys
-from .rpc import RPC, RPCList
-from .tio import daemon_shell_list, char_to_type
+from .rpc import RPC, RPCList, char_to_type
+from .tio import daemon_shell_list
 
 '''                             ''
     ~/.rpc-lists r/w interface

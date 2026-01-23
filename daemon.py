@@ -6,8 +6,8 @@ from typing import Callable, TypeVar
 import twinleaf
 
 from rpclib.tio import SOCKET_PATH, PROXY_ERROR
-from rpclib.tio import char_to_type, type_to_char
 from rpclib.tio import RPC_DNE_ERROR, RPC_TYPE_ERROR
+from rpclib.rpc import char_to_type, type_to_char
 
 class RPCDaemon:
     '''Handles starting daemon, twinleaf.Device, & receiving client requests'''
@@ -42,7 +42,6 @@ class RPCDaemon:
                 client_thread.start()
 
     def handle_client(self, client: socket.socket):
-        print("Got new client")
         with client:
             try:
                 while True:
@@ -60,8 +59,7 @@ class RPCDaemon:
             # bad request, this client is dead
             # TODO: what to do about ConnectionResetError?
             except json.decoder.JSONDecodeError:
-                print("Client finished, waiting on new client")
-                print()
+                return
 
 from testdev import TestDevice
 class TestDaemon(RPCDaemon):

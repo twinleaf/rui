@@ -37,7 +37,7 @@ class RPCList:
 
     def search(self, terms: list[str], match_any: bool) -> RPCList:
         selector = any if match_any else all
-        sieve = lambda x: selector(fuzzy_match(term, x) for term in terms)
+        sieve = lambda x: selector(self.fuzzy_match(term, x) for term in terms)
         return self.filter(sieve)
 
     def print(self):
@@ -47,6 +47,19 @@ class RPCList:
             for i in range(len(self)): 
                 print(f"{i+1}.", self[i])
             print() #spacer
+
+    def fuzzy_match(self, search_for: str, search_in: str) -> bool:
+        if search_for[0] == '/': search_for = search_for[1:] # ignore /
+        if search_for[0] == '@': return search_for[1:] in search_in
+        if search_for[0] == '.': return search_for in search_in
+
+        st = search_for.replace('.', '..')  # be less forgiving with matching dots
+        name = search_in.replace('.', '..')
+        substrings = [name[i:i+len(st)] for i in range(len(name)-len(st)+1)]
+
+        chars_per_mistake = 4 # match 'ferq' to 'freq' but not 'fer' to 'fre'
+        cutoff = 1 - 1/chars_per_mistake # 0.75
+        return get_close_matches(st, substrings, cutoff=cutoff) != []
 
     def empty(self): return len(self) == 0
     def lonely(self): return len(self) <= 1
@@ -59,15 +72,23 @@ class RPCList:
     def __plus__(self, other): return RPCList(self.list + other.list)
     def __iadd__(self, other): return RPCList(self.list + other.list)
 
-def fuzzy_match(search_for: str, search_in: str) -> bool:
-    if search_for[0] == '/': search_for = search_for[1:] # ignore /
-    if search_for[0] == '@': return search_for[1:] in search_in
-    if search_for[0] == '.': return search_for in search_in
+'''                          ''
+    type processing helpers
+''                          '''
+rpc_arg_type = int | float | None
+TYPE_ERROR = lambda x: f"Unknown data type: {x}"
+TYPES_DICT = {'f': float, 'u': int, 'i': int, 's': type(None), ')': type(None), '': type(None)}
+# TODO: what to do with bytes rpcs
+CHARS_DICT = {float: 'f', int: 'i', bytes: '', str: 's', type(None): ''}
 
-    st = search_for.replace('.', '..')  # be less forgiving with matching dots
-    name = search_in.replace('.', '..')
-    substrings = [name[i:i+len(st)] for i in range(len(name)-len(st)+1)]
+def char_to_type(char: str) -> type:
+    try:
+        return TYPES_DICT[char]
+    except KeyError:
+        raise TypeError(TYPE_ERROR(char))
 
-    chars_per_mistake = 4 # match 'ferq' to 'freq' but not 'fer' to 'fre'
-    cutoff = 1 - 1/chars_per_mistake # 0.75
-    return get_close_matches(st, substrings, cutoff=cutoff) != []
+def type_to_char(t: type) -> str:
+    try:
+        return CHARS_DICT[t]
+    except KeyError:
+        raise TypeError(TYPE_ERROR(t))

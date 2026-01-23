@@ -100,24 +100,3 @@ def daemon_rpc(name: str, type_char: str, arg: str | None) -> str:
 def daemon_rpc_list() -> list[str]:
     value = send_request({'op': 'list'})
     return value.splitlines()
-
-'''                          ''
-    type processing helpers
-''                          '''
-rpc_arg_type = int | float | None
-TYPE_ERROR = lambda x: f"Unknown data type: {x}"
-TYPES_DICT = {'f': float, 'u': int, 'i': int, 's': type(None), ')': type(None), '': type(None)}
-# TODO: what to do with bytes rpcs
-CHARS_DICT = {float: 'f', int: 'i', bytes: '', str: 's', type(None): ''}
-
-def char_to_type(char: str) -> type:
-    try:
-        return TYPES_DICT[char] 
-    except KeyError: 
-        raise TypeError(TYPE_ERROR(char))
-
-def type_to_char(t: type) -> str:
-    try:
-        return CHARS_DICT[t]
-    except KeyError:
-        raise TypeError(TYPE_ERROR(t))
