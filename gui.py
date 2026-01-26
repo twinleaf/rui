@@ -1,4 +1,3 @@
-# TODO: Better float display 
 # TODO: if we have the speed, fetch value at intervals i/s/o every call (value cache)
 import os, sys, subprocess, random
 from typing import Callable

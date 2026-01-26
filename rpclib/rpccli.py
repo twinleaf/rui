@@ -1,5 +1,8 @@
-from .rpcio import search_input
+import sys
+from typing import TypeVar, Callable
+from .rpc import RPC, RPCList
 from .rpctypes import rpc_arg_type
+
 ALL_MODES = {'-', '+', '++', '*', '@', '/', '|', 'debug', 'regen'}
 FLAGS = {
         'no-arg': '-',
@@ -32,7 +35,9 @@ class rpcCLI:
                 except ValueError: self.search_terms.append(arg)
 
     def terms(self) -> list[str]: 
-        terms = search_input(self.search_terms)
+        terms = valid_input("Enter search terms: ", "", # no error message
+                            lambda t: list(t) if type(t) is list and t[0] else t.split(),
+                            default=self.search_terms)
         if self.exact(): terms = ['@' + term for term in terms]
         self.search_terms = terms
         return terms
@@ -47,3 +52,25 @@ class rpcCLI:
     def exact(self) -> bool: return '@' in self.modes # exact instead of fuzzy match
     def regen(self) -> bool: return 'regen' in self.modes # regenerate rpc-list file
     def debug(self) -> bool: return 'debug' in self.modes # debug options
+
+'''           ''
+    I/O core
+''           '''
+
+def __input(msg: str, default=None):
+    if default is not None: return default
+    try:
+        i = input(msg)
+        if i == "quit" or i == "exit": sys.exit(0)
+        return i
+    except (EOFError, KeyboardInterrupt):
+        print("\nInterrupted, exiting")
+        sys.exit(2)
+
+RT = TypeVar('RT')
+def valid_input(input_msg: str, error_msg: str,
+                test: Callable[[str], RT], default=None) -> RT:
+    try: return test(__input(input_msg, default))
+    except (ValueError, IndexError):
+        print(error_msg, end='')
+        return valid_input(input_msg, error_msg, test) # recurse until they get it right
