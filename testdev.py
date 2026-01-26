@@ -49,5 +49,10 @@ class TestDevice:
         self.settings._add_rpc("dev.name", type(None), str, value=b"TEST")
         self.settings._add_rpc("mode.autostart", int, int)
         self.settings._add_rpc("pump.lock.control.Kp", float, float)
+        self.settings._add_rpc("pump.lock.control.Ki", float, float)
+        self.settings._add_rpc("pump.lock.control.Ki", float, float)
         self.settings._add_rpc("pump.therm.control.autotune.start", 
                                type(None), type(None), value=b"OK")
+        self.settings._add_rpc("signal.capture.size", type(None), int, value=8)
+        self.settings._add_rpc("signal.capture.trigger", type(None), type(None), value=8)
+        self.settings._add_rpc("signal.capture.block", type(None), bytes, value=8)

@@ -7,14 +7,19 @@ from .tio import send_request
     ~/.rpc-lists r/w interface
 ''                             '''
 
-DEV_ERR = "Device not found"
-RPCLIST_ERR = "tio-tool rpc-list failed"
+class DeviceError(Exception): pass
+class DaemonListError(Exception): pass
 REGEN_MSG = lambda x: f"Re-generating {os.path.basename(x)} ..."
 NOFILE_MSG = lambda x: f"{os.path.basename(x)} not found, generating..."
 
 def rpclist_from_file(dirname: str, regen: bool=False) -> RPCList:
     os.makedirs(dirname, exist_ok=True)
-    filepath = __get_gen_file(dirname, regen)
+    try:
+        filepath = __get_gen_file(dirname, regen)
+    except DeviceError:
+        sys.exit("Device not found, exiting")
+    except DaemonListError:
+        sys.exit("Daemon failed to generate list, exiting")
     with open(filepath, 'r') as f:
         return RPCList([__line_to_rpc(line) for line in f.readlines()])
 
@@ -27,14 +32,13 @@ def __line_to_rpc(rpc_list_line: str) -> RPC:
     arg_type = TYPES_DICT[type_name]
     return RPC(name, arg_type)
 
-# TODO: figure out these runtime errors
 def __get_gen_file(dirname: str, regen: bool=False) -> str:
     # get name of file to write to
     try: 
         devname = RPC("dev.name", None).call()
         assert type(devname) is str
     except RuntimeError: 
-        sys.exit(DEV_ERR)
+        raise DeviceError
     filepath = os.path.join(dirname, devname + ".rpcs")
 
     # regenerate if necessary
@@ -44,7 +48,7 @@ def __get_gen_file(dirname: str, regen: bool=False) -> str:
             daemon_list = send_request({'op': 'list'})
             assert type(daemon_list) is str
         except RuntimeError: 
-            sys.exit(RPCLIST_ERR)
+            raise DaemonListError
 
         with open(filepath, 'w') as f: 
             f.write(daemon_list+'\n')

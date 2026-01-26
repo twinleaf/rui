@@ -8,7 +8,7 @@ import twinleaf
 from rpclib.tio import SOCKET_PATH, PROXY_ERROR
 from rpclib.tio import RPC_DNE_ERROR, RPC_TYPE_ERROR
 from rpclib.rpctypes import rpc_arg_type, rpc_ret_type
-from rpclib.rpctypes import TYPES_DICT, TYPE_NAME, TYPE_CAST, IS_ARG_TYPE
+from rpclib.rpctypes import NAME_TO_TYPE, TYPE_NAME, TYPE_CAST, IS_ARG_TYPE
 
 class RPCDaemon:
     '''Handles starting daemon, twinleaf.Device, & receiving client requests'''
@@ -57,9 +57,11 @@ class RPCDaemon:
                         reinit_thread = threading.Thread(target=self.get_device, args=())
                         reinit_thread.start()
 
-            # bad request, this client is dead
-            # TODO: what to do about ConnectionResetError?
+            except ConnectionResetError:
+                print("Client's recv not big enough for server request, failed")
+                return
             except json.decoder.JSONDecodeError:
+                # couldn't receive anything, we're done
                 return
 
 from testdev import TestDevice
@@ -111,13 +113,15 @@ def process_rpc(dev, req: dict[str, str | rpc_arg_type]) -> rpc_ret_type:
 
     # call rpc with type conversion
     try:
-        req_type = TYPES_DICT[req_type_name]
+        req_type = NAME_TO_TYPE(req_type_name)
         arg = TYPE_CAST(req_arg, req_type)
         value = rpc() if arg is None else rpc(arg)
         value = TYPE_CAST(value, str)
         assert value is not None
         return value
-    except RuntimeError as e: 
+    except TypeError:
+        return RPC_TYPE_ERROR
+    except RuntimeError:
         # rpc fails on proxy disconnect
         return PROXY_ERROR
 

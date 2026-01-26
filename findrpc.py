@@ -12,6 +12,8 @@ from gui import slider
 def find_and_select(full_list: RPCList, cli: rpcCLI) -> RPCList:
     ''' search through rpcs and select call list '''
     matched   = _find_targets(full_list, cli)
+    if matched.empty():
+        sys.exit(f"Couldn't find {cli.terms()[0] if len(cli.terms()) == 1 else 'a match'}.")
     selected  = _select_input(matched, cli.star(), cli.slash())
     return selected
 
@@ -71,9 +73,6 @@ def _select_input(rpclist: RPCList, star: bool=False, slash: bool=False) -> RPCL
 def _find_targets(all_rpcs: RPCList, cli: rpcCLI) -> RPCList:
     ''' fuzzy search all_rpcs for cli.terms or input and update all_rpcs '''
     matched = all_rpcs.search(cli.terms(), cli.any())
-    if matched.empty():
-        print(f"Couldn't find {cli.terms()[0] if len(cli.terms()) == 1 else 'a match'}.")
-        sys.exit(1)
     return matched
 
 def _print_get_arg(rpc: RPC, cli: rpcCLI) -> rpc_arg_type:
