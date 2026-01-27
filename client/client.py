@@ -5,89 +5,108 @@ from rpclib.listfiles import rpclist_from_file
 from rpclib.rpctypes import rpc_arg_type
 from .gui import slider
 
-'''               ''
-    main script 
-''               '''
-def find_and_select(full_list: RPCList, cli: rpcCLI) -> RPCList:
-    ''' search through rpcs and select call list '''
-    matched   = _find_targets(full_list, cli)
-    if matched.empty():
-        sys.exit(f"Couldn't find {cli.terms()[0] if len(cli.terms()) == 1 else 'a match'}.")
-    selected  = _select_input(matched, cli.star(), cli.slash())
-    return selected
+def select_input(rpclist: RPCList, star: bool=False, match_any: bool=False) -> RPCList:
+    ''' recursive loop to select a full call list of rpcs '''
 
-def input_call_output(selected_rpcs: RPCList, cli: rpcCLI):
-    ''' loop through call list '''
-    if cli.slider(): 
+    # print here so we print every slash search
+    rpclist.print()
+
+    # sometimes we can just return what we have
+    if rpclist.lonely() or star: return rpclist
+
+    # otherwise do input loop
+    else: return valid_input("Select rpc, or /[search] to keep searching: ",
+                             f"Invalid. Select a number from 1 to {len(rpclist)}.\n",
+                             lambda x: select_rpcs(rpclist, x, match_any))
+
+def select_rpcs(rpcs: RPCList, selection: str, match_any: bool=False) -> RPCList:
+    ''' helper for recursive _select_input function'''
+
+    if selection == '\\':   # slash search base case, empty list
+        return RPCList()
+    if selection[0] == '/': # recursive case, go back to _select_input with narrowed search
+        return _select_input(rpcs.search(selection.split(), match_any))
+
+    if selection == '*':    # star mode - no recusion, select everything
+        return rpcs.pick([i for i in range(len(rpcs))])
+    else:                   # no modes, just select by numbers
+        return rpcs.pick([int(s)-1 for s in selection.split()])
+
+def print_get_arg(rpc: RPC, cli: rpcCLI) -> rpc_arg_type:
+    ''' print current rpc value and ask user for what to change it to if any '''
+
+    # if we can't set a value, we don't need this function
+    if cli.dash() or rpc.arg_type == None: return None
+
+    # print current value, we use Previously if the cli already has a new value in mind
+    print("Previously:" if cli.default_arg is not None else "Currently:", rpc.call())
+
+    # try cli's value if it exists, otherwise input loop to match rpc.arg_type
+    return valid_input("Enter argument: ",
+                       f"Invalid. Argument should be of {str(rpc.arg_type)[1:-1]}.\n",
+                       lambda x: rpc.arg_type(x) if x not in {'-', ''} else None,
+                       default=cli.default_arg)
+
+'''               ''
+    main script
+''               '''
+
+MATCH_ERR = lambda terms: f"Couldn't find {terms[0] if len(terms)==1 else 'a match'}."
+
+def main():
+    ''' load list '''
+    # first get our arguments
+    cli_args    = sys.argv[1:]
+    cli         = rpcCLI(cli_args)
+
+    # load from our list directory, fetching dev.name() to know what list to load
+    dirname     = os.path.expanduser("~/.rpc-lists/")
+    full_list   = rpclist_from_file(dirname, cli.regen())
+    selected = RPCList()
+
+    ''' search & select loop '''
+    while True: # only runs once unless we're slash search
+        if cli.terms()[0] == '\\':  break   # backslash exits search
+
+        # cli.terms() gets search terms to filter full_list for
+        matched = full_list.search(cli.terms(), cli.any())
+
+        # didn't match anything, try again if we're in slash search
+        if matched.empty():
+            print(MATCH_ERR(cli.terms()))
+            if cli.slash(): continue
+
+        # ask which rpcs to call
+        next_selection = select_input(matched, cli.star(), cli.any())
+        selected += next_selection
+
+        if not cli.slash():         break
+        if next_selection.empty():  break   # backslash here exits as well
+        cli.search_terms = []               # reset search terms
+
+    # if selected is empty as this point, remaining code will do nothing
+
+    ''' invoke gui '''
+    if cli.slider():
+        # if we want sliders, we have to check if we can make them
         all_numeric = True
-        for rpc in selected_rpcs:
+        for rpc in selected:
             if rpc.arg_type not in {int, float}:
                 print(f"{rpc} has type {rpc.arg_type}, can't make a slider")
                 all_numeric = False
-        if all_numeric: 
-            slider(selected_rpcs, fork=not cli.debug())
 
-    else:
-        for rpc in selected_rpcs:
-            if len(selected_rpcs) > 1: print(rpc)   # print where we are in call list
-            while True:                             # loop for possible + mode
-                arg = _print_get_arg(rpc, cli)           # ask user for argument to rpc
-                output = rpc.call(arg)                  # make call
-                print("Reply:", output)                 # print current value
-                if cli.plus(): 
-                    print()                             # spacer
-                    continue                            # keep looping if + mode
-                else: break
+        # okay, make sliders
+        if all_numeric:
+            returnslider(selected, fork=not cli.debug())
 
-def main():
-    ''' load, search, select, and call '''
-    dirname     = os.path.expanduser("~/.rpc-lists/")
-    cli_args    = sys.argv[1:]
-    cli         = rpcCLI(cli_args)
-    full_list   = rpclist_from_file(dirname, cli.regen())
-    selected    = find_and_select(full_list, cli)
-    while cli.slash():
-        cli.search_terms = []
-        if cli.terms()[0] == '\\': break # \ during search
-        next_selection = find_and_select(full_list, cli)
-        if next_selection.empty(): break # \ during select
-        selected += next_selection
-    input_call_output(selected, cli)
-
-'''                      ''
-    main script methods
-''                      '''
-def __select_rpcs(rpcs: RPCList, selection: str, match_any: bool=False) -> RPCList:
-    ''' helper to parse _select_input input '''
-    if selection == '\\': return RPCList() # slash search base case, empty list
-    if selection[0] == '/':
-        # narrow search by recursively calling _select_input
-        return _select_input(rpcs.search(selection.split(), match_any))
-    elif selection == '*':
-        return rpcs.pick([i for i in range(len(rpcs))]) # pick all
-    elif len(selection.split()) == 1:
-        return rpcs.pick([int(selection)-1])
-    else:
-        return rpcs.pick([int(s)-1 for s in selection.split()])
-
-def _select_input(rpclist: RPCList, star: bool=False, slash: bool=False) -> RPCList:
-    ''' recursive loop to select a full call list of rpcs '''
-    rpclist.print()
-    if rpclist.lonely() or star: return rpclist
-    else: return valid_input("Select rpc, or /[search] to keep searching: ",
-                             f"Invalid. Select a number from 1 to {len(rpclist)}.\n",
-                             lambda x: __select_rpcs(rpclist, x, slash))
-
-def _find_targets(all_rpcs: RPCList, cli: rpcCLI) -> RPCList:
-    ''' fuzzy search all_rpcs for cli.terms or input and update all_rpcs '''
-    matched = all_rpcs.search(cli.terms(), cli.any())
-    return matched
-
-def _print_get_arg(rpc: RPC, cli: rpcCLI) -> rpc_arg_type:
-    ''' print current rpc value and ask user for what to change it to if any '''
-    if cli.dash() or rpc.arg_type == None: return None 
-    print("Previously:" if cli.default_arg is not None else "Currently:", rpc.call())
-    return valid_input("Enter argument: ", 
-                       f"Invalid. Argument should be of {str(rpc.arg_type)[1:-1]}.\n", 
-                       lambda x: rpc.arg_type(x) if x not in {'-', ''} else None, 
-                       default=cli.default_arg)
+    ''' normal input call output loop '''
+    for rpc in selected:
+        if len(selected) > 1: print(rpc)   # print where we are in call list
+        while True:                             # loop for possible + mode
+            arg = print_get_arg(rpc, cli)           # ask user for argument to rpc
+            output = rpc.call(arg)                  # make call
+            print("Reply:", output)                 # print current value
+            if cli.plus():
+                print()                             # spacer
+                continue                            # keep looping if + mode
+            else: break

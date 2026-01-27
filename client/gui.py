@@ -10,6 +10,8 @@ from PyQt6.QtCore import Qt, QRect
 from PyQt6.QtGui import QFont, QDoubleValidator
 
 def slider(rpcs: RPCList, fork=True):
+    if rpcs.empty(): sys.exit("No rpcs to slide!")
+
     if fork:
         pid = os.fork()
         if pid > 0: sys.exit()  # we're a parent, exit
