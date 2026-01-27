@@ -64,7 +64,7 @@ class RPCDaemon:
                 # couldn't receive anything, we're done
                 return
 
-from testdev import TestDevice
+from test.testdev import TestDevice
 class TestDaemon(RPCDaemon):
     ''' Daemon with fake device object for testing '''
     def __init__(self):
@@ -167,14 +167,3 @@ def member_dfs[PT, LT](parent: PT | LT, path: str,
         ret_names += new_names
         ret_nodes += new_nodes
     return ret_names, ret_nodes
-
-# TODO: move execution of daemon into separate script
-if __name__ == "__main__":
-    try: 
-        if len(sys.argv) > 1 and sys.argv[1] == 'test':
-            daemon: RPCDaemon = TestDaemon()
-        else:
-            daemon = RPCDaemon()
-        while True: daemon.server_loop()
-    except (EOFError, KeyboardInterrupt):
-        print("Interrupted, exiting")

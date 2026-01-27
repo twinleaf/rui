@@ -12,11 +12,11 @@ def daemon_shell_rpc(name: str, arg_type: type | None, arg: rpc_arg_type) -> rpc
         return daemon_rpc(name, arg_type, arg)
     except (ConnectionRefusedError, FileNotFoundError):
         # TODO: background daemon yourself
-        print("\nDaemon not found, try starting it?")
+        print("Daemon not found, defaulting to shell")
     except DaemonError:
-        print("\nError in daemon loop, trying shell")
+        print("Error in daemon loop, trying shell")
     except ProxyError:
-        print("\nError with daemon's proxy, defaulting to shell")
+        print("Error with daemon's proxy, defaulting to shell")
     except (TypeError, AssertionError):
         sys.exit("\nBad types on request data, exiting")
 
