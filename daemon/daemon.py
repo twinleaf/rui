@@ -37,22 +37,38 @@ class RPCDaemon:
                 time.sleep(5)
 
     def server_loop(self):
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
-            server.bind(SOCKET_PATH) # raise OSError if socket in use
-            server.listen(5) # accept up to five clients (arbitrary)
-            print("Started server")
+        self.server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.server.bind(SOCKET_PATH) # raise OSError if socket in use
+        self.server.listen(5) # accept up to five clients (arbitrary)
+        print("Started server")
 
-            while True:
-                client, _ = server.accept() # block here until client arrives
-                client_thread = threading.Thread(target=self._handle_client,
-                                            args=(client,), daemon=True)
-                client_thread.start()
+        while True:
+            assert self.still_connected()
+            client, _ = self.server.accept() # block here until client arrives
+            client_thread = threading.Thread(target=self._handle_client,
+                                        args=(client,), daemon=True)
+            client_thread.start()
+
+    def still_connected(self) -> bool:
+        # Try to connect to dummy client
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+            try:
+                client.connect(SOCKET_PATH)
+                self.server.setblocking(False)
+                client, _ = self.server.accept()
+                self.server.setblocking(True)
+                return True
+            except BlockingIOError:
+                return False # couldn't accept dummy client
+            except OSError:
+                return False # accept throws invalid argument if we never had a connection
 
     def __exit__(self, exc_type, exc_value, traceback):
         # Remove our old socket if we were using it
-        # TODO: check if it hasn't been overridden first, idk how
-        if os.path.exists(SOCKET_PATH) and self.socket_available:
-            os.remove(SOCKET_PATH)
+        if self.socket_available and self.still_connected():
+            self.server.close()
+            if os.path.exists(SOCKET_PATH):
+                os.remove(SOCKET_PATH)
 
         # Exceptions we expect
         if exc_type == OSError:
