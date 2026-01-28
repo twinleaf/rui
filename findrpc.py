@@ -30,7 +30,7 @@ if __name__ == "__main__":
             case 'playback':
                 for test in list_recorded():
                     # new daemon for every test
-                    with RPCDaemon(dev_constructor, True) as daemon:
+                    with RPCDaemon(TestDevice, True) as daemon:
                         run_transcript(main, test)
             case _:
                 main(args)
