@@ -88,9 +88,13 @@ def main(args: list[str]):
     ''' invoke gui '''
     if cli.slider():
         # if we want sliders, we have to check if we can make them
-        non_numeric = [r for r in selected if r.arg_type not in {int, float}]
-        numeric = [r for r in selected if r.arg_type in {int, float}]
+        non_numeric = RPCList([r for r in selected if r.arg_type not in {int, float}])
+        numeric = RPCList([r for r in selected if r.arg_type in {int, float}])
         for rpc in non_numeric: print(f"{rpc} has type {rpc.arg_type}, can't make a slider")
+
+        # see which rpcs we need to watch out for changes behind our backs
+        for rpc in numeric:
+            rpc.check_is_sample()
 
         # okay, make sliders
         if numeric:

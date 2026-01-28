@@ -39,6 +39,7 @@ SOCKET_PATH = "/tmp/daemon.sock"
 PROXY_ERROR = "Proxy failed, trying to restart..."
 RPC_DNE_ERROR = "RPC does not exist"
 RPC_TYPE_ERROR = "RPC failed, check type"
+BAD_REQ_ERROR = "Malformed or unknown request"
 class ProxyError(Exception): pass
 DaemonError = json.decoder.JSONDecodeError
 
@@ -47,6 +48,9 @@ def daemon_rpc(name: str, arg_type: type | None, arg: rpc_arg_type) -> rpc_ret_t
     value = send_request({'op': 'rpc', 'name': name, 'type': TYPE_NAME(arg_type), 'arg': arg})
     assert IS_RET_TYPE(value)
     return value
+
+def daemon_check_is_sample(name) -> bool:
+    return send_request({'op': 'is_sample', 'name': name})
 
 def send_request(req: dict[str, str | rpc_arg_type]) -> rpc_ret_type:
     ''' sends request to daemon, reads back reply from daemon.process_request '''
