@@ -1,5 +1,3 @@
-#!/home/zhao/.basevenv/bin/python
-#!/usr/bin/python
 import os, sys
 from client.cli import main
 
