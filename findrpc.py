@@ -1,46 +1,34 @@
 import os, sys
 from client.cli import main
+from daemon.daemon import RPCDaemon
+
+from test.testdev import TestDevice
+from test.record import record, list_recorded
+from test.playback import run_transcript
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        main()
+    try:
+        match sys.argv.pop(1):
+            case 'daemon':
+                if 'test' not in sys.argv:
+                    import twinleaf
+                    dev_constructor = twinleaf.Device
+                else: dev_constructor = TestDevice
 
-    elif sys.argv[1] == 'daemon':
-        from daemon.daemon import RPCDaemon
-        from test.testdev import TestDevice
-        import twinleaf
-
-        # TODO: with statement to clean up this syntax
-        try:
-            if len(sys.argv) > 2 and sys.argv[2] == 'test':
-                daemon = RPCDaemon(TestDevice)
-            else:
-                daemon = RPCDaemon(twinleaf.Device)
-
-            daemon.server_loop()
-
-        except OSError:
-            print("Socket already in use, are you running daemon already?")
-
-        except (EOFError, KeyboardInterrupt):
-            print("Interrupted, exiting")
-
-    elif sys.argv[1] == 'record':
-        from test.record import record
-        # TODO: make fresh daemon
-        # TODO: what if i want to test saving state b/w rpc calls w/i a daemon?
-        try:
-            sys.argv = sys.argv[1:] # only need to shift one argv
-            record(main)
-        except (EOFError, KeyboardInterrupt):
-            print("Interrupted, exiting")
-
-    elif sys.argv[1] == 'playback':
-        # TODO: playback also needs fresh daemon
-        from test.record import list_recorded
-        from test.playback import run_transcript
-        for test in list_recorded():
-            run_transcript(main, test)
-
-    else:
+                with RPCDaemon(dev_constructor, '--override' in sys.argv) as daemon:
+                    daemon.server_loop()
+            case 'record':
+                with RPCDaemon(dev_constructor, True) as daemon:
+                    try:
+                        record(main)
+                    except (EOFError, KeyboardInterrupt):
+                        print("Interrupted, exiting")
+            case 'playback':
+                for test in list_recorded():
+                    # new daemon for every test
+                    with RPCDaemon(dev_constructor, True) as daemon:
+                        run_transcript(main, test)
+            case _:
+                main()
+    except IndexError:
         main()

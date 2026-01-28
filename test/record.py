@@ -45,7 +45,6 @@ class Recorder:
 
         if exc_type:
             print("Exception:", exc_type.__name__)
-            print(traceback)
 
 test_dir = Path(__file__).resolve().parent # location of this script
 dest_dir = test_dir / "recorded"
