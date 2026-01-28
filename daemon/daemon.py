@@ -25,18 +25,24 @@ class RPCDaemon:
                 time.sleep(5)
 
     def server_loop(self):
-        if os.path.exists(SOCKET_PATH): os.remove(SOCKET_PATH)
+        # TODO: allow user to remove SOCKET_PATH and take over old server?
+        # we can't kill the old server from here but we can make it obsolete
+        if os.path.exists(SOCKET_PATH): 
+            raise OSError("Socket already in use")
 
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
-            server.bind(SOCKET_PATH)
-            server.listen(5)
-            print("Started server")
+        try:
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
+                server.bind(SOCKET_PATH)
+                server.listen(5)
+                print("Started server")
 
-            while True:
-                client, _ = server.accept()
-                client_thread = threading.Thread(target=self._handle_client, 
-                                            args=(client,), daemon=True)
-                client_thread.start()
+                while True:
+                    client, _ = server.accept() # block here until client arrives
+                    client_thread = threading.Thread(target=self._handle_client, 
+                                                args=(client,), daemon=True)
+                    client_thread.start()
+        finally:
+            if os.path.exists(SOCKET_PATH): os.remove(SOCKET_PATH)
 
     def _handle_client(self, client: socket.socket):
         with client:
@@ -99,8 +105,11 @@ def process_rpc(dev, req: dict[str, str | rpc_arg_type]) -> rpc_ret_type:
         req_type = NAME_TO_TYPE(req_type_name)
         arg = TYPE_CAST(req_arg, req_type)
         value = rpc() if arg is None else rpc(arg)
+
+        if type(value) is float: value = round(value, 2)
         value = TYPE_CAST(value, str)
         assert value is not None
+
         return value
     except TypeError:
         return RPC_TYPE_ERROR

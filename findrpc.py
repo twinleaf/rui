@@ -1,7 +1,7 @@
 #!/home/zhao/.basevenv/bin/python
 #!/usr/bin/python
 import os, sys
-from client.client import main
+from client.cli import main
 
 if __name__ == "__main__": 
     if len(sys.argv) == 1:
@@ -10,8 +10,9 @@ if __name__ == "__main__":
     elif sys.argv[1] == 'daemon':
         from daemon.daemon import RPCDaemon
         from test.testdev import TestDevice
-        # TODO: kill existing daemon if there is one
-        # actually just see what happens when you try to make two
+        import twinleaf
+
+        # TODO: with statement to clean up this syntax
         try: 
             if len(sys.argv) > 2 and sys.argv[2] == 'test':
                 daemon = RPCDaemon(TestDevice)
@@ -19,6 +20,9 @@ if __name__ == "__main__":
                 daemon = RPCDaemon(twinleaf.Device)
 
             daemon.server_loop()
+
+        except OSError:
+            print("Socket already in use, are you running daemon already?")
 
         except (EOFError, KeyboardInterrupt):
             print("Interrupted, exiting")

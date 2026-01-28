@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 
+# TODO: actually record tests
 class Recorder:
     ''' Logs stdin and stdout to transcript files before redirecting back to terminal '''
     def __init__(self, transcript_path):

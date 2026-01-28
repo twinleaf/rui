@@ -106,7 +106,10 @@ class RPCDisplay():
         if not self.updating: # don't recursively call this
             self.updating = True
             self.rpc.call(self.__descale(value))
-            self.__get_value()
+            self.__get_value() 
+            # TODO: decide when to re-call to check value, not always?
+            #self.value = self.__descale(value)
+            #self.value_scaled = value
             self.result_label.setText(self.__result_display())
             self.slider.setValue(self.value_scaled)
             self.updating = False

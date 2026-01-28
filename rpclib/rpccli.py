@@ -8,6 +8,7 @@ FLAGS = {
         'no-arg': '-',
         'continuous': '+',
         'sliders': '++',
+        'slider': '++',
         'select-all': '*',
         'exact': '@',
         'keep-searching': '/',

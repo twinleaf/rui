@@ -1,5 +1,3 @@
-# TODO: actually write tests
-
 def call_test_rpc(rpc, arg: int | float | None) -> int | float | None:
     if arg is None: 
         return rpc._value
