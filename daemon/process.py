@@ -61,7 +61,7 @@ def process_rpc_list(dev) -> str: # TODO: what errors does this risk?
     types = [TYPE_NAME(get_arg_type(node)) for node in nodes]
     return '\n'.join([n + '(' + t + ')' for n, t in zip(names, types)])
 
-def process_is_sample(dev, name: str) -> str:
+def process_is_sample(dev, name: str) -> bool:
     path = name.split('.')
     names_and_streams = [(s, v) for s, v in getmembers(dev.samples) if s[0] != '_']
     for name, stream in names_and_streams:
@@ -69,11 +69,11 @@ def process_is_sample(dev, name: str) -> str:
         try:
             for p in path:
                 parent = getattr(parent, p)
-            return stream # we got to the end, this is a child of stream
+            return True # we got to the end, this is a child of stream
         except AttributeError:
             continue # this is not a sample in this stream
 
-    return "" # this is not a sample in any stream
+    return False # this is not a sample in any stream
 
 def process_get_sample(dev, name: str) -> int | float: # TODO: what errors does this risk?
     for sample in dev._samples(n=1, columns=[name]):
