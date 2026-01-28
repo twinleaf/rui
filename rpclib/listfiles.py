@@ -34,23 +34,23 @@ def __line_to_rpc(rpc_list_line: str) -> RPC:
 
 def __get_gen_file(dirname: str, regen: bool=False) -> str:
     # get name of file to write to
-    try: 
+    try:
         devname = RPC("dev.name", None).call()
         assert type(devname) is str
-    except RuntimeError: 
+    except RuntimeError:
         raise DeviceError
     filepath = os.path.join(dirname, devname + ".rpcs")
 
     # regenerate if necessary
     if regen or not os.path.exists(filepath):
         print(REGEN_MSG(filepath) if regen else NOFILE_MSG(filepath))
-        try: 
+        try:
             daemon_list = send_request({'op': 'list'})
             assert type(daemon_list) is str
-        except RuntimeError: 
+        except RuntimeError:
             raise DaemonListError
 
-        with open(filepath, 'w') as f: 
+        with open(filepath, 'w') as f:
             f.write(daemon_list+'\n')
 
     # return where to get what we just wrote

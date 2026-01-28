@@ -24,18 +24,18 @@ class rpcCLI:
         self.default_arg:   rpc_arg_type = None # argument to call rpc with, should be numeric
         self.modes:         set[str]  = set()   # set of options from ALL_MODES
         self.__parse_args(argv)
-    
+
     def __parse_args(self, argv: list[str]):
         for arg in argv:
-            if arg in ALL_MODES: 
+            if arg in ALL_MODES:
                 self.add_mode(arg)
             elif arg[:2] == '--' and arg[2:] in FLAGS:
                 self.add_mode(FLAGS[arg])
-            else: 
+            else:
                 try: self.default_arg = float(arg) if '.' in arg else int(arg)
                 except ValueError: self.search_terms.append(arg)
 
-    def terms(self) -> list[str]: 
+    def terms(self) -> list[str]:
         terms = valid_input("Enter search terms: ", "", # no error message
                             lambda t: list(t) if t[0] and type(t) is list else t.split(),
                             default=self.search_terms)

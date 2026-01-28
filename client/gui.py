@@ -26,7 +26,7 @@ def slider(rpcs: RPCList, fork=True):
 
     # make slider floating for i3wm
     try: subprocess.run(["i3-msg", "floating", "toggle"], capture_output=True)
-    except FileNotFoundError: pass  
+    except FileNotFoundError: pass
 
     sys.exit(app.exec())
 
@@ -106,7 +106,7 @@ class RPCDisplay():
         if not self.updating: # don't recursively call this
             self.updating = True
             self.rpc.call(self.__descale(value))
-            self.__get_value() 
+            self.__get_value()
             # TODO: decide when to re-call to check value, not always?
             #self.value = self.__descale(value)
             #self.value_scaled = value
@@ -114,7 +114,7 @@ class RPCDisplay():
             self.slider.setValue(self.value_scaled)
             self.updating = False
 
-    def __get_value(self): 
+    def __get_value(self):
         self.value = self.rpc.call()
         self.value_scaled = self.__scale(self.value)
     def __result_display(self): return f"Current value: {self.value}"

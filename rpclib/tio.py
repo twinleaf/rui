@@ -53,7 +53,7 @@ def shell_rpc(name: str, arg_type: type | None, arg: rpc_arg_type) -> rpc_ret_ty
                 # convert manually here; ret type might be non-None even if arg type None
                 if arg_type is not None: reply = arg_type(reply)
                 return reply
-            case 'Unknown': # assuming string since no -T/-t, 
+            case 'Unknown': # assuming string since no -T/-t
                 continue
             case 'OK': # if this is all we get, we'll go to the return 'OK' at the end
                 continue

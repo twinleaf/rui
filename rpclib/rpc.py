@@ -11,7 +11,7 @@ class RPC:
         assert IS_ARG_TYPE(arg_type)
         self.name, self.arg_type = name, arg_type
 
-    def call(self, arg: rpc_arg_type=None) -> rpc_ret_type: 
+    def call(self, arg: rpc_arg_type=None) -> rpc_ret_type:
         assert IS_ARG_TYPE(arg)
         ret = daemon_shell_rpc(self.name, self.arg_type, arg)
         assert IS_RET_TYPE(ret)
@@ -41,7 +41,7 @@ class RPCList:
         if len(self) == 0: return
         if len(self) == 1: print(self[0])
         else:
-            for i in range(len(self)): 
+            for i in range(len(self)):
                 print(f"{i+1}.", self[i])
 
     def fuzzy_match(self, search_for: str, search_in: str) -> bool:

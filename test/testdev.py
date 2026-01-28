@@ -1,5 +1,5 @@
 def call_test_rpc(rpc, arg: int | float | None) -> int | float | None:
-    if arg is None: 
+    if arg is None:
         return rpc._value
     elif arg == 444: # simulate errors
         raise RuntimeError
@@ -23,7 +23,7 @@ class TestSurvey:
     def _get_path(self, string):
         path = string.split('.')
         parent = self
-        for survey in path[:-1]: 
+        for survey in path[:-1]:
             try:
                 parent = getattr(parent, survey)
             except AttributeError:
@@ -49,7 +49,7 @@ class TestDevice:
         self.settings._add_rpc("pump.lock.control.Kp", float, float)
         self.settings._add_rpc("pump.lock.control.Ki", float, float)
         self.settings._add_rpc("pump.lock.control.Ki", float, float)
-        self.settings._add_rpc("pump.therm.control.autotune.start", 
+        self.settings._add_rpc("pump.therm.control.autotune.start",
                                type(None), type(None), value=b"OK")
         self.settings._add_rpc("signal.capture.size", type(None), int, value=8)
         self.settings._add_rpc("signal.capture.trigger", type(None), type(None), value=8)

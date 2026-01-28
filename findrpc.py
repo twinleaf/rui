@@ -1,7 +1,7 @@
 import os, sys
 from client.cli import main
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
     if len(sys.argv) == 1:
         main()
 
@@ -11,7 +11,7 @@ if __name__ == "__main__":
         import twinleaf
 
         # TODO: with statement to clean up this syntax
-        try: 
+        try:
             if len(sys.argv) > 2 and sys.argv[2] == 'test':
                 daemon = RPCDaemon(TestDevice)
             else:

@@ -27,7 +27,7 @@ class RPCDaemon:
     def server_loop(self):
         # TODO: allow user to remove SOCKET_PATH and take over old server?
         # we can't kill the old server from here but we can make it obsolete
-        if os.path.exists(SOCKET_PATH): 
+        if os.path.exists(SOCKET_PATH):
             raise OSError("Socket already in use")
 
         try:
@@ -38,7 +38,7 @@ class RPCDaemon:
 
                 while True:
                     client, _ = server.accept() # block here until client arrives
-                    client_thread = threading.Thread(target=self._handle_client, 
+                    client_thread = threading.Thread(target=self._handle_client,
                                                 args=(client,), daemon=True)
                     client_thread.start()
         finally:
@@ -96,7 +96,7 @@ def process_rpc(dev, req: dict[str, str | rpc_arg_type]) -> rpc_ret_type:
     try:
         for survey in req_name.split('.'):
             rpc = getattr(rpc, survey)
-    except AttributeError as e: 
+    except AttributeError as e:
         # getattr fails on nonexistent RPC
         return RPC_DNE_ERROR
 
