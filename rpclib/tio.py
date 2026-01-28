@@ -31,39 +31,6 @@ def daemon_shell_rpc(name: str, arg_type: type | None, arg: rpc_arg_type) -> rpc
         sys.exit(str(e))
 
 '''                      ''
-    rust tool interface
-''                      '''
-# TODO: make test shell interface
-def shell_rpc(name: str, arg_type: type | None, arg: rpc_arg_type) -> rpc_ret_type:
-    try:
-        argv = ['tio-tool', 'rpc', '--']
-        argv.append(name)
-        if arg is not None: argv.append(str(arg)) # only here do we convert to str
-        output = subprocess.run(argv, capture_output=True)
-    except TypeError: # for some reason it throws this on tio-tool fail sometimes
-        raise RuntimeError("tio-tool failure") # catch this error upstream
-
-    result = output.stdout.strip().decode()
-    for line in result.splitlines():
-        words = line.split()
-        match words[0]:
-            case 'Reply:':
-                reply = words[1]
-                if reply[0] == '"': reply = reply[1:-1] # trim quotes
-                # convert manually here; ret type might be non-None even if arg type None
-                if arg_type is not None: reply = arg_type(reply)
-                return reply
-            case 'Unknown': # assuming string since no -T/-t
-                continue
-            case 'OK': # if this is all we get, we'll go to the return 'OK' at the end
-                continue
-            case 'FAILED' | 'RPC': # should be "RPC failed: [reason]"
-                raise RuntimeError(line)
-            case _:
-                raise NotImplementedError("Don't know what to do with " + line)
-    return 'OK'
-
-'''                      ''
      daemon interface
 ''                      '''
 # TODO: Connect in main script intead of in each rpc call
@@ -99,3 +66,36 @@ def send_request(req: dict[str, str | rpc_arg_type]) -> rpc_ret_type:
         if value == RPC_DNE_ERROR: raise RuntimeError
         if value == RPC_TYPE_ERROR: raise TypeError(RPC_TYPE_ERROR)
         else: return value
+
+'''                      ''
+    rust tool interface
+''                      '''
+# TODO: make test shell interface
+def shell_rpc(name: str, arg_type: type | None, arg: rpc_arg_type) -> rpc_ret_type:
+    try:
+        argv = ['tio-tool', 'rpc', '--']
+        argv.append(name)
+        if arg is not None: argv.append(str(arg)) # only here do we convert to str
+        output = subprocess.run(argv, capture_output=True)
+    except TypeError: # for some reason it throws this on tio-tool fail sometimes
+        raise RuntimeError("tio-tool failure") # catch this error upstream
+
+    result = output.stdout.strip().decode()
+    for line in result.splitlines():
+        words = line.split()
+        match words[0]:
+            case 'Reply:':
+                reply = words[1]
+                if reply[0] == '"': reply = reply[1:-1] # trim quotes
+                # convert manually here; ret type might be non-None even if arg type None
+                if arg_type is not None: reply = arg_type(reply)
+                return reply
+            case 'Unknown': # assuming string since no -T/-t
+                continue
+            case 'OK': # if this is all we get, we'll go to the return 'OK' at the end
+                continue
+            case 'FAILED' | 'RPC': # should be "RPC failed: [reason]"
+                raise RuntimeError(line)
+            case _:
+                raise NotImplementedError("Don't know what to do with " + line)
+    return 'OK'
