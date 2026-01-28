@@ -1,6 +1,5 @@
-# TODO: if we have the speed, fetch value at intervals i/s/o every call (value cache)
 # TODO: use multiprocessing instead of os.fork
-import os, sys, subprocess, random
+import os, sys, subprocess, multiprocessing
 from typing import Callable
 from rpclib.rpc import RPC, RPCList
 from rpclib.rpctypes import rpc_arg_type, rpc_ret_type
@@ -9,6 +8,7 @@ from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit
 from PyQt6.QtCore import Qt, QRect
 from PyQt6.QtGui import QFont, QDoubleValidator
+import random # for colors
 
 def slider(rpcs: RPCList, fork=True):
     if rpcs.empty(): sys.exit("No rpcs to slide!")
