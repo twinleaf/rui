@@ -17,7 +17,7 @@ class Playback:
 
     def __enter__(self):
         self.transcript = open(self.transcript_path, 'r')
-        
+
         # get I/O streams
         self.stdin = sys.stdin
         sys.stdin = self
@@ -32,7 +32,7 @@ class Playback:
             self.println("Transcript doesn't start with $ [argv], instead got " + argv)
             self.passed = False
             raise IOError
-        else: 
+        else:
             sys.argv = [""] + argv[3:-2].split()
 
     def check_write_buffer(self):

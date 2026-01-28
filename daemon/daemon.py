@@ -3,7 +3,6 @@ import os, sys, time, json, socket, threading
 from inspect import signature, getmembers
 from struct import error as StructError
 from typing import Callable, TypeVar
-import twinleaf
 
 from rpclib.tio import SOCKET_PATH, PROXY_ERROR
 from rpclib.tio import RPC_DNE_ERROR, RPC_TYPE_ERROR
@@ -12,11 +11,8 @@ from rpclib.rpctypes import NAME_TO_TYPE, TYPE_NAME, TYPE_CAST, IS_ARG_TYPE
 
 class RPCDaemon:
     '''Handles starting daemon, twinleaf.Device, & receiving client requests'''
-    def __init__(self):
-        self.dev_constructor = twinleaf.Device
-        self.get_device()
-
-    def get_device(self):
+    def __init__(self, dev_constructor):
+        self.dev_constructor = dev_constructor
         while True:
             try:
                 print("Looking for device...")
@@ -38,11 +34,11 @@ class RPCDaemon:
 
             while True:
                 client, _ = server.accept()
-                client_thread = threading.Thread(target=self.handle_client, 
+                client_thread = threading.Thread(target=self._handle_client, 
                                             args=(client,), daemon=True)
                 client_thread.start()
 
-    def handle_client(self, client: socket.socket):
+    def _handle_client(self, client: socket.socket):
         with client:
             try:
                 while True:
@@ -54,7 +50,7 @@ class RPCDaemon:
                     # if we have a bad device, re-initalize it
                     if reply == PROXY_ERROR and self.dev is not None:
                         self.dev = None
-                        reinit_thread = threading.Thread(target=self.get_device, args=())
+                        reinit_thread = threading.Thread(target=self.__init__, args=())
                         reinit_thread.start()
 
             except ConnectionResetError:
@@ -63,13 +59,6 @@ class RPCDaemon:
             except json.decoder.JSONDecodeError:
                 # couldn't receive anything, we're done
                 return
-
-from test.testdev import TestDevice
-class TestDaemon(RPCDaemon):
-    ''' Daemon with fake device object for testing '''
-    def __init__(self):
-        self.dev_constructor = TestDevice
-        self.get_device()
 
 '''                    ''
      daemon methods
@@ -86,13 +75,7 @@ def process_request(dev, req: dict[str, str | rpc_arg_type ]) -> rpc_ret_type:
         case 'list':
             return process_rpc_list(dev)
         case 'itl':
-            def toJSON(dev):
-                return json.dumps(
-                    dev,
-                    default=lambda o: o.__dict__, 
-                    sort_keys=True,
-                    indent=4)
-            return toJSON(dev)
+            raise NotImplementedError # TODO: itl
         case _:
             return "Unknown request: " + str(req)
 
