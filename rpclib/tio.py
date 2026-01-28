@@ -25,10 +25,9 @@ def daemon_shell_rpc(name: str, arg_type: type | None, arg: rpc_arg_type) -> rpc
         return shell_rpc(name, arg_type, arg)
     except FileNotFoundError:
         sys.exit("No tio-tool found, try installing or adding to PATH")
-    except RuntimeError as e:
-        sys.exit(str(e))
     except NotImplementedError as e:
         sys.exit(str(e))
+    # RuntimeError caught upstream
 
 '''                      ''
      daemon interface
@@ -50,7 +49,11 @@ def daemon_rpc(name: str, arg_type: type | None, arg: rpc_arg_type) -> rpc_ret_t
     return value
 
 def daemon_check_is_sample(name) -> bool:
-    return send_request({'op': 'is_sample', 'name': name})
+    try:
+        return send_request({'op': 'is_sample', 'name': name})
+    except FileNotFoundError:
+        # No daemon to check, must assume the worst
+        return True
 
 def send_request(req: dict[str, str | rpc_arg_type]) -> rpc_ret_type:
     ''' sends request to daemon, reads back reply from daemon.process_request '''
@@ -62,7 +65,7 @@ def send_request(req: dict[str, str | rpc_arg_type]) -> rpc_ret_type:
         client.sendall(request.encode())
         try:
             reply = json.loads(client.recv(8192).decode())
-        except json.decoder.JSONDecoderError:
+        except json.decoder.JSONDecodeError:
             raise ProxyError
         value = reply["rep"]
 
@@ -99,7 +102,7 @@ def shell_rpc(name: str, arg_type: type | None, arg: rpc_arg_type) -> rpc_ret_ty
             case 'OK': # if this is all we get, we'll go to the return 'OK' at the end
                 continue
             case 'FAILED' | 'RPC': # should be "RPC failed: [reason]"
-                raise RuntimeError(line)
+                raise RuntimeError(name + ' | ' + line)
             case _:
                 raise NotImplementedError("Don't know what to do with " + line)
     return 'OK'
