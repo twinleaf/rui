@@ -83,22 +83,18 @@ def main(args: list[str]):
         if not cli.slash():         break
         if next_selection.empty():  break   # backslash here exits as well
         cli.search_terms = []               # reset search terms
-
     # if selected is empty as this point, remaining code will do nothing
 
     ''' invoke gui '''
     if cli.slider():
         # if we want sliders, we have to check if we can make them
-        all_numeric = True
-        for rpc in selected:
-            if rpc.arg_type not in {int, float}:
-                print(f"{rpc} has type {rpc.arg_type}, can't make a slider")
-                all_numeric = False
-                # don't exit yet, want to yell at all non-numeric rpcs
+        non_numeric = [r for r in selected if r.arg_type not in {int, float}]
+        numeric = [r for r in selected if r.arg_type in {int, float}]
+        for rpc in non_numeric: print(f"{rpc} has type {rpc.arg_type}, can't make a slider")
 
         # okay, make sliders
-        if all_numeric:
-            slider(selected, fork=not cli.debug())
+        if numeric:
+            slider(numeric, fork=not cli.debug())
 
         return # don't go to call loop, even if we didn't make a gui
 
