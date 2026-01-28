@@ -1,4 +1,4 @@
-import os, sys, time, json, socket, threading
+import os, time, json, socket, threading
 from rpclib.tio import SOCKET_PATH, PROXY_ERROR
 from .process import process_request
 

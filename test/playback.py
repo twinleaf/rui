@@ -26,14 +26,14 @@ class Playback:
 
         return self
 
-    def parse_argv(self):
-        argv = self.transcript.readline()
-        if argv[:3] != "$ [" or argv[-2:] != "]\n":
-            self.println("Transcript doesn't start with $ [argv], instead got " + argv)
+    def parse_args(self) -> list[str]:
+        arg_line = self.transcript.readline()
+        if arg_line[:3] != "$ [" or arg_line[-2:] != "]\n":
+            self.println("Transcript doesn't start with $ [argv], instead got " + arg_line)
             self.passed = False
             raise IOError
         else:
-            sys.argv = [""] + argv[3:-2].split()
+            return [""] + arg_line[3:-2].split()
 
     def check_write_buffer(self):
         # get data from write buffer, reset write buffer
@@ -82,12 +82,8 @@ class Playback:
 
 def run_transcript(program, transcript_path):
     print("-- Testing", transcript_path, "--")
-    sys.argv = [""]
     with Playback(transcript_path) as playback:
-        # set sys.argv to be what we want
-        playback.parse_argv()
-
-        # now do whatever we're testing
-        program()
+        args = playback.parse_args()
+        program(args)
         status = "-- PASSED --" if playback.passed else "-- FAILED --"
     print(status)

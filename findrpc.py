@@ -7,28 +7,32 @@ from test.record import record, list_recorded
 from test.playback import run_transcript
 
 if __name__ == "__main__":
+    args = sys.argv[1:]
     try:
-        match sys.argv.pop(1):
+        match args[0]:
             case 'daemon':
-                if 'test' not in sys.argv:
+                if 'test' not in args:
                     import twinleaf
                     dev_constructor = twinleaf.Device
                 else: dev_constructor = TestDevice
 
-                with RPCDaemon(dev_constructor, '--override' in sys.argv) as daemon:
+                with RPCDaemon(dev_constructor, '--override' in args) as daemon:
                     daemon.server_loop()
+
             case 'record':
                 with RPCDaemon(dev_constructor, True) as daemon:
                     try:
-                        record(main)
+                        record(main, args)
                     except (EOFError, KeyboardInterrupt):
-                        print("Interrupted, exiting")
+                        # shoudl never make our test
+                        sys.exit("Interrupted, exiting")
+
             case 'playback':
                 for test in list_recorded():
                     # new daemon for every test
                     with RPCDaemon(dev_constructor, True) as daemon:
                         run_transcript(main, test)
             case _:
-                main()
+                main(args)
     except IndexError:
-        main()
+        main(args)

@@ -53,11 +53,10 @@ def print_get_arg(rpc: RPC, cli: rpcCLI) -> rpc_arg_type:
 
 MATCH_ERR = lambda terms: f"Couldn't find {terms[0] if len(terms)==1 else 'a match'}."
 
-def main():
+def main(args: list[str]):
     ''' load list '''
     # first get our arguments
-    cli_args    = sys.argv[1:]
-    cli         = rpcCLI(cli_args)
+    cli         = rpcCLI(args)
 
     # load from our list directory, fetching dev.name() to know what list to load
     dirname     = os.path.expanduser("~/.rpc-lists/")

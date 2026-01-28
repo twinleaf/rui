@@ -52,16 +52,16 @@ dest_dir.mkdir(exist_ok=True)
 def list_recorded():
     return dest_dir.iterdir()
 
-def record(program):
+def record(program, args=[]):
     transcript_path = dest_dir / "tmp.transcript"
 
     with Recorder(transcript_path) as recorder:
         # first write arguments
-        argv = "$ [" + " ".join(sys.argv[1:]) + "]\n"
-        recorder.write(argv)
+        arg_line = "$ [" + " ".join(args) + "]\n"
+        recorder.write(arg_line)
 
         # now do whatever we're testing
-        program()
+        program(args)
 
     print() #spacer
     test_name = input("Recorded, enter a test name: ").replace(' ', '_')
