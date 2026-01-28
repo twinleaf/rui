@@ -18,6 +18,9 @@ class RPCDaemon:
             os.remove(SOCKET_PATH)
             self.socket_available = True
 
+        return self
+
+    def get_device(self):
         # If we have a socket, look for a device
         # If not, server_loop will raise OSError and go to __exit__
         while self.socket_available:
@@ -33,7 +36,9 @@ class RPCDaemon:
                 print("Device not found, trying again in 5s...")
                 time.sleep(5)
 
-        return self
+            except (EOFError, KeyboardInterrupt):
+                print("Interrupted, exiting")
+                break
 
     def server_loop(self):
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
@@ -78,7 +83,7 @@ class RPCDaemon:
                     # if we have a bad device, re-initalize it
                     if reply == PROXY_ERROR and self.dev is not None:
                         self.dev = None
-                        reinit_thread = threading.Thread(target=self.__init__, args=())
+                        reinit_thread = threading.Thread(target=self.get_device, args=())
                         reinit_thread.start()
 
             except ConnectionResetError:

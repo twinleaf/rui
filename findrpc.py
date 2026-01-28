@@ -17,21 +17,21 @@ if __name__ == "__main__":
                 else: dev_constructor = TestDevice
 
                 with RPCDaemon(dev_constructor, '--override' in args) as daemon:
+                    daemon.get_device()
                     daemon.server_loop()
 
             case 'record':
-                with RPCDaemon(dev_constructor, True) as daemon:
-                    try:
-                        record(main, args)
-                    except (EOFError, KeyboardInterrupt):
-                        # shoudl never make our test
-                        sys.exit("Interrupted, exiting")
+                # TODO: spawn daemon thread
+                try:
+                    record(main, args)
+                except (EOFError, KeyboardInterrupt):
+                    # shoudl never make our test
+                    sys.exit("Interrupted, exiting")
 
             case 'playback':
                 for test in list_recorded():
-                    # new daemon for every test
-                    with RPCDaemon(TestDevice, True) as daemon:
-                        run_transcript(main, test)
+                    # TODO: daemon thread for each test
+                    run_transcript(main, test)
             case _:
                 main(args)
     except IndexError:
