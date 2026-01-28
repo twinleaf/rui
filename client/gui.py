@@ -1,4 +1,5 @@
 # TODO: if we have the speed, fetch value at intervals i/s/o every call (value cache)
+# TODO: use multiprocessing instead of os.fork
 import os, sys, subprocess, random
 from typing import Callable
 from rpclib.rpc import RPC, RPCList
@@ -13,7 +14,7 @@ def slider(rpcs: RPCList, fork=True):
     if rpcs.empty(): sys.exit("No rpcs to slide!")
 
     if fork:
-        pid = os.fork()
+        pid = os.fork()         # we use fork to keep child alive after parent ends
         if pid > 0: sys.exit()  # we're a parent, exit
         os.setsid()             # detach from terminal
         sys.stdin.close()       # close streams

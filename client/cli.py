@@ -1,3 +1,4 @@
+# TODO: add spacers
 import os, sys
 from rpclib.rpc import RPC, RPCList
 from rpclib.rpccli import rpcCLI, valid_input
@@ -93,10 +94,14 @@ def main(args: list[str]):
             if rpc.arg_type not in {int, float}:
                 print(f"{rpc} has type {rpc.arg_type}, can't make a slider")
                 all_numeric = False
+                # don't exit yet, want to yell at all non-numeric rpcs
 
         # okay, make sliders
         if all_numeric:
-            return slider(selected, fork=not cli.debug())
+            slider(selected, fork=not cli.debug())
+
+        return # don't go to call loop, even if we didn't make a gui
+
 
     ''' normal input call output loop '''
     for rpc in selected:
@@ -105,7 +110,5 @@ def main(args: list[str]):
             arg = print_get_arg(rpc, cli)           # ask user for argument to rpc
             output = rpc.call(arg)                  # make call
             print("Reply:", output)                 # print current value
-            if cli.plus():
-                print()                             # spacer
-                continue                            # keep looping if + mode
+            if cli.plus(): continue                 # keep looping if + mode
             else: break

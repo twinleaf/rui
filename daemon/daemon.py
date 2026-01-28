@@ -50,6 +50,7 @@ class RPCDaemon:
 
     def __exit__(self, exc_type, exc_value, traceback):
         # Remove our old socket if we were using it
+        # TODO: check if it hasn't been overridden first, idk how
         if os.path.exists(SOCKET_PATH) and self.socket_available:
             os.remove(SOCKET_PATH)
 
