@@ -14,7 +14,7 @@ class RPCDaemon:
         self.socket_available = not os.path.exists(SOCKET_PATH)
 
         # If override, we can't kill the old server but we can usurp its socket
-        if self.server_override:
+        if self.server_override and not self.socket_available:
             os.remove(SOCKET_PATH)
             self.socket_available = True
 
