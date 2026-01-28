@@ -42,7 +42,7 @@ class RPCList:
         if len(self) == 1: print(self[0])
         else:
             for i in range(len(self)): 
-                print(i+1 + ". " + self[i])
+                print(f"{i+1}.", self[i])
 
     def fuzzy_match(self, search_for: str, search_in: str) -> bool:
         if search_for[0] == '/': search_for = search_for[1:] # ignore /

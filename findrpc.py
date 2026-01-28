@@ -18,8 +18,7 @@ if __name__ == "__main__":
             else:
                 daemon = RPCDaemon(twinleaf.Device)
 
-            while True: 
-                daemon.server_loop()
+            daemon.server_loop()
 
         except (EOFError, KeyboardInterrupt):
             print("Interrupted, exiting")
