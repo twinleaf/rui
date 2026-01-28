@@ -36,10 +36,6 @@ class RPCDaemon:
                 print("Device not found, trying again in 5s...")
                 time.sleep(5)
 
-            except (EOFError, KeyboardInterrupt):
-                print("Interrupted, exiting")
-                break
-
     def server_loop(self):
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
             server.bind(SOCKET_PATH) # raise OSError if socket in use
