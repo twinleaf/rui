@@ -20,12 +20,12 @@ def select_input(rpclist: RPCList, star: bool=False, match_any: bool=False) -> R
                              lambda x: select_rpcs(rpclist, x, match_any))
 
 def select_rpcs(rpcs: RPCList, selection: str, match_any: bool=False) -> RPCList:
-    ''' helper for recursive _select_input function'''
+    ''' helper for recursive select_input function'''
 
     if selection == '\\':   # slash search base case, empty list
         return RPCList()
-    if selection[0] == '/': # recursive case, go back to _select_input with narrowed search
-        return _select_input(rpcs.search(selection.split(), match_any))
+    if selection[0] == '/': # recursive case, go back to select_input with narrowed search
+        return select_input(rpcs.search(selection.split(), match_any))
 
     if selection == '*':    # star mode - no recusion, select everything
         return rpcs.pick([i for i in range(len(rpcs))])
@@ -97,7 +97,7 @@ def main():
 
         # okay, make sliders
         if all_numeric:
-            returnslider(selected, fork=not cli.debug())
+            return slider(selected, fork=not cli.debug())
 
     ''' normal input call output loop '''
     for rpc in selected:
