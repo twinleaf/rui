@@ -1,7 +1,7 @@
-import os, sys
+import os, sys, time
 from client.main import main
 from daemon.daemon import RPCDaemon
-from daemon.spawn import spawn_temp_daemon
+from daemon.spawn import spawn_test_daemon
 
 from test.testdev import TestDevice
 from test.record import record, list_recorded
@@ -9,6 +9,7 @@ from test.playback import run_transcript
 
 if __name__ == "__main__":
     args = sys.argv[1:]
+
     try:
         match args:
             case ['daemon', *rest]:
@@ -16,19 +17,29 @@ if __name__ == "__main__":
                     import twinleaf
                     dev_constructor = twinleaf.Device
                 else: dev_constructor = TestDevice
+                override = '--override' in rest
 
-                with RPCDaemon(dev_constructor, '--override' in rest) as daemon:
-                    daemon.get_device()
+                with RPCDaemon(dev_constructor, override) as daemon:
                     daemon.server_loop()
 
             case ['record', *rest]:
-                spawn_temp_daemon(TestDevice, True, True) # override, silent
-                record(main, rest)
+                stop_signal = spawn_test_daemon(TestDevice)
+                try:
+                    record(main, rest)
+                finally:
+                    stop_signal.set()
 
             case ['playback', *rest]:
+                passed, total = 0, 0
                 for test in list_recorded():
-                    spawn_temp_daemon(TestDevice, True, True) # override, silent
-                    run_transcript(main, test)
+                    stop_signal = spawn_test_daemon(TestDevice)
+                    total += 1
+                    try:
+                        passed += run_transcript(main, test)
+                    finally:
+                        stop_signal.set()
+                    time.sleep(0.4) # wait at least 0.3s for daemon to exit
+                print(f"RESULTS: PASSED {passed} OUT OF {total}")
             case _:
                 main(args)
     except (EOFError, KeyboardInterrupt):
