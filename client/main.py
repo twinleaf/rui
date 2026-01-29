@@ -91,6 +91,7 @@ def main(args: list[str]):
             # if we want sliders, we have to check if we can make them
             non_numeric = RPCList([r for r in selected if r.arg_type not in {int, float}])
             numeric = RPCList([r for r in selected if r.arg_type in {int, float}])
+            numeric_full = RPCList([r for r in full_list if r.arg_type in {int, float}])
             for rpc in non_numeric: print(f"{rpc} has type {rpc.arg_type}, can't make a slider")
 
             # see which rpcs we need to watch out for changes behind our backs
@@ -99,9 +100,9 @@ def main(args: list[str]):
 
             # okay, make sliders
             if numeric:
-                slider(numeric, full_list, fork=not cli.debug())
+                slider(numeric, numeric_full, fork=not cli.debug())
 
-            return # don't go to call loop, even if we didn't make a gui
+                return # don't go to call loop, even if we didn't make a gui
 
 
         ''' normal input call output loop '''

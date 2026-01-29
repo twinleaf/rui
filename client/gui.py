@@ -41,17 +41,16 @@ class MainWindow(QWidget):
         self.setWindowTitle('findrpc GUI')
         self.setMinimumWidth(500)
 
+        self.rpcs_displayed = [0]
         self.dropdown = QComboBox()
         self.dropdown.setStyleSheet(_generate_qss())
         self.dropdown.addItem("Select new rpc")
-        self.dropdown.activated.connect(self.display_rpc_slider)
-
+        
         self.rpc_list = rpc_full_list
         for rpc in self.rpc_list:
             self.dropdown.addItem(rpc.name)
-
         self.layout.addWidget(self.dropdown)
-        self.rpc_insts = []
+
         for rpc in rpcs:
             try: min_val = RPC(rpc.name+'.min', rpc.arg_type).call()
             except RuntimeError: min_val = 0
@@ -62,20 +61,24 @@ class MainWindow(QWidget):
             self.layout.addLayout(self.display.label_container)
             self.layout.addLayout(self.display.slider_container)
 
-            self.rpc_insts.append(self.display)
+            self.rpcs_displayed.append(self.display)
+
+        self.dropdown.activated.connect(self.display_rpc_slider)
 
     def display_rpc_slider(self):
-        if self.dropdown.currentIndex():
-                index = self.dropdown.currentIndex() - 1
-                new_rpc = RPCDisplay(self.rpc_list[index], 0, self.rpc_list[index].call())
-                print(self.rpc_insts)
-                if new_rpc in self.rpc_insts:
-                    self.rpc_insts.index(new_rpc).show_slider()
-                    self.rpc_insts.index(new_rpc).widget_visible = False
+        index = self.dropdown.currentIndex()
+        dropdown_value = self.dropdown.currentText()
+        if index:
+                idx = next((i + 1 for i, rpc in enumerate(self.rpcs_displayed[1:]) if rpc.name == dropdown_value), None)
+                if idx:
+                    if not self.rpcs_displayed[idx].widget_visible:
+                        self.rpcs_displayed[idx].show_slider()
+                        self.rpcs_displayed[idx].widget_visible = True
                 else:
+                    new_rpc = RPCDisplay(self.rpc_list[index-1], 0, self.rpc_list[index-1].call())
+                    self.rpcs_displayed.append(new_rpc)
                     self.layout.addLayout(new_rpc.label_container)
                     self.layout.addLayout(new_rpc.slider_container)
-
 
 class RPCDisplay():
     def __init__(self, rpc: RPC, min_val: rpc_ret_type, max_val: rpc_ret_type):
@@ -84,6 +87,7 @@ class RPCDisplay():
         self.__get_value()
 
         self.widget_visible = True
+        self.name = rpc.name
         self.name_label = self.make_label(rpc.name)
         self.result_label = self.make_label(self.__result_display())
         self.delete_button = self.make_button()
@@ -157,8 +161,8 @@ class RPCDisplay():
         self.label_container.removeWidget(self.name_label)
         self.label_container.removeWidget(self.result_label)
         self.label_container.removeWidget(self.delete_button)
-        self.slider_container.removeWidget(self.slider)
         self.slider_container.removeWidget(self.min_label)
+        self.slider_container.removeWidget(self.slider)
         self.slider_container.removeWidget(self.max_label)
         self.name_label.hide()
         self.result_label.hide()
@@ -173,8 +177,8 @@ class RPCDisplay():
         self.label_container.addWidget(self.name_label)
         self.label_container.addWidget(self.result_label)
         self.label_container.addWidget(self.delete_button)
-        self.slider_container.addWidget(self.slider)
         self.slider_container.addWidget(self.min_label)
+        self.slider_container.addWidget(self.slider)
         self.slider_container.addWidget(self.max_label)
         self.name_label.show()
         self.result_label.show()
