@@ -3,7 +3,7 @@ import os, sys
 from rpclib.rpc import RPC, RPCList
 from rpclib.listfiles import rpclist_from_file
 from rpclib.rpctypes import rpc_arg_type
-from .cli import rpcCLI, valid_input
+from .cli import rpcCLI, valid_input, InputQuit
 from .gui import slider
 
 def select_input(rpclist: RPCList, star: bool=False, match_any: bool=False) -> RPCList:
@@ -55,60 +55,67 @@ def print_get_arg(rpc: RPC, cli: rpcCLI) -> rpc_arg_type:
 MATCH_ERR = lambda terms: f"Couldn't find {terms[0] if len(terms)==1 else 'a match'}."
 
 def main(args: list[str]):
-    ''' load list '''
-    # first get our arguments
-    cli         = rpcCLI(args)
+    try:
+        ''' load list '''
+        # first get our arguments
+        cli         = rpcCLI(args)
 
-    # load from our list directory, fetching dev.name() to know what list to load
-    dirname     = os.path.expanduser("~/.rpc-lists/")
-    full_list   = rpclist_from_file(dirname, cli.regen())
-    selected = RPCList()
+        # load from our list directory, fetching dev.name() to know what list to load
+        dirname     = os.path.expanduser("~/.rpc-lists/")
+        full_list   = rpclist_from_file(dirname, cli.regen())
+        selected = RPCList()
 
-    ''' search & select loop '''
-    while True: # only runs once unless we're slash search
-        if cli.terms()[0] == '\\':  break   # backslash exits search
+        ''' search & select loop '''
+        while True: # only runs once unless we're slash search
+            if cli.terms()[0] == '\\':  break   # backslash exits search
 
-        # cli.terms() gets search terms to filter full_list for
-        matched = full_list.search(cli.terms(), cli.any())
+            # cli.terms() gets search terms to filter full_list for
+            matched = full_list.search(cli.terms(), cli.any())
 
-        # didn't match anything, try again if we're in slash search
-        if matched.empty():
-            print(MATCH_ERR(cli.terms()))
-            if cli.slash(): continue
+            # didn't match anything, try again if we're in slash search
+            if matched.empty():
+                print(MATCH_ERR(cli.terms()))
+                if cli.slash(): continue
 
-        # ask which rpcs to call
-        next_selection = select_input(matched, cli.star(), cli.any())
-        selected += next_selection
+            # ask which rpcs to call
+            next_selection = select_input(matched, cli.star(), cli.any())
+            selected += next_selection
 
-        if not cli.slash():         break
-        if next_selection.empty():  break   # backslash here exits as well
-        cli.search_terms = []               # reset search terms
-    # if selected is empty as this point, remaining code will do nothing
+            if not cli.slash():         break
+            if next_selection.empty():  break   # backslash here exits as well
+            cli.search_terms = []               # reset search terms
+        # if selected is empty as this point, remaining code will do nothing
 
-    ''' invoke gui '''
-    if cli.slider():
-        # if we want sliders, we have to check if we can make them
-        non_numeric = RPCList([r for r in selected if r.arg_type not in {int, float}])
-        numeric = RPCList([r for r in selected if r.arg_type in {int, float}])
-        for rpc in non_numeric: print(f"{rpc} has type {rpc.arg_type}, can't make a slider")
+        ''' invoke gui '''
+        if cli.slider():
+            # if we want sliders, we have to check if we can make them
+            non_numeric = RPCList([r for r in selected if r.arg_type not in {int, float}])
+            numeric = RPCList([r for r in selected if r.arg_type in {int, float}])
+            for rpc in non_numeric: print(f"{rpc} has type {rpc.arg_type}, can't make a slider")
 
-        # see which rpcs we need to watch out for changes behind our backs
-        for rpc in numeric:
-            rpc.check_is_sample()
+            # see which rpcs we need to watch out for changes behind our backs
+            for rpc in numeric:
+                rpc.check_is_sample()
 
-        # okay, make sliders
-        if numeric:
-            slider(numeric, full_list, fork=not cli.debug())
+            # okay, make sliders
+            if numeric:
+                slider(numeric, full_list, fork=not cli.debug())
 
-        return # don't go to call loop, even if we didn't make a gui
+            return # don't go to call loop, even if we didn't make a gui
 
 
-    ''' normal input call output loop '''
-    for rpc in selected:
-        if len(selected) > 1: print(rpc)   # print where we are in call list
-        while True:                             # loop for possible + mode
-            arg = print_get_arg(rpc, cli)           # ask user for argument to rpc
-            output = rpc.call(arg)                  # make call
-            print("Reply:", output)                 # print current value
-            if cli.plus(): continue                 # keep looping if + mode
-            else: break
+        ''' normal input call output loop '''
+        for rpc in selected:
+            if len(selected) > 1: print(rpc)    # print where we are in call list
+            while True:                         # loop for possible + mode
+                arg = print_get_arg(rpc, cli)       # ask user for argument to rpc
+                output = rpc.call(arg)              # make call
+                print("Reply:", output)             # print current value
+                if cli.plus():                      # keep looping if + mode
+                    if not cli.dash():              # unless dash, which is incompatible
+                        continue
+                break
+
+    # User just wanted to exit, do so peacefully
+    except InputQuit:
+        pass

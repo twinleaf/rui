@@ -58,10 +58,12 @@ class rpcCLI:
     I/O core
 ''           '''
 
+class InputQuit(Exception): pass
 def __input(msg: str, default=None):
     if default is not None: return default
     i = input(msg)
-    if i == "quit" or i == "exit": sys.exit(0)
+    if i == "quit" or i == "exit":
+        raise InputQuit
     return i
 
 RT = TypeVar('RT')
