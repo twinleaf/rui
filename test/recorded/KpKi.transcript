@@ -1,0 +1,23 @@
+$ []
+Enter search terms: \
+> .
+1. dev.name()
+2. mode.autostart(int)
+3. pump.lock.control.Ki(float)
+4. pump.lock.control.Kp(float)
+5. pump.therm.control.autotune.start()
+6. signal.capture.block()
+7. signal.capture.size()
+8. signal.capture.trigger()
+Select rpc, or /[search] to keep searching: \
+> 3 4
+pump.lock.control.Ki(float)
+Currently: 0
+Enter argument: \
+> 1
+Reply: 1.0
+pump.lock.control.Kp(float)
+Currently: 0
+Enter argument: \
+> 1
+Reply: 1.0

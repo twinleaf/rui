@@ -63,6 +63,7 @@ class RPCDaemon:
                 return False # couldn't accept dummy client
             except OSError:
                 return False # accept throws invalid argument if we never had a connection
+            # TODO: does ConnectionResetError happen here and what causes it?
 
     def __exit__(self, exc_type, exc_value, traceback):
         # Remove our old socket if we were using it
@@ -75,14 +76,16 @@ class RPCDaemon:
         if exc_type == OSError:
             print("Socket already in use, use --override to usurp")
             return True # silence error
-        elif exc_type in {EOFError, KeyboardInterrupt}:
-            print("Interrupted, exiting")
-            return True # silence error
+        elif exc_type == AssertionError:
+            print("Lost connection, exiting")
+            return True
+        elif exc_type == SystemExit:
+            return True
 
         # Any other exception, don't silence
-        elif exc_type: print("Exception:", exc_type.__name__)
+        elif exc_type: return False
 
-        # No exception
+        # No exception, no return needed
         else: print("Quitting server")
 
     def _handle_client(self, client: socket.socket):

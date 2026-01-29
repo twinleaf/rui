@@ -51,6 +51,8 @@ class Playback:
         elif next_line != data:
             self.println("Expected " + next_line + ", instead got " + data)
             self.passed = False
+        else:
+            self.println(next_line)
 
     def readline(self):
         # last write finished with no newline, check write first
@@ -62,7 +64,9 @@ class Playback:
         if next_line[:2] != "> ":
             self.println("Expected " + next_line + ", instead asked for input")
             self.passed = False
-        return next_line[2:]
+        else:
+            self.println(next_line)
+            return next_line[2:]
 
     def write(self, data):
         if not data: return # stdout likes to write nothing sometimes
@@ -76,9 +80,7 @@ class Playback:
         sys.stdout = self.stdout
         sys.stdin = self.stdin
 
-        if exc_type:
-            print("Exception:", exc_type.__name__)
-            print(traceback)
+        if exc_type: return False # propagate exception
 
 def run_transcript(program, transcript_path):
     print("-- Testing", transcript_path, "--")

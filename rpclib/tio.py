@@ -67,6 +67,8 @@ def send_request(req: dict[str, str | rpc_arg_type]) -> rpc_ret_type:
             reply = json.loads(client.recv(8192).decode())
         except json.decoder.JSONDecodeError:
             raise ProxyError
+        except ConnectionResetError:
+            raise ProxyError
         value = reply["rep"]
 
         if value == PROXY_ERROR: raise ProxyError

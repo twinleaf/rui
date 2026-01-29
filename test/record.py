@@ -43,8 +43,7 @@ class Recorder:
         sys.stdout = self.stdout
         sys.stdin = self.stdin
 
-        if exc_type:
-            print("Exception:", exc_type.__name__)
+        if exc_type: return False # propagate exception
 
 test_dir = Path(__file__).resolve().parent # location of this script
 dest_dir = test_dir / "recorded"
