@@ -4,18 +4,18 @@ from pathlib import Path
 # TODO: actually record tests
 class Recorder:
     ''' Logs stdin and stdout to transcript files before redirecting back to terminal '''
-    def __init__(self, transcript_path):
-        self.transcript_path = transcript_path
+    def __init__(self, transcript_dir: Path):
+        self.temp_path = transcript_dir / 'tmp'
 
-    def write_transcript(self, data=None):
+    def write_transcript(self, data: str=None):
         if data: self.transcript.write(data)
         self.transcript.flush()
-    def write_stdout(self, data=None):
+    def write_stdout(self, data: str=None):
         if data: self.stdout.write(data)
         self.stdout.flush()
 
     def __enter__(self):
-        self.transcript = open(self.transcript_path, 'w')
+        self.transcript = open(self.temp_path, 'w')
 
         self.stdin = sys.stdin
         sys.stdin = self
@@ -30,7 +30,7 @@ class Recorder:
         self.write_transcript("\\\n> " + data)
         return data
 
-    def write(self, data):
+    def write(self, data: str):
         self.write_stdout(data)
         self.write_transcript(data)
 
@@ -43,27 +43,31 @@ class Recorder:
         sys.stdout = self.stdout
         sys.stdin = self.stdin
 
-        if exc_type: return False # propagate exception
+        if exc_type: 
+            # If we had an error, remove tmp transcript and propagate exception
+            print("Exception caught, not recording")
+            if self.temp_path.exists(): self.temp_path.unlink()
+            return False
+        else:
+            print() #spacer
+            test_name = input("Recorded, enter a test name: ").replace(' ', '_')
+
+            new_transcript_path = f"{test_name}.transcript"
+            self.temp_path.rename(dest_dir / new_transcript_path)
+
+            print("-- Recorded to", new_transcript_path, "--")
 
 test_dir = Path(__file__).resolve().parent # location of this script
 dest_dir = test_dir / "recorded"
 dest_dir.mkdir(exist_ok=True)
-def list_recorded():
+def list_recorded() -> list[Path]:
     return dest_dir.iterdir()
 
-def record(program, args=[]):
-    transcript_path = dest_dir / "tmp.transcript"
-
-    with Recorder(transcript_path) as recorder:
+def record(program, args: list[str]=[]):
+    with Recorder(dest_dir) as recorder:
         # first write arguments
         arg_line = "$ [" + " ".join(args) + "]\n"
         recorder.write(arg_line)
 
         # now do whatever we're testing
         program(args)
-
-    print() #spacer
-    test_name = input("Recorded, enter a test name: ").replace(' ', '_')
-    new_transcript_path = f"{test_name}.transcript"
-    transcript_path.rename(dest_dir / new_transcript_path)
-    print("-- Recorded to", new_transcript_path, "--")

@@ -3,7 +3,7 @@ from pathlib import Path
 
 class Playback:
     ''' Sends stdin from transcript, reads stdout and asserts against transcript '''
-    def __init__(self, transcript_path):
+    def __init__(self, transcript_path: str):
         self.transcript_path = transcript_path
         self.write_buffer = ""
         self.passed = True
@@ -33,7 +33,7 @@ class Playback:
             self.passed = False
             raise IOError
         else:
-            return [""] + arg_line[3:-2].split()
+            return arg_line[3:-2].split()
 
     def check_write_buffer(self):
         # get data from write buffer, reset write buffer
@@ -52,7 +52,7 @@ class Playback:
             self.println("Expected " + next_line + ", instead got " + data)
             self.passed = False
         else:
-            self.println(next_line)
+            self.println(next_line[:-1])
 
     def readline(self):
         # last write finished with no newline, check write first
@@ -65,10 +65,10 @@ class Playback:
             self.println("Expected " + next_line + ", instead asked for input")
             self.passed = False
         else:
-            self.println(next_line)
+            self.println(next_line[:-1])
             return next_line[2:]
 
-    def write(self, data):
+    def write(self, data: str):
         if not data: return # stdout likes to write nothing sometimes
         else: self.write_buffer += data
 
@@ -82,10 +82,12 @@ class Playback:
 
         if exc_type: return False # propagate exception
 
-def run_transcript(program, transcript_path):
+def run_transcript(program, transcript_path: str) -> int:
     print("-- Testing", transcript_path, "--")
     with Playback(transcript_path) as playback:
         args = playback.parse_args()
         program(args)
-        status = "-- PASSED --" if playback.passed else "-- FAILED --"
-    print(status)
+        status = "-- PASSED --" if playback.passed else "!!!! FAILED !!!!"
+        passed = playback.passed
+    print(status + '\n')
+    return int(passed)

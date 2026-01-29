@@ -1,0 +1,19 @@
+$ [+]
+Enter search terms: \
+> Ki
+pump.lock.control.Ki(float)
+Currently: 0
+Enter argument: \
+> 1
+Reply: 1.0
+Currently: 1.0
+Enter argument: \
+> 2
+Reply: 2.0
+Currently: 2.0
+Enter argument: \
+> 1
+Reply: 1.0
+Currently: 1.0
+Enter argument: \
+> quit
