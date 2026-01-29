@@ -54,3 +54,5 @@ class TestDevice:
         self.settings._add_rpc("signal.capture.size", type(None), int, value=8)
         self.settings._add_rpc("signal.capture.trigger", type(None), type(None), value=8)
         self.settings._add_rpc("signal.capture.block", type(None), bytes, value=8)
+
+        self.samples = None
