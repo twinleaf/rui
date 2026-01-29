@@ -1,6 +1,7 @@
 import os, sys
 from client.main import main
 from daemon.daemon import RPCDaemon
+from daemon.spawn import spawn_temp_daemon
 
 from test.testdev import TestDevice
 from test.record import record, list_recorded

@@ -20,30 +20,31 @@ class RPCDaemon:
 
         return self
 
-    def get_device(self):
+    def get_device(self, silent=False):
         # If we have a socket, look for a device
         # If not, server_loop will raise OSError and go to __exit__
         while self.socket_available:
             try:
-                print("Looking for device...")
+                if not silent: print("Looking for device...")
                 self.dev = self.dev_constructor()
-                print(f"Got device {self.dev.settings.dev.name().decode()}")
+                if not silent: print(f"Got device {self.dev.settings.dev.name().decode()}")
                 break # go to return
 
             # dev_constructor will raise this if no device
             except RuntimeError:
                 self.dev = None
-                print("Device not found, trying again in 5s...")
+                if not silent: print("Device not found, trying again in 5s...")
                 time.sleep(5)
 
-    def server_loop(self):
+    def server_loop(self, silent=False):
         self.server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.server.bind(SOCKET_PATH) # raise OSError if socket in use
         self.server.listen(5) # accept up to five clients (arbitrary)
-        print("Started server")
+        if not silent: print("Started server")
 
         while True:
             assert self.still_connected()
+            ## loop that checks for client non-blocking but also checks for parent death
             client, _ = self.server.accept() # block here until client arrives
             client_thread = threading.Thread(target=self._handle_client,
                                         args=(client,), daemon=True)
