@@ -98,7 +98,7 @@ def main(args: list[str]):
 
         # okay, make sliders
         if numeric:
-            slider(numeric, fork=not cli.debug())
+            slider(numeric, full_list, fork=not cli.debug())
 
         return # don't go to call loop, even if we didn't make a gui
 
