@@ -1,5 +1,5 @@
 import os, sys
-from client.cli import main
+from client.main import main
 from daemon.daemon import RPCDaemon
 
 from test.testdev import TestDevice
