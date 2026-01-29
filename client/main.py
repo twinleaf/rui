@@ -65,8 +65,9 @@ def main(args: list[str]):
         full_list   = rpclist_from_file(dirname, cli.regen())
         selected = RPCList()
 
-        ''' search & select loop '''
-        while True: # only runs once unless we're slash search
+        ''' search & select loop (only runs once unless we're slash search) '''
+        while True:
+            # backslash exits search
             if cli.terms()[0] == '\\':  break   # backslash exits search
 
             # cli.terms() gets search terms to filter full_list for
@@ -75,7 +76,9 @@ def main(args: list[str]):
             # didn't match anything, try again if we're in slash search
             if matched.empty():
                 print(MATCH_ERR(cli.terms()))
-                if cli.slash(): continue
+                if cli.slash():
+                    cli.search_terms = []
+                    continue
 
             # ask which rpcs to call
             next_selection = select_input(matched, cli.star(), cli.any())

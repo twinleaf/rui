@@ -38,7 +38,7 @@ if __name__ == "__main__":
                         passed += run_transcript(main, test)
                     finally:
                         stop_signal.set()
-                    time.sleep(0.4) # wait at least 0.3s for daemon to exit
+                    time.sleep(0.26) # wait at least 0.25s for daemon to exit
                 print(f"RESULTS: PASSED {passed} OUT OF {total}")
             case _:
                 main(args)

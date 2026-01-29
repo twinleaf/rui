@@ -1,0 +1,24 @@
+$ [/]
+Enter search terms: \
+> autostart
+mode.autostart(int)
+Enter search terms: \
+> K
+1. pump.lock.control.Ki(float)
+2. pump.lock.control.Kp(float)
+Select rpc, or /[search] to keep searching: \
+> 2
+Enter search terms: \
+> 
+Enter search terms: \
+> \
+mode.autostart(int)
+Currently: 0
+Enter argument: \
+> 1
+Reply: 1
+pump.lock.control.Kp(float)
+Currently: 0
+Enter argument: \
+> 2
+Reply: 2.0

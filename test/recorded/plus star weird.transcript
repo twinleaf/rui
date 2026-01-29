@@ -1,0 +1,23 @@
+$ [+]
+Enter search terms: \
+> K
+1. pump.lock.control.Ki(float)
+2. pump.lock.control.Kp(float)
+Select rpc, or /[search] to keep searching: \
+> *
+pump.lock.control.Ki(float)
+Currently: 0
+Enter argument: \
+> 1
+Reply: 1.0
+Currently: 1.0
+Enter argument: \
+> 2
+Reply: 2.0
+Currently: 2.0
+Enter argument: \
+> 3
+Reply: 3.0
+Currently: 3.0
+Enter argument: \
+> quit

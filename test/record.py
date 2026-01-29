@@ -50,7 +50,7 @@ class Recorder:
             return False
         else:
             print() #spacer
-            test_name = input("Recorded, enter a test name: ").replace(' ', '_')
+            while not (test_name := input("Recorded, enter test name: ")): pass
 
             new_transcript_path = f"{test_name}.transcript"
             self.temp_path.rename(dest_dir / new_transcript_path)

@@ -1,0 +1,37 @@
+$ [- + * @ / |]
+Enter search terms: \
+> e
+1. dev.name()
+2. mode.autostart(int)
+3. pump.therm.control.autotune.start()
+4. signal.capture.block()
+5. signal.capture.size()
+6. signal.capture.trigger()
+Enter search terms: \
+> f
+Couldn't find @f.
+Enter search terms: \
+> g
+1. signal.capture.block()
+2. signal.capture.size()
+3. signal.capture.trigger()
+Enter search terms: \
+> \
+dev.name()
+Reply: TEST
+mode.autostart(int)
+Reply: 0
+pump.therm.control.autotune.start()
+Reply: OK
+signal.capture.block()
+Reply: 8
+signal.capture.size()
+Reply: 8
+signal.capture.trigger()
+Reply: 8
+signal.capture.block()
+Reply: 8
+signal.capture.size()
+Reply: 8
+signal.capture.trigger()
+Reply: 8

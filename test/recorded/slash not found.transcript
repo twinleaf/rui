@@ -1,0 +1,17 @@
+$ [/]
+Enter search terms: \
+> f
+Couldn't find f.
+Enter search terms: \
+> e
+1. dev.name()
+2. mode.autostart(int)
+3. pump.therm.control.autotune.start()
+4. signal.capture.block()
+5. signal.capture.size()
+6. signal.capture.trigger()
+Select rpc, or /[search] to keep searching: \
+> 1
+Enter search terms: \
+> \
+Reply: TEST

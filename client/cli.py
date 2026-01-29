@@ -39,7 +39,8 @@ class rpcCLI:
         terms = valid_input("Enter search terms: ", "", # no error message
                             lambda t: t if t[0] is not None and type(t) is list else t.split(),
                             default=self.search_terms)
-        if self.exact(): terms = ['@' + term for term in terms]
+        if self.exact(): terms = ['@' + term if term[0] not in {'\\', '@'}
+                                  else term for term in terms]
         self.search_terms = terms
         return terms
 

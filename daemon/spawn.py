@@ -12,7 +12,7 @@ class TempDaemon(RPCDaemon):
     def server_loop(self, silent=False):
         self._make_server()
 
-        self.server.settimeout(0.3)
+        self.server.settimeout(0.25)
         while not self.stop_signal.is_set():
             try:
                 client, _ = self.server.accept() # raise error if no immediate client
