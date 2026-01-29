@@ -18,6 +18,9 @@ class RPCDaemon:
             os.remove(SOCKET_PATH)
             self.socket_available = True
 
+        return self
+
+    def get_device(self):
         # If we have a socket, look for a device
         # If not, server_loop will raise OSError and go to __exit__
         while self.socket_available:
@@ -33,24 +36,39 @@ class RPCDaemon:
                 print("Device not found, trying again in 5s...")
                 time.sleep(5)
 
-        return self
-
     def server_loop(self):
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
-            server.bind(SOCKET_PATH) # raise OSError if socket in use
-            server.listen(5) # accept up to five clients (arbitrary)
-            print("Started server")
+        self.server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.server.bind(SOCKET_PATH) # raise OSError if socket in use
+        self.server.listen(5) # accept up to five clients (arbitrary)
+        print("Started server")
 
-            while True:
-                client, _ = server.accept() # block here until client arrives
-                client_thread = threading.Thread(target=self._handle_client,
-                                            args=(client,), daemon=True)
-                client_thread.start()
+        while True:
+            assert self.still_connected()
+            client, _ = self.server.accept() # block here until client arrives
+            client_thread = threading.Thread(target=self._handle_client,
+                                        args=(client,), daemon=True)
+            client_thread.start()
+
+    def still_connected(self) -> bool:
+        # Try to connect to dummy client
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+            try:
+                client.connect(SOCKET_PATH)
+                self.server.setblocking(False)
+                client, _ = self.server.accept()
+                self.server.setblocking(True)
+                return True
+            except BlockingIOError:
+                return False # couldn't accept dummy client
+            except OSError:
+                return False # accept throws invalid argument if we never had a connection
 
     def __exit__(self, exc_type, exc_value, traceback):
         # Remove our old socket if we were using it
-        if os.path.exists(SOCKET_PATH) and self.socket_available:
-            os.remove(SOCKET_PATH)
+        if self.socket_available and self.still_connected():
+            self.server.close()
+            if os.path.exists(SOCKET_PATH):
+                os.remove(SOCKET_PATH)
 
         # Exceptions we expect
         if exc_type == OSError:
@@ -78,7 +96,7 @@ class RPCDaemon:
                     # if we have a bad device, re-initalize it
                     if reply == PROXY_ERROR and self.dev is not None:
                         self.dev = None
-                        reinit_thread = threading.Thread(target=self.__init__, args=())
+                        reinit_thread = threading.Thread(target=self.get_device, args=())
                         reinit_thread.start()
 
             except ConnectionResetError:

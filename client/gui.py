@@ -1,5 +1,5 @@
-# TODO: if we have the speed, fetch value at intervals i/s/o every call (value cache)
-import os, sys, subprocess, random
+# TODO: use multiprocessing instead of os.fork
+import os, sys, subprocess, multiprocessing
 from typing import Callable
 from rpclib.rpc import RPC, RPCList
 from rpclib.rpctypes import rpc_arg_type, rpc_ret_type
@@ -8,12 +8,13 @@ from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit
 from PyQt6.QtCore import Qt, QRect
 from PyQt6.QtGui import QFont, QDoubleValidator
+import random # for colors
 
 def slider(rpcs: RPCList, fork=True):
     if rpcs.empty(): sys.exit("No rpcs to slide!")
 
     if fork:
-        pid = os.fork()
+        pid = os.fork()         # we use fork to keep child alive after parent ends
         if pid > 0: sys.exit()  # we're a parent, exit
         os.setsid()             # detach from terminal
         sys.stdin.close()       # close streams
@@ -105,17 +106,17 @@ class RPCDisplay():
     def update_slider(self, value: int):
         if not self.updating: # don't recursively call this
             self.updating = True
-            self.rpc.call(self.__descale(value))
+
+            value_real = self.__descale(value)
+            self.rpc.call(value_real)
             self.__get_value()
-            # TODO: decide when to re-call to check value, not always?
-            #self.value = self.__descale(value)
-            #self.value_scaled = value
+
             self.result_label.setText(self.__result_display())
             self.slider.setValue(self.value_scaled)
             self.updating = False
 
     def __get_value(self):
-        self.value = self.rpc.call()
+        self.value = self.rpc.value()
         self.value_scaled = self.__scale(self.value)
     def __result_display(self): return f"Current value: {self.value}"
     def __qfont(self, size: int=14): return QFont('Ubuntu', size)

@@ -30,7 +30,7 @@ class rpcCLI:
             if arg in ALL_MODES:
                 self.add_mode(arg)
             elif arg[:2] == '--' and arg[2:] in FLAGS:
-                self.add_mode(FLAGS[arg])
+                self.add_mode(FLAGS[arg[2:]])
             else:
                 try: self.default_arg = float(arg) if '.' in arg else int(arg)
                 except ValueError: self.search_terms.append(arg)
