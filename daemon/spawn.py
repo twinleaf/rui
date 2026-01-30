@@ -1,6 +1,5 @@
-import os, sys, time, threading, subprocess
+import os, sys, time, threading
 from daemon.daemon import RPCDaemon
-# TODO: spawn permanent daemon with subprocess
 
 class TempDaemon(RPCDaemon):
     ''' Thread daemon bound to stop_signal so it can be killed by main '''
@@ -10,8 +9,7 @@ class TempDaemon(RPCDaemon):
         self.stop_signal    = stop_signal
 
     def server_loop(self, silent=False):
-        self._make_server()
-
+        if not self.socket_available: raise OSError
         self.server.settimeout(0.25)
         while not self.stop_signal.is_set():
             try:
@@ -27,7 +25,7 @@ def make_temp_daemon(dev_constructor, stop_signal):
     with TempDaemon(dev_constructor, stop_signal) as daemon:
         daemon.server_loop()
 
-def spawn_test_daemon(dev_constructor, override=False, silent=False) -> threading.Event:
+def spawn_test_daemon(dev_constructor) -> threading.Event:
     stop_signal = threading.Event()
     daemon_thread = threading.Thread(target=make_temp_daemon,
                                      args=(dev_constructor, stop_signal),
@@ -35,6 +33,3 @@ def spawn_test_daemon(dev_constructor, override=False, silent=False) -> threadin
     daemon_thread.start()
     time.sleep(0.1)
     return stop_signal
-    
-def spawn_permanent_daemon(dev_constructor, override=False, silent=False):
-    pass

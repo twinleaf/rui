@@ -9,7 +9,9 @@ from rpclib.rpctypes import NAME_TO_TYPE, TYPE_NAME, TYPE_CAST, IS_ARG_TYPE
 def process_request(dev, req: dict[str, str | rpc_arg_type ]) -> rpc_ret_type:
     ''' receives request from client tio.send_request, calls it, and replies with value '''
     # first check that we can do anything
-    if not dev: return PROXY_ERROR
+    if not dev:
+        return PROXY_ERROR
+
     # TODO: handle request errors & document error handling between daemon & client
     elif 'op' not in req: return "Malformed request: " + str(req)
 

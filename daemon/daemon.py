@@ -11,6 +11,7 @@ class RPCDaemon:
         self.silent             = silent
         self.socket_available   = False
         self.dev                = None
+        self.server             = None
 
     def __enter__(self):
         ''' Called as we enter a with statement, gets device only if socket available '''
@@ -21,8 +22,8 @@ class RPCDaemon:
             os.remove(self.path)
             self.socket_available = True
 
-        # If we have a socket, look for a device
-        # If not, skip and _make_server will raise OSError and go to __exit__
+        # If we have a socket, set up server and make device
+        if self.socket_available: self._make_server()
         while self.socket_available:
             try:
                 if not self.silent: print("Looking for device...")
@@ -39,8 +40,8 @@ class RPCDaemon:
         return self
 
     def server_loop(self):
-        ''' Must be called within with statement otherwise... what was the point '''
-        self._make_server()
+        ''' Call inside with statement to actually run server '''
+        if not self.socket_available: raise OSError # We don't have a server, exit
         while True:
             assert self._still_connected()
             client, _ = self.server.accept() # block here until client arrives
@@ -79,7 +80,6 @@ class RPCDaemon:
         self.server.bind(self.path) # raise OSError if socket in use
         self.server.listen(5) # accept up to five clients (arbitrary)
         if not self.silent: print("Started server")
-
 
     def _handle_client(self, client: socket.socket):
         with client:
