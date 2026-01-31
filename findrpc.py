@@ -1,5 +1,6 @@
 import os, sys, time
 from client.main import main
+from client.itl import itl
 from daemon.daemon import RPCDaemon
 from daemon.spawn import spawn_test_daemon
 
@@ -19,8 +20,12 @@ if __name__ == "__main__":
                 else: dev_constructor = TestDevice
                 override = '--override' in rest
 
+                # with statement guarantees clean exit
                 with RPCDaemon(dev_constructor, override) as daemon:
                     daemon.server_loop()
+
+            case ['itl', *rest]:
+                itl()
 
             case ['record', *rest]:
                 stop_signal = spawn_test_daemon(TestDevice)

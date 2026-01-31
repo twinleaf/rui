@@ -6,10 +6,10 @@ class Recorder:
     def __init__(self, transcript_dir: Path):
         self.temp_path = transcript_dir / 'tmp'
 
-    def write_transcript(self, data: str=None):
+    def write_transcript(self, data: str | None=None):
         if data: self.transcript.write(data)
         self.transcript.flush()
-    def write_stdout(self, data: str=None):
+    def write_stdout(self, data: str | None=None):
         if data: self.stdout.write(data)
         self.stdout.flush()
 
@@ -60,7 +60,7 @@ test_dir = Path(__file__).resolve().parent # location of this script
 dest_dir = test_dir / "recorded"
 dest_dir.mkdir(exist_ok=True)
 def list_recorded() -> list[Path]:
-    return dest_dir.iterdir()
+    return list(dest_dir.iterdir())
 
 def record(program, args: list[str]=[]):
     with Recorder(dest_dir) as recorder:

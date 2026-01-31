@@ -12,11 +12,13 @@ RequestError = (TypeError, AssertionError)
 ''                          '''
 def daemon_shell_rpc(name: str, arg_type: type | None, arg: rpc_arg_type) -> rpc_ret_type:
     ''' framework to try daemon first, then shell. only this method can sys.exit '''
+    # TODO: better error handling of different things that can happen with daemon/shell
+    # For example, difference between a daemon runtime error and a shell runtime error?
     try:
         return daemon_rpc(name, arg_type, arg)
     except (ConnectionRefusedError, FileNotFoundError):
         process = spawn_permanent_daemon()
-        print("Starting daemon, using shell for now")
+        print("Trying to start daemon, using shell for now")
     except DaemonError:
         print("Error in daemon loop, trying shell")
     except ProxyError:
@@ -31,7 +33,6 @@ def daemon_shell_rpc(name: str, arg_type: type | None, arg: rpc_arg_type) -> rpc
         sys.exit("No tio-tool found, try installing or adding to PATH")
     except NotImplementedError as e:
         sys.exit(str(e))
-    # RuntimeError caught upstream TODO: is this true??
 
 '''                      ''
      daemon interface
@@ -43,9 +44,7 @@ RPC_TYPE_ERROR = "RPC failed, check type"
 BAD_REQ_ERROR = "Malformed or unknown request"
 
 def daemon_rpc(name: str, arg_type: type | None, arg: rpc_arg_type) -> rpc_ret_type:
-    assert IS_ARG_TYPE(arg)
     value = send_request({'op': 'rpc', 'name': name, 'type': TYPE_NAME(arg_type), 'arg': arg})
-    assert IS_RET_TYPE(value)
     return value
 
 def daemon_check_is_sample(name) -> bool:
@@ -73,7 +72,8 @@ def send_request(req: dict[str, str | rpc_arg_type]) -> rpc_ret_type:
 
         if value == PROXY_ERROR: raise ProxyError
         if value == RPC_DNE_ERROR: raise RuntimeError
-        if value == RPC_TYPE_ERROR: raise TypeError(RPC_TYPE_ERROR)
+        if value == RPC_TYPE_ERROR: raise TypeError
+        if value == BAD_REQ_ERROR: raise TypeError
         else: return value
 
 def spawn_permanent_daemon() -> subprocess.Popen:

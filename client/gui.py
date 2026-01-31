@@ -193,10 +193,8 @@ class RPCDisplay():
     def __result_display(self): return f"Current value: {self.value}"
     def __qfont(self, size: int=14): return QFont('Ubuntu', size)
     def __scale(self, val: rpc_ret_type ) -> int:
-        assert self.rpc.arg_type in {int, float} # for mypy, will never fail probably
         return int(self.rpc.arg_type(val) * self.scale)
     def __descale(self, val: int) -> rpc_arg_type:
-        assert self.rpc.arg_type in {int, float} # for mypy
         return self.rpc.arg_type(val / self.scale)
 
 def _generate_qss() -> str:

@@ -36,7 +36,6 @@ def __get_gen_file(dirname: str, regen: bool=False) -> str:
     # get name of file to write to
     try:
         devname = RPC("dev.name", None).call()
-        assert type(devname) is str
     except RuntimeError:
         raise DeviceError
     filepath = os.path.join(dirname, devname + ".rpcs")
@@ -46,7 +45,6 @@ def __get_gen_file(dirname: str, regen: bool=False) -> str:
         print(REGEN_MSG(filepath) if regen else NOFILE_MSG(filepath))
         try:
             daemon_list = send_request({'op': 'list'})
-            assert type(daemon_list) is str
         except RuntimeError:
             raise DaemonListError
 

@@ -8,15 +8,12 @@ from .rpctypes import TYPE_NAME, IS_ARG_TYPE, IS_RET_TYPE
 class RPC:
     ''' Interface for an RPC, supporting name, calling, type, and search '''
     def __init__(self, name: str, arg_type: type | None, is_sample: bool | None=None):
-        assert IS_ARG_TYPE(arg_type)
         self.name, self.arg_type, self.is_sample = name, arg_type, is_sample
         self.value_cache = None
 
     def call(self, arg: rpc_arg_type=None) -> rpc_ret_type:
-        assert IS_ARG_TYPE(arg)
         ret = daemon_shell_rpc(self.name, self.arg_type, arg)
         self.value_cache = ret
-        assert IS_RET_TYPE(ret)
         return ret
 
     def value(self) -> rpc_ret_type:
