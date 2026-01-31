@@ -33,6 +33,7 @@ class Playback:
             self.passed = False
             raise IOError
         else:
+            self.println(arg_line[:-1])
             return arg_line[3:-2].split()
 
     def check_write_buffer(self):

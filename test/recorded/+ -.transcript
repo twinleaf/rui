@@ -3,3 +3,4 @@ Enter search terms: \
 > Ki
 pump.lock.control.Ki(float)
 Reply: 0
+Plus (continuous input) and dash (no argument) modes incompatible, exiting

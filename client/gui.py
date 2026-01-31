@@ -10,7 +10,19 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QDoubleValidator
 import random # for colors
 
-def slider(rpcs: RPCList, rpc_full_list: RPCList, fork=True):
+def slider(full_list: RPCList, selected: RPCList, fork: bool=True):
+
+    # Need to know which RPCs we can slide
+    numeric_full = RPCList([r for r in full_list if r.arg_type in {int, float}])
+    numeric_selected= RPCList([r for r in selected if r.arg_type in {int, float}])
+
+    # If user selected a non-numeric RPC, tell them
+    non_numeric = RPCList([r for r in selected if r.arg_type not in {int, float}])
+    for rpc in non_numeric: print(f"{rpc} has type {rpc.arg_type}, can't make a slider")
+
+    # See which rpcs we need to watch out for changes behind our backs
+    for rpc in numeric: rpc.check_is_sample()
+
     if rpcs.empty(): sys.exit("No rpcs to slide!")
 
     if fork:
@@ -22,10 +34,10 @@ def slider(rpcs: RPCList, rpc_full_list: RPCList, fork=True):
         sys.stderr.close()
 
     app = QApplication([sys.argv[0]])
-    window = MainWindow(rpcs, rpc_full_list)
+    window = MainWindow(numeric_selected, numeric_full)
     window.show()
 
-    # make slider floating for i3wm
+    # make slider floating for i3wm, doesn't do anything if you're not Chris
     try: subprocess.run(["i3-msg", "floating", "toggle"], capture_output=True)
     except FileNotFoundError: pass
 
