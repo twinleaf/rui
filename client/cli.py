@@ -1,7 +1,7 @@
 import sys
 from typing import TypeVar, Callable
-from rpclib.rpc import RPC, RPCList
-from rpclib.rpctypes import rpc_arg_type
+from client.rpc import RPC, RPCList
+from rpclib.rpclib import rpc_arg_type
 
 ALL_MODES = {'-', '+', '++', '*', '@', '/', '|', 'debug', 'regen'}
 FLAGS = {
@@ -20,9 +20,9 @@ FLAGS = {
 class rpcCLI:
     '''Interface to parse and store command line input to findrpc'''
     def __init__(self, argv: list[str]):
-        self.search_terms:  list[str]    = []      # list of search terms
-        self.default_arg:   rpc_arg_type = None    # argument to call rpc with, should be numeric
-        self.modes:         set[str]     = set()   # set of options from ALL_MODES
+        self.search_terms = []  # list of search terms
+        self.default_arg = None # argument to call rpc with, should be numeric
+        self.modes = set()      # set of options from ALL_MODES
         self.__parse_args(argv)
 
     def __parse_args(self, argv: list[str]):

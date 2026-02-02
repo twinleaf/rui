@@ -1,9 +1,9 @@
 import os, sys, json, socket, subprocess
-from typing import Callable, TypeVar, Any
-from .rpctypes import rpc_arg_type, rpc_ret_type
-from .rpctypes import IS_ARG_TYPE, IS_RET_TYPE, TYPE_NAME
+from rpclib.rpclib import rpc_arg_type, rpc_ret_type
+from rpclib.rpclib import IS_ARG_TYPE, IS_RET_TYPE, TYPE_NAME
+from rpclib.rpclib import SOCKET_PATH, ProxyError
+from rpclib.rpclib import PROXY_ERROR, RPC_DNE_ERROR, RPC_TYPE_ERROR, BAD_REQ_ERROR
 
-class ProxyError(Exception): pass
 DaemonError = json.decoder.JSONDecodeError
 RequestError = (TypeError, AssertionError)
 
@@ -16,15 +16,17 @@ def daemon_shell_rpc(name: str, arg_type: type | None, arg: rpc_arg_type) -> rpc
     # For example, difference between a daemon runtime error and a shell runtime error?
     try:
         return daemon_rpc(name, arg_type, arg)
-    except (ConnectionRefusedError, FileNotFoundError):
-        process = spawn_permanent_daemon()
-        print("Trying to start daemon, using shell for now")
+    except FileNotFoundError:
+        process = spawn_thread_daemon('--silent')
+        print("Trying to start daemon, using tio-tool for now")
+    except ConnectionRefusedError:
+        print("Proxy hasn't found device, trying tio-tool")
     except DaemonError:
-        print("Error in daemon loop, trying shell")
+        print("Error in daemon loop, trying tio-tool")
     except ProxyError:
-        print("Error with daemon's proxy, defaulting to shell")
+        print("Error with daemon's proxy, trying tio-tool")
     except RequestError:
-        sys.exit("\nBad types on request data, exiting")
+        sys.exit("Bad types on request data, exiting")
 
     # only get here if error
     try:
@@ -37,11 +39,6 @@ def daemon_shell_rpc(name: str, arg_type: type | None, arg: rpc_arg_type) -> rpc
 '''                      ''
      daemon interface
 ''                      '''
-SOCKET_PATH = "/tmp/daemon.sock"
-PROXY_ERROR = "Proxy failed, trying to restart..."
-RPC_DNE_ERROR = "RPC does not exist"
-RPC_TYPE_ERROR = "RPC failed, check type"
-BAD_REQ_ERROR = "Malformed or unknown request"
 
 def daemon_rpc(name: str, arg_type: type | None, arg: rpc_arg_type) -> rpc_ret_type:
     value = send_request({'op': 'rpc', 'name': name, 'type': TYPE_NAME(arg_type), 'arg': arg})
@@ -64,7 +61,8 @@ def send_request(req: dict[str, str | rpc_arg_type]) -> rpc_ret_type:
         client.sendall(request.encode())
         try:
             reply = json.loads(client.recv(8192).decode())
-        except json.decoder.JSONDecodeError:
+        # TODO: difference between these errors?
+        except DaemonError:
             raise ProxyError
         except ConnectionResetError:
             raise ProxyError
@@ -76,14 +74,14 @@ def send_request(req: dict[str, str | rpc_arg_type]) -> rpc_ret_type:
         if value == BAD_REQ_ERROR: raise TypeError
         else: return value
 
-def spawn_permanent_daemon() -> subprocess.Popen:
+def spawn_thread_daemon(*args) -> subprocess.Popen:
     findrpc_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     findrpc_script = os.path.join(findrpc_dir, 'findrpc.py')
 
     with open(os.devnull, 'w') as devnull:
         process = subprocess.Popen(
-            [sys.executable, findrpc_script, "daemon", "--silent"],
-            stdout=devnull, stderr=devnull, 
+            [sys.executable, findrpc_script, 'daemon'] + args,
+            stdout=devnull, stderr=devnull,
             close_fds=True, start_new_session=True)
     return process
 

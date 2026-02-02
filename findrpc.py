@@ -17,7 +17,8 @@ if __name__ == "__main__":
                 if 'test' not in rest:
                     import twinleaf
                     dev_constructor = twinleaf.Device
-                else: dev_constructor = TestDevice
+                else: 
+                    dev_constructor = TestDevice
                 override = '--override' in rest
 
                 # with statement guarantees clean exit

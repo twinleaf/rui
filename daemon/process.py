@@ -2,9 +2,9 @@ from inspect import signature, getmembers
 from struct import error as StructError
 from typing import Callable, TypeVar
 
-from rpclib.tio import PROXY_ERROR, RPC_DNE_ERROR, RPC_TYPE_ERROR, BAD_REQ_ERROR
-from rpclib.rpctypes import rpc_arg_type, rpc_ret_type
-from rpclib.rpctypes import NAME_TO_TYPE, TYPE_NAME, TYPE_CAST, IS_ARG_TYPE
+from rpclib.rpclib import rpc_arg_type, rpc_ret_type
+from rpclib.rpclib import NAME_TO_TYPE, TYPE_NAME, TYPE_CAST, IS_ARG_TYPE
+from rpclib.rpclib import PROXY_ERROR, RPC_DNE_ERROR, RPC_TYPE_ERROR, BAD_REQ_ERROR
 
 def process_request(dev, req: dict[str, str | rpc_arg_type ]) -> rpc_ret_type | bool:
     ''' receives request from client tio.send_request, calls it, and replies with value '''

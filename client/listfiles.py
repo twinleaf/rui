@@ -1,7 +1,7 @@
 import os, sys
-from .rpc import RPC, RPCList
-from .rpctypes import TYPES_DICT
-from .tio import send_request
+from client.rpc import RPC, RPCList
+from client.process import send_request
+from rpclib.rpclib import TYPES_DICT
 
 '''                             ''
     ~/.rpc-lists r/w interface

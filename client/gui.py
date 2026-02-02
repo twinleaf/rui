@@ -1,8 +1,8 @@
 # TODO: use multiprocessing instead of os.fork
 import os, sys, subprocess, multiprocessing
 from typing import Callable
-from rpclib.rpc import RPC, RPCList
-from rpclib.rpctypes import rpc_arg_type, rpc_ret_type
+from client.rpc import RPC, RPCList
+from rpclib.rpclib import rpc_arg_type, rpc_ret_type
 
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit, QComboBox, QCheckBox
@@ -21,9 +21,9 @@ def slider(full_list: RPCList, selected: RPCList, fork: bool=True):
     for rpc in non_numeric: print(f"{rpc} has type {rpc.arg_type}, can't make a slider")
 
     # See which rpcs we need to watch out for changes behind our backs
-    for rpc in numeric: rpc.check_is_sample()
+    for rpc in numeric_selected: rpc.check_is_sample()
 
-    if rpcs.empty(): sys.exit("No rpcs to slide!")
+    if numeric_selected.empty(): sys.exit("No rpcs to slide!")
 
     if fork:
         pid = os.fork()         # we use fork to keep child alive after parent ends
@@ -204,6 +204,9 @@ class RPCDisplay():
         self.value_scaled = self.__scale(self.value)
     def __result_display(self): return f"Current value: {self.value}"
     def __qfont(self, size: int=14): return QFont('Ubuntu', size)
+
+    # TODO: Fix floating point rounding issues causing it not to move sometimes
+    # Try going up from 18.9 when on a scale of 0-20
     def __scale(self, val: rpc_ret_type ) -> int:
         return int(self.rpc.arg_type(val) * self.scale)
     def __descale(self, val: int) -> rpc_arg_type:

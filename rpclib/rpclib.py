@@ -38,3 +38,15 @@ def TYPE_CAST(x: Any, t: type | None) -> rpc_any_type:
         return t(x)
     except ValueError:
         raise TypeError
+
+'''                 ''
+    TIO constants
+''                 '''
+
+class ProxyError(Exception): pass
+
+SOCKET_PATH = "/tmp/daemon.sock"
+PROXY_ERROR = "Proxy failed, trying to restart..."
+RPC_DNE_ERROR = "RPC does not exist"
+RPC_TYPE_ERROR = "RPC failed, check type"
+BAD_REQ_ERROR = "Malformed or unknown request"

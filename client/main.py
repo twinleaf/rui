@@ -1,12 +1,13 @@
 # TODO: add spacers
 import os, sys
-from rpclib.rpc import RPC, RPCList
-from rpclib.listfiles import rpclist_from_file
-from rpclib.rpctypes import rpc_arg_type
-from client.cli import rpcCLI, valid_input, InputQuit
+from client.listfiles import rpclist_from_file
+from client.cli import rpcCLI, InputQuit
+from client.gui import slider
+
 from client.search_select import search_select_loop
 from client.call_io import input_call_output_loop
-from client.gui import slider
+
+from rpclib.rpclib import rpc_arg_type
 
 '''               ''
     main script

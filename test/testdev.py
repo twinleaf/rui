@@ -1,3 +1,5 @@
+import os
+
 def call_test_rpc(rpc, arg: int | float | None) -> int | float | None:
     if arg is None:
         return rpc._value
@@ -56,3 +58,6 @@ class TestDevice:
         self.settings._add_rpc("signal.capture.block", type(None), bytes, value=8)
 
         self.samples = None
+
+    def _interact(self):
+        os.execvp("zsh", ["zsh"])

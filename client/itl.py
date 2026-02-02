@@ -1,6 +1,8 @@
-from rpclib.tio import SOCKET_PATH, send_request
+from rpclib.rpclib import SOCKET_PATH
+from client.process import send_request
 import os, sys, socket, select, termios, tty
 
+# TODO: handle ProxyError
 def itl():
     try:
         stdin_fd = sys.stdin.fileno()
