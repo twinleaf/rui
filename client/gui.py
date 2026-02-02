@@ -5,8 +5,8 @@ from client.rpc import RPC, RPCList
 from rpclib.rpclib import rpc_arg_type, rpc_ret_type
 
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
-from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit, QComboBox, QCheckBox
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit, QComboBox, QScrollArea, QCompleter, QSpacerItem, QSizePolicy
+from PyQt6.QtCore import Qt, QStringListModel
 from PyQt6.QtGui import QFont, QDoubleValidator
 import random # for colors
 
@@ -47,22 +47,31 @@ class MainWindow(QWidget):
     def __init__(self, rpcs: RPCList, rpc_full_list):
         super().__init__()
 
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
-        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignCenter)
+        self.main_layout = QVBoxLayout()
+        self.setLayout(self.main_layout)
+        self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setWindowTitle('findrpc GUI')
         self.setMinimumWidth(500)
 
-        self.rpcs_displayed = [0]
+        self.search_bar = QLineEdit()
+        self.model = QStringListModel()
+        self.completer = QCompleter(self.model, self)
+        self.rpc_list = rpc_full_list
+
         self.dropdown = QComboBox()
+        self.dropdown.adjustSize()
         self.dropdown.setStyleSheet(_generate_qss())
         self.dropdown.addItem("Select new rpc")
+        self.dropdown.activated.connect(self.display_rpc_slider)
         
-        self.rpc_list = rpc_full_list
+        self.name_placeholder = []
+        self.rpcs_displayed = [0]
         for rpc in self.rpc_list:
             self.dropdown.addItem(rpc.name)
-        self.layout.addWidget(self.dropdown)
-
+            self.name_placeholder.append(rpc.name)
+        
+        self.generate_searchbar
+        self.rpcLayout = QVBoxLayout()    
         for rpc in rpcs:
             try: min_val = RPC(rpc.name+'.min', rpc.arg_type).call()
             except RuntimeError: min_val = 0
@@ -70,27 +79,51 @@ class MainWindow(QWidget):
             except RuntimeError: max_val = rpc.call()
 
             self.display = RPCDisplay(rpc, min_val, max_val)
-            self.layout.addLayout(self.display.label_container)
-            self.layout.addLayout(self.display.slider_container)
-
+            self.rpcLayout.addLayout(self.display.label_container)
+            self.rpcLayout.addLayout(self.display.slider_container)
             self.rpcs_displayed.append(self.display)
+        
+        self.rpcs_Box = QWidget()
+        self.rpcs_Box.setLayout(self.rpcLayout)
 
-        self.dropdown.activated.connect(self.display_rpc_slider)
+        self.scroll = QScrollArea()
+        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setWidget(self.rpcs_Box)
 
-    def display_rpc_slider(self):
+        self.main_layout.addWidget(self.search_bar)
+        self.main_layout.addWidget(self.dropdown)
+        self.main_layout.addWidget(self.scroll)
+
+    def tab_completion(self, event):
+        if event.key() == Qt.Key.Key_Tab and self.completer.popup().isVisible():
+            self.completer.insertCompletion(
+                self.completer.currentCompletion()
+            ) 
+            return
+
+    def display_rpc_slider(self): #display hidden RPCs else create new ones
         index = self.dropdown.currentIndex()
         dropdown_value = self.dropdown.currentText()
         if index:
                 idx = next((i + 1 for i, rpc in enumerate(self.rpcs_displayed[1:]) if rpc.name == dropdown_value), None)
                 if idx:
                     if not self.rpcs_displayed[idx].widget_visible:
-                        self.rpcs_displayed[idx].show_slider()
-                        self.rpcs_displayed[idx].widget_visible = True
+                        self.rpcs_displayed[idx].show_slider_box()
                 else:
                     new_rpc = RPCDisplay(self.rpc_list[index-1], 0, self.rpc_list[index-1].call())
                     self.rpcs_displayed.append(new_rpc)
-                    self.layout.addLayout(new_rpc.label_container)
-                    self.layout.addLayout(new_rpc.slider_container)
+                    self.rpcLayout.addLayout(new_rpc.label_container)
+                    self.rpcLayout.addLayout(new_rpc.slider_container)        
+
+    def generate_searchbar(self):
+        self.model.setStringList(self.name_placeholder)
+        self.completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.completer.setFilterMode(Qt.MatchFlag.Mat)
+        self.completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+        self.search_bar.setPlaceholderText("Search rpcs")
+        self.search_bar.setCompleter(self.completer)
 
 class RPCDisplay():
     def __init__(self, rpc: RPC, min_val: rpc_ret_type, max_val: rpc_ret_type):
@@ -165,11 +198,10 @@ class RPCDisplay():
         button.setFixedSize(50, 40)
         button.adjustSize()
         if (self.widget_visible == True):
-            button.clicked.connect(self.hide_slider)
-            self.widget_visible = False
+            button.clicked.connect(self.hide_slider_box)
         return button
 
-    def hide_slider(self):
+    def hide_slider_box(self):
         self.label_container.removeWidget(self.name_label)
         self.label_container.removeWidget(self.result_label)
         self.label_container.removeWidget(self.delete_button)
@@ -184,20 +216,23 @@ class RPCDisplay():
         self.max_label.hide()
         self.label_container.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignCenter) 
         self.slider_container.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignCenter)
+        self.widget_visible = False
     
-    def show_slider(self):
-        self.label_container.addWidget(self.name_label)
-        self.label_container.addWidget(self.result_label)
-        self.label_container.addWidget(self.delete_button)
-        self.slider_container.addWidget(self.min_label)
-        self.slider_container.addWidget(self.slider)
-        self.slider_container.addWidget(self.max_label)
+    def show_slider_box(self):
         self.name_label.show()
         self.result_label.show()
         self.delete_button.show()
         self.slider.show()
         self.min_label.show()
         self.max_label.show() 
+        self.label_container.addWidget(self.name_label)
+        self.label_container.addWidget(self.result_label)
+        self.label_container.addWidget(self.delete_button)
+        self.slider_container.addWidget(self.min_label)
+        self.slider_container.addWidget(self.slider)
+        self.slider_container.addWidget(self.max_label)
+        self.widget_visible = True
+
 
     def __get_value(self):
         self.value = self.rpc.value()
@@ -224,7 +259,7 @@ def _generate_qss() -> str:
 
     QComboBox QAbstractItemView{{
         border-color:2px solid black;
-        border-radius: 3px;
+        border-radius: 5px;
         color:white;
         selection-background-color:lightgrey}}
 
