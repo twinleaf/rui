@@ -156,7 +156,7 @@ class MakeRPCDisplay():
         self.max_label = self.make_edit(str(max_val), self.slider.setMaximum)
 
         self.grid_layout = QGridLayout()
-        self.grid_layout.setSpacing(10)
+        self.grid_layout.setSpacing(0)
         self.grid_layout.addWidget(self.name_label, 0, 0)
         self.grid_layout.addWidget(self.result_label, 0, 1, alignment= Qt.AlignmentFlag.AlignHCenter)
         self.grid_layout.addWidget(self.delete_button, 0, 2, alignment =Qt.AlignmentFlag.AlignLeft)
@@ -186,19 +186,16 @@ class MakeRPCDisplay():
         slider.setValue(self.value_scaled)
         slider.setSingleStep(1)
         slider.setPageStep(10)
-        slider.valueChanged.connect(self.update_slider)
         slider.setStyleSheet(_generate_qss())
-
+        slider.valueChanged.connect(self.update_slider)
         return slider
 
     def update_slider(self, value: int):
         if not self.updating: # don't recursively call this
             self.updating = True
-
             value_real = self.__descale(value)
             self.rpc.call(value_real)
             self.__get_value()
-
             self.result_label.setText(self.__result_display())
             self.slider.setValue(self.value_scaled)
             self.updating = False
@@ -242,17 +239,14 @@ class MakeRPCDisplay():
         self.grid_layout.addWidget(self.max_label)
         self.widget_visible = True
 
-
     def __get_value(self):
         self.value = self.rpc.value()
         self.value_scaled = self.__scale(self.value)
     def __result_display(self): return f"Current value: {self.value}"
     def __qfont(self, size: int=14): return QFont('Ubuntu', size)
 
-    # TODO: Fix floating point rounding issues causing it not to move sometimes
-    # Try going up from 18.9 when on a scale of 0-20
     def __scale(self, val: rpc_ret_type ) -> int:
-        return int(self.rpc.arg_type(val) * self.scale)
+        return round(self.rpc.arg_type(val) * self.scale)
     def __descale(self, val: int) -> rpc_arg_type:
         return self.rpc.arg_type(val / self.scale)
 
