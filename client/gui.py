@@ -51,7 +51,7 @@ class MainWindow(QWidget):
         self.setLayout(self.main_layout)
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.rpc_layout = QVBoxLayout()    
-        self.setWindowTitle('findrpc GUI')
+        self.setWindowTitle('RUI GUI')
         self.setMinimumWidth(500)
         
         self.rpc_list = rpc_full_list

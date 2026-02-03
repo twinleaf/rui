@@ -22,12 +22,12 @@ def main(args: list[str]):
 
 def spawn_thread_daemon(args: list[str]) -> subprocess.Popen:
     # Slightly evil recursive import for other relative imports to work
-    findrpc_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    findrpc_script = os.path.join(findrpc_dir, 'findrpc.py')
+    rui_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    rui_script = os.path.join(rui_dir, 'rui.py')
 
     with open(os.devnull, 'w') as devnull:
          process = subprocess.Popen(
-            [sys.executable, findrpc_script, 'daemon'] + args,
+            [sys.executable, rui_script, 'daemon'] + args,
             #stdout=devnull, stderr=devnull,
             close_fds=True, start_new_session=True)
     return process

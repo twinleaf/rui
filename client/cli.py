@@ -18,7 +18,7 @@ FLAGS = {
         }
 
 class rpcCLI:
-    '''Interface to parse and store command line input to findrpc'''
+    '''Interface to parse and store command line input to RUI'''
     def __init__(self, argv: list[str]):
         self.search_terms = []  # list of search terms
         self.default_arg = None # argument to call rpc with, should be numeric
