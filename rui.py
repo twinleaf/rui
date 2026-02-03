@@ -32,9 +32,9 @@ if __name__ == "__main__":
             case ['playback', *rest]:
                 passed, total = 0, 0
                 for test in list_recorded():
-                    daemon_main(["test", "--thread", "--silent"])
+                    daemon_main(["test", "--thread"])
                     total += 1
-                    time.sleep(0.1)
+                    time.sleep(0.2)
                     try:
                         passed += run_transcript(client_main, test)
                     finally:
