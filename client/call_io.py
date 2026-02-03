@@ -1,5 +1,5 @@
 from client.cli import rpcCLI, valid_input
-from client.rpc import RPC, RPCList
+from client.lib.rpc import RPC, RPCList
 from rpclib.rpclib import rpc_arg_type
 
 DASH_PLUS_ERR = "Plus (continuous input) and dash (no argument) modes incompatible, exiting"

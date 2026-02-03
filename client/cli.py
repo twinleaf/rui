@@ -1,6 +1,6 @@
 import sys
 from typing import TypeVar, Callable
-from client.rpc import RPC, RPCList
+from client.lib.rpc import RPC, RPCList
 from rpclib.rpclib import rpc_arg_type
 
 ALL_MODES = {'-', '+', '++', '*', '@', '/', '|', 'debug', 'regen'}
@@ -30,11 +30,11 @@ class rpcCLI:
 
             # If we have a mode option/flag, go to that
             if arg in ALL_MODES: self.add_mode(arg)
-            elif arg[:2] == '--' and arg[2:] in FLAGS: 
+            elif arg[:2] == '--' and arg[2:] in FLAGS:
                 self.add_mode(FLAGS[arg[2:]])
 
             else:
-                # Otherwise, check if this arg is numeric. 
+                # Otherwise, check if this arg is numeric.
                 # If it is, assume it's meant to be an RPC argument
                 try: self.default_arg = float(arg) if '.' in arg else int(arg)
 
@@ -44,12 +44,12 @@ class rpcCLI:
     def terms(self) -> list[str]:
         # lambda fails on "" or [], else splits by space if string or just returns list
         terms = valid_input("Enter search terms: ", "", # no error message
-                            lambda t: t if t[0] is not None and type(t) is list else t.split(), 
+                            lambda t: t if t[0] is not None and type(t) is list else t.split(),
                             default=self.search_terms)
 
         # Add the exact flag to terms that aren't already exact
         # Ignore backslash, since that exits search upstream
-        if self.exact(): terms = ['@' + term if term[0] not in {'\\', '@'} 
+        if self.exact(): terms = ['@' + term if term[0] not in {'\\', '@'}
                                   else term for term in terms]
 
         # Save and return
@@ -86,7 +86,7 @@ def valid_input(input_msg: str, error_msg: str,
                 test: Callable[[str], RT], default=None) -> RT:
     # Get input/default, try to apply test and return
     try: return test(__input(input_msg, default))
-    
+
     # If that didn't work, recurse until they get it right
     except (ValueError, IndexError):
         print(error_msg, end='')

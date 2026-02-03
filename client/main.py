@@ -1,6 +1,6 @@
 # TODO: add spacers
 import os, sys
-from client.listfiles import rpclist_from_file
+from client.lib.listfiles import get_rpclist
 from client.cli import rpcCLI, InputQuit
 from client.gui import slider
 
@@ -21,7 +21,7 @@ def main(args: list[str]):
 
         # load from our list directory, fetching dev.name() to know what list to load
         dirname     = os.path.expanduser("~/.rpc-lists/")
-        full_list   = rpclist_from_file(dirname, cli.regen())
+        full_list   = get_rpclist(dirname, cli.regen())
 
         selected = search_select_loop(cli, full_list)
         if not selected: print("Didn't select anything")

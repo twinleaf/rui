@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Callable
 from difflib import get_close_matches
-from client.process import daemon_shell_rpc, daemon_check_is_sample
+from client.lib.send_request import daemon_shell_rpc, daemon_check_is_sample
 from rpclib.rpclib import rpc_arg_type, rpc_ret_type
 from rpclib.rpclib import TYPE_NAME, IS_ARG_TYPE, IS_RET_TYPE
 

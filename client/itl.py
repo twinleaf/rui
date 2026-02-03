@@ -1,5 +1,5 @@
 from rpclib.rpclib import SOCKET_PATH
-from client.process import send_request
+from client.lib.send_request import send_request
 import os, sys, socket, select, termios, tty
 
 # TODO: handle ProxyError
@@ -10,7 +10,7 @@ def itl():
         tty.setraw(stdin_fd)
 
         path = send_request({'op': 'itl'})
-        if not path: 
+        if not path:
             print("No path found!")
             return # no path found
         print(path)

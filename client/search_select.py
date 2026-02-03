@@ -1,4 +1,4 @@
-from client.rpc import RPCList
+from client.lib.rpc import RPCList
 from client.cli import rpcCLI, valid_input
 
 MATCH_ERR = lambda terms: f"Couldn't find {terms[0] if len(terms)==1 else 'a match'}."

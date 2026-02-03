@@ -1,7 +1,7 @@
 # TODO: use multiprocessing instead of os.fork
 import os, sys, subprocess, multiprocessing
 from typing import Callable
-from client.rpc import RPC, RPCList
+from client.lib.rpc import RPC, RPCList
 from rpclib.rpclib import rpc_arg_type, rpc_ret_type
 
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
@@ -181,7 +181,7 @@ class RPCDisplay():
         slider.setValue(self.value_scaled)
         slider.setSingleStep(1)
         slider.setPageStep(10)
-        slider.setTracking(False)
+        slider.setTracking(True)
         slider.valueChanged.connect(self.update_slider)
         slider.setStyleSheet(_generate_qss())
 
