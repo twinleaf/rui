@@ -3,6 +3,17 @@ import os, time, json, socket, signal, threading
 class SocketOccupiedError(Exception): pass
 class UnconnectedError(Exception): pass
 
+def send_eof(socket_path: str):
+    for i in range(4): # try to kill server a few times
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+            client.connect(socket_path)
+            client.sendall(json.dumps({"op": "EOF"}).encode())
+            try:
+                client.recv(8192) # accept reply so server will get to EOF
+                break
+            except ConnectionResetError:
+                continue
+
 class DaemonServer:
     ''' Generic class to represent daemon server using with statements'''
     def __init__(self, socket_path: str, socket_override=False, silent=False):
@@ -24,14 +35,11 @@ class DaemonServer:
     def __enter__(self):
         # Check if we have a socket
         self.socket_available = not os.path.exists(self.socket_path)
-        
+
         # Usurp the socket if we want to override
         if self.socket_override and not self.socket_available:
             # TODO: add error handling, for example ConnectionResetError
-            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
-                client.connect(self.socket_path)
-                client.sendall(json.dumps({"op": "EOF"}).encode())
-                client.recv(8192) # accept reply so server will get to EOF
+            send_eof(self.socket_path)
             self.socket_available = True
             time.sleep(0.1) # wait for other server to die
 
@@ -44,10 +52,10 @@ class DaemonServer:
     def setup_thread(self):
         setup_thread = threading.Thread(target=self.setup, args=(), daemon=True)
         setup_thread.start()
-    
+
     def make_server(self) -> socket.socket:
         self.server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        
+
         # Bind shouldn't fail here since we should have an unoccpied path
         try:
             self.server.bind(self.socket_path)
@@ -83,10 +91,9 @@ class DaemonServer:
         if not self.socket_available: raise SocketOccupiedError
 
         self.make_server()
-        self.setup_thread() 
+        self.setup_thread()
 
         while True:
-            if not self.still_connected(): raise UnconnectedError
             if self.eof_received: raise EOFError
             client, _ = self.server.accept() # block here until client arrives
             client_thread = threading.Thread(target = self.handle_client,
@@ -99,31 +106,13 @@ class DaemonServer:
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
             client.connect(self.socket_path)
 
-    def still_connected(self) -> bool:
-        if not self.server: return False
-        # Try to connect to dummy client, will fail if our socket was usurped
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
-            try:
-                client.connect(self.socket_path)
-                self.server.setblocking(False)
-                client, _ = self.server.accept()
-                self.server.setblocking(True)
-                return True
-            except BlockingIOError:
-                return False # couldn't accept dummy client
-            except OSError:
-                return False # accept throws invalid argument if we never had a connection
-
     def __exit__(self, exc_type, exc_value, traceback):
         if self.socket_available:
 
             # If we haven't been overridden, we can also remove the path
-            if self.still_connected() and os.path.exists(self.socket_path):
+            if os.path.exists(self.socket_path):
                 print("Removing socket " + self.socket_path)
                 os.remove(self.socket_path)
-
-            elif os.path.exists(self.socket_path):
-                print("Unconnected socket " + self.socket_path)
 
             # Now we can close our server
             if self.server: self.server.close()

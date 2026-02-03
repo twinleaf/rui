@@ -23,7 +23,7 @@ def process_request(dev, req: dict[str, str | rpc_arg_type ]) -> rpc_ret_type | 
             case 'is_sample':
                 return process_is_sample(dev, req['name'])
 
-            # TODO: make threads with sample streams 
+            # TODO: make threads with sample streams
             # case 'get_sample': pass
 
             # TODO: itl PTY

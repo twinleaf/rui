@@ -42,7 +42,7 @@ class Recorder:
         sys.stdout = self.stdout
         sys.stdin = self.stdin
 
-        if exc_type: 
+        if exc_type:
             # If we had an error, remove tmp transcript and propagate exception
             print("Exception caught, not recording")
             if self.temp_path.exists(): self.temp_path.unlink()

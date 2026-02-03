@@ -1,8 +1,11 @@
 import os, sys, time
-from client.main import main
+from rpclib.rpclib import SOCKET_PATH
+
+from client.main import main as client_main
 from client.itl import itl
-from daemon.daemon import RPCDaemon
-from daemon.spawn import spawn_test_daemon
+
+from daemon.main import main as daemon_main
+from daemon.server import send_eof
 
 from test.testdev import TestDevice
 from test.record import record, list_recorded
@@ -14,39 +17,30 @@ if __name__ == "__main__":
     try:
         match args:
             case ['daemon', *rest]:
-                if 'test' not in rest:
-                    import twinleaf
-                    dev_constructor = twinleaf.Device
-                else: 
-                    dev_constructor = TestDevice
-                override = '--override' in rest
-
-                # with statement guarantees clean exit
-                with RPCDaemon(dev_constructor, override) as daemon:
-                    daemon.server_loop()
+                daemon_main(rest)
 
             case ['itl', *rest]:
                 itl()
 
             case ['record', *rest]:
-                stop_signal = spawn_test_daemon(TestDevice)
+                daemon_main(["test", "--thread", "--silent"])
                 try:
-                    record(main, rest)
+                    record(client_main, rest)
                 finally:
-                    stop_signal.set()
+                    send_eof(SOCKET_PATH)
 
             case ['playback', *rest]:
                 passed, total = 0, 0
                 for test in list_recorded():
-                    stop_signal = spawn_test_daemon(TestDevice)
+                    daemon_main(["test", "--thread", "--silent"])
                     total += 1
+                    time.sleep(0.1)
                     try:
-                        passed += run_transcript(main, test)
+                        passed += run_transcript(client_main, test)
                     finally:
-                        stop_signal.set()
-                    time.sleep(0.26) # wait at least 0.25s for daemon to exit
+                        send_eof(SOCKET_PATH)
                 print(f"RESULTS: PASSED {passed} OUT OF {total}")
             case _:
-                main(args)
+                client_main(args)
     except (EOFError, KeyboardInterrupt):
         print("\nInterrupted, exiting")

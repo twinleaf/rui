@@ -5,10 +5,9 @@ from daemon.server import DaemonServer
 
 class RPCDaemon(DaemonServer):
     '''Handles starting daemon, twinleaf.Device, & receiving client requests'''
-    def __init__(self, dev_constructor, interact, socket_override=False, silent=False):
+    def __init__(self, dev_constructor, socket_override=False, silent=False):
         super().__init__(SOCKET_PATH, socket_override, silent)
         self.dev_constructor    = dev_constructor
-        self.interact           = interact
         self.dev                = None
 
     def setup(self):
@@ -16,7 +15,7 @@ class RPCDaemon(DaemonServer):
             try:
                 if not self.silent: print("Looking for device...")
                 self.dev = self.dev_constructor()
-                if not self.silent: 
+                if not self.silent:
                     print(f"Got device {self.dev.settings.dev.name().decode()}")
                 break # go to return
 
@@ -41,7 +40,7 @@ class RPCDaemon(DaemonServer):
                          if not os.path.exists(p)][0]
             except IndexError:
                 reply = ""
-            
+
             itl_thread = threading.Thread(target=self.itl, args=(reply,), daemon=True)
             itl_thread.start()
 

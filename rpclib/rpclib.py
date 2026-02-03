@@ -43,8 +43,6 @@ def TYPE_CAST(x: Any, t: type | None) -> rpc_any_type:
     TIO constants
 ''                 '''
 
-class ProxyError(Exception): pass
-
 SOCKET_PATH = "/tmp/daemon.sock"
 PROXY_ERROR = "Proxy failed, trying to restart..."
 RPC_DNE_ERROR = "RPC does not exist"

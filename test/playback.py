@@ -85,10 +85,15 @@ class Playback:
 
 def run_transcript(program, transcript_path: str) -> int:
     print("-- Testing", transcript_path, "--")
-    with Playback(transcript_path) as playback:
-        args = playback.parse_args()
-        program(args)
-        status = "-- PASSED --" if playback.passed else "!!!! FAILED !!!!"
-        passed = playback.passed
+    try:
+        with Playback(transcript_path) as playback:
+            args = playback.parse_args()
+            program(args)
+            status = "-- PASSED --" if playback.passed else "!!!! FAILED !!!!"
+            passed = playback.passed
+    except TypeError: # raised on input fail
+        print("Expected input, got nothing")
+        status, passed = "!!!! FAILED !!!!", False
+
     print(status + '\n')
     return int(passed)
