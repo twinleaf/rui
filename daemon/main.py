@@ -28,6 +28,6 @@ def spawn_thread_daemon(args: list[str]) -> subprocess.Popen:
     with open(os.devnull, 'w') as devnull:
          process = subprocess.Popen(
             [sys.executable, rui_script, 'daemon'] + args,
-            #stdout=devnull, stderr=devnull,
+            stdout=devnull, stderr=devnull,
             close_fds=True, start_new_session=True)
     return process
