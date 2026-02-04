@@ -147,13 +147,14 @@ class CustomLineEdit(QLineEdit):
         QLineEdit.__init__(self, parent)
         self.completion_items = items
         self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())])
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.initial = True
     
     def keyPressEvent(self, event):
         if self.text() == None or event.key() == Qt.Key.Key_Backspace:
             self.initial = True
 
-        if event.key() == Qt.Key.Key_Shift:
+        if event.key() == Qt.Key.Key_Tab:
             if self.initial: 
                 self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())]) 
                 self.initial = False
@@ -198,6 +199,7 @@ class MakeRPCDisplay():
         edit.setFont(self.__qfont())
         edit.setFixedWidth(50)
         edit.setValidator(QDoubleValidator())
+        edit.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         edit.setStyleSheet(_generate_qss())
         edit.returnPressed.connect(lambda: edit_func(self.__scale(edit.text())))
         return edit
