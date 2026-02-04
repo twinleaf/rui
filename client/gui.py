@@ -1,11 +1,12 @@
 import os, sys, subprocess
 from typing import Callable
+from itertools import cycle
 from client.lib.rpc import RPC, RPCList
 from rpclib.rpclib import rpc_arg_type, rpc_ret_type
 
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton
-from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit, QComboBox, QScrollArea, QCompleter, QGridLayout
-from PyQt6.QtCore import Qt, QStringListModel
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QGridLayout, QPushButton
+from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit, QComboBox, QCompleter 
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QDoubleValidator, QIcon
 import random # for colors
 
@@ -59,6 +60,7 @@ class MainWindow(QWidget):
         self.tool_bar = ToolBar(rpc_full_list)
         self.tool_bar.dropdown.activated.connect(lambda: self.display_rpc_slider("drop"))
         self.tool_bar.completer.activated.connect(lambda: self.display_rpc_slider("search"))
+        self.tool_bar.search_bar.returnPressed.connect(lambda: self.display_rpc_slider("search"))
         self.rpcs_displayed = [0]
         
         for rpc in rpcs:
@@ -83,7 +85,8 @@ class MainWindow(QWidget):
 
             case "search": 
                 index = self.tool_bar.dropdown.findText(self.tool_bar.search_bar.text())
-                value = self.tool_bar.search_bar.text()
+                value = self.tool_bar.search_bar.text() 
+                self.tool_bar.search_bar.initial = True
             case _: index = 0
 
         if index:
@@ -92,13 +95,13 @@ class MainWindow(QWidget):
                 if idx:
                     if not self.rpcs_displayed[idx].widget_visible:
                         self.rpcs_displayed[idx].show_slider_box()
-                else: #else make new slider
+                elif value in self.tool_bar.rpc_string: #else make new slider
                     new_rpc = MakeRPCDisplay(self.rpc_list[index-1], 0, self.rpc_list[index-1].call())
                     self.rpcs_displayed.append(new_rpc)
                     self.rpc_layout.addLayout(new_rpc.grid_layout)
     
 class ToolBar():
-    def __init__(self, rpc_full_list):
+    def __init__(self, rpc_full_list: RPCList):
         self.rpc_list = rpc_full_list
         self.rpc_string = []
         self.menu = QVBoxLayout()
@@ -129,16 +132,34 @@ class ToolBar():
         return completer
 
     def make_searchbar(self) -> QLineEdit:
-        search_bar = QLineEdit()
+        search_bar = CustomLineEdit(self.rpc_string)
         search_bar.setPlaceholderText("Search rpcs")
         search_bar.setCompleter(self.completer)
-        #search_bar.selectionChanged.connect(self.tab_completion) //TODO: Functional tab completion
+        if search_bar.returnPressed: 
+            search_bar.initial = True
         return search_bar
 
-    def tab_completion(self, event):
-        if event.key() == Qt.Key.Key_Tab and self.completer.popup().isVisible():
-            self.completer.insertCompletion(self.completer.currentCompletion()) 
-            return
+class CustomLineEdit(QLineEdit):
+    def __init__(self, items, parent = None):
+        QLineEdit.__init__(self, parent)
+        self.completion_items = items
+        self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())])
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.initial = True
+    
+    def keyPressEvent(self, event):
+        if self.text() == None or event.key() == Qt.Key.Key_Backspace:
+            self.initial = True
+
+        if event.key() == Qt.Key.Key_Tab:
+            if self.initial: 
+                self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())]) 
+                self.initial = False
+            item = next(self.matches)
+            self.setText(item)   
+    
+        event.accept()
+        QLineEdit.keyPressEvent(self, event)
 
 class MakeRPCDisplay():
     def __init__(self, rpc: RPC, min_val: rpc_ret_type, max_val: rpc_ret_type):
@@ -156,7 +177,7 @@ class MakeRPCDisplay():
         self.max_label = self.make_edit(str(max_val), self.slider.setMaximum)
 
         self.grid_layout = QGridLayout()
-        self.grid_layout.setSpacing(10)
+        self.grid_layout.setSpacing(0)
         self.grid_layout.addWidget(self.name_label, 0, 0)
         self.grid_layout.addWidget(self.result_label, 0, 1, alignment= Qt.AlignmentFlag.AlignHCenter)
         self.grid_layout.addWidget(self.delete_button, 0, 2, alignment =Qt.AlignmentFlag.AlignLeft)
@@ -175,6 +196,7 @@ class MakeRPCDisplay():
         edit.setFont(self.__qfont())
         edit.setFixedWidth(50)
         edit.setValidator(QDoubleValidator())
+        edit.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         edit.setStyleSheet(_generate_qss())
         edit.returnPressed.connect(lambda: edit_func(self.__scale(edit.text())))
         return edit
@@ -186,19 +208,16 @@ class MakeRPCDisplay():
         slider.setValue(self.value_scaled)
         slider.setSingleStep(1)
         slider.setPageStep(10)
-        slider.valueChanged.connect(self.update_slider)
         slider.setStyleSheet(_generate_qss())
-
+        slider.valueChanged.connect(self.update_slider)
         return slider
 
     def update_slider(self, value: int):
         if not self.updating: # don't recursively call this
             self.updating = True
-
             value_real = self.__descale(value)
             self.rpc.call(value_real)
             self.__get_value()
-
             self.result_label.setText(self.__result_display())
             self.slider.setValue(self.value_scaled)
             self.updating = False
@@ -242,17 +261,14 @@ class MakeRPCDisplay():
         self.grid_layout.addWidget(self.max_label)
         self.widget_visible = True
 
-
     def __get_value(self):
         self.value = self.rpc.value()
         self.value_scaled = self.__scale(self.value)
     def __result_display(self): return f"Current value: {self.value}"
     def __qfont(self, size: int=14): return QFont('Ubuntu', size)
 
-    # TODO: Fix floating point rounding issues causing it not to move sometimes
-    # Try going up from 18.9 when on a scale of 0-20
     def __scale(self, val: rpc_ret_type ) -> int:
-        return int(self.rpc.arg_type(val) * self.scale)
+        return round(self.rpc.arg_type(val) * self.scale)
     def __descale(self, val: int) -> rpc_arg_type:
         return self.rpc.arg_type(val / self.scale)
 
@@ -306,6 +322,7 @@ def _generate_qss() -> str:
         border: 1px solid #5c5c5c;
         border-radius: 9px;
     }}
+
     """
 
 def _random_hex(total: int) -> str:
