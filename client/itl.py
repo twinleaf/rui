@@ -1,23 +1,23 @@
-import os, sys, time, socket, select, termios, tty
+import os, sys, socket, select, termios, tty
 from rpclib.rpclib import SOCKET_PATH
 from client.lib.send_request import send_request
 
 # TODO: handle ProxyError
 def itl():
-    try:
-        stdin_fd = sys.stdin.fileno()
-        old_terminal = termios.tcgetattr(stdin_fd)
-        tty.setraw(stdin_fd)
+    path = send_request({'op': 'itl'})
+    if not path: raise SystemExit("No path found!")
+    else: print(path)
 
-        path = send_request({'op': 'itl'})
-        time.sleep(0.01) # wait for request)
+    # Wait for path to exist
+    while not os.path.exists(path): 
+        print('a', end='')
 
-        if not path:
-            print("No path found!")
-            return # no path found
-        print(path)
+    stdin_fd = sys.stdin.fileno()
+    old_terminal = termios.tcgetattr(stdin_fd)
+    tty.setraw(stdin_fd)
 
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+        try:
             client.connect(path)
 
             while True:
@@ -32,6 +32,15 @@ def itl():
                 if sys.stdin in r:
                     data = os.read(stdin_fd, 8192)
                     client.sendall(data)
+        finally: 
+            # un-raw our terminal
+            termios.tcsetattr(stdin_fd, termios.TCSADRAIN, old_terminal)
+            try: client.sendall("__ITL_EOF".encode())
+            except: pass # this can go wrong in all sorts of ways
 
-    # un-raw our terminal
-    finally: termios.tcsetattr(stdin_fd, termios.TCSADRAIN, old_terminal)
+def kill_itl(kill_path: str):
+    if os.path.exists(kill_path):
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+            client.connect(kill_path)
+            try: client.sendall("__ITL_EOF".encode())
+            except: pass

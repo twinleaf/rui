@@ -1,18 +1,18 @@
-import os, time, json, socket, signal, threading
+import os, time, json, socket, threading
 
 class SocketOccupiedError(Exception): pass
 class UnconnectedError(Exception): pass
 
+def wait_for(socket_path: str):
+    while not os.path.exists(socket_path): pass
+
 def send_eof(socket_path: str):
-    for i in range(4): # try to kill server a few times
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
-            client.connect(socket_path)
-            client.sendall(json.dumps({"op": "EOF"}).encode())
-            try:
-                client.recv(8192) # accept reply so server will get to EOF
-                break
-            except ConnectionResetError:
-                continue
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+        try: client.connect(socket_path)
+        except FileNotFoundError: return # socket already died
+
+        client.sendall(json.dumps({"op": "EOF"}).encode())
+        client.recv(8192) # accept reply so server will get to EOF
 
 class DaemonServer:
     ''' Generic class to represent daemon server using with statements'''
@@ -24,14 +24,6 @@ class DaemonServer:
         self.eof_received = False
         self.server = None
 
-        # Handle SIGTERM and SIGINT as errors so we close our socket
-        def sigterm_handler(signum, frame): raise SystemExit
-        def sigint_handler(signum, frame): raise KeyboardInterrupt
-        try:
-            signal.signal(signal.SIGTERM, sigterm_handler)
-            signal.signal(signal.SIGINT,  sigint_handler)
-        except ValueError: pass # we're not main thread
-
     def __enter__(self):
         # Check if we have a socket
         self.socket_available = not os.path.exists(self.socket_path)
@@ -41,7 +33,6 @@ class DaemonServer:
             # TODO: add error handling, for example ConnectionResetError
             send_eof(self.socket_path)
             self.socket_available = True
-            time.sleep(0.1) # wait for other server to die
 
         return self
 
@@ -56,12 +47,9 @@ class DaemonServer:
     def make_server(self) -> socket.socket:
         self.server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
-        # Bind shouldn't fail here since we should have an unoccpied path
-        try:
-            self.server.bind(self.socket_path)
-        except OSError:
-            print("Couldn't make server, socket occupied")
-            return
+        # Our path should be unoccupied, wait for the other server to give it up
+        while os.path.exists(self.socket_path): pass
+        self.server.bind(self.socket_path)
 
         self.server.listen(5) # accept 5 clients, arbitrary
         if not self.silent: print("Started server at " + self.socket_path)

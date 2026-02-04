@@ -27,10 +27,7 @@ def daemon_shell_rpc(name: str, arg_type: type | None, arg: rpc_arg_type) -> rpc
         print("Error in daemon loop, trying tio-tool")
     except ProxyError:
         print("Error with daemon's proxy, trying tio-tool")
-    #except ConnectionResetError:
-        #time.sleep(0.0001)
-        #return daemon_shell_rpc(name, arg_type, arg) # connection reset sometimes, try again
-        #print("Connection reset by daemon, trying tio-tool")
+    # TODO: ConnectionResetError?
     except RequestError:
         sys.exit("Bad types on request data, exiting")
 

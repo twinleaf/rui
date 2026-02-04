@@ -1,12 +1,14 @@
 $ [+]
 Enter search terms: \
 > Ki
-pump.lock.control.Ki(float)
-Currently: 0
-Enter argument: \
+1. alice.lock.control.Ki(float)
+2. bob.lock.control.Ki(float)
+3. chris.lock.control.Ki(float)
+4. pump.lock.control.Ki(float)
+5. zachary.lock.control.Ki(float)
+Select rpc, or /[search] to keep searching: \
 > 1
-Reply: 1.0
-Currently: 1.0
+Currently: 0
 Enter argument: \
 > 2
 Reply: 2.0

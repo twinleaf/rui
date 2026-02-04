@@ -1,6 +1,8 @@
 import os, sys, subprocess
 from daemon.daemon import RPCDaemon
+from daemon.server import wait_for
 from test.testdev import TestDevice
+from rpclib.rpclib import SOCKET_PATH
 
 def main(args: list[str]):
     if 'test' not in args:
@@ -15,6 +17,7 @@ def main(args: list[str]):
 
     if thread:
         spawn_thread_daemon([a for a in args if a != '--thread'])
+        wait_for(SOCKET_PATH)
 
     else:
         with RPCDaemon(dev_constructor, override, silent) as daemon:

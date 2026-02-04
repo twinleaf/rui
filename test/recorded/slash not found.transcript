@@ -4,14 +4,15 @@ Enter search terms: \
 Couldn't find f.
 Enter search terms: \
 > e
-1. dev.name()
-2. mode.autostart(int)
-3. pump.therm.control.autotune.start()
-4. signal.capture.block()
-5. signal.capture.size()
-6. signal.capture.trigger()
+1. alice.lock.control.Ki(float)
+2. dev.name()
+3. mode.autostart(int)
+4. pump.therm.control.autotune.start()
+5. signal.capture.block()
+6. signal.capture.size()
+7. signal.capture.trigger()
 Select rpc, or /[search] to keep searching: \
-> 1
+> 2
 Enter search terms: \
 > \
 Reply: TEST

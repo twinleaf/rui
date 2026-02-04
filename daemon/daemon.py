@@ -74,6 +74,7 @@ class RPCDaemon(DaemonServer):
 
                         if client in r: # client's stdin, send to child
                             data = client.recv(8192)
+                            if data.decode() == "__ITL_EOF": break
                             os.write(master_fd, data)
             except KeyboardInterrupt:
                 print("Interrupted, exiting")
