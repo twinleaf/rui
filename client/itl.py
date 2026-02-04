@@ -24,13 +24,13 @@ def itl():
                 r, _, _ = select.select([client, sys.stdin], [], [])
 
                 if client in r:
-                    data = client.recv(1024)
+                    data = client.recv(8192)
                     if not data: break
                     sys.stdout.buffer.write(data)
                     sys.stdout.flush()
 
                 if sys.stdin in r:
-                    data = os.read(stdin_fd, 1024)
+                    data = os.read(stdin_fd, 8192)
                     client.sendall(data)
 
     # un-raw our terminal
