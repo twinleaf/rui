@@ -1,4 +1,4 @@
-import os, sys, time
+import sys, time
 from rpclib.rpclib import SOCKET_PATH
 
 from client.main import main as client_main
@@ -7,7 +7,6 @@ from client.itl import itl
 from daemon.main import main as daemon_main
 from daemon.server import send_eof
 
-from test.testdev import TestDevice
 from test.record import record, list_recorded
 from test.playback import run_transcript
 

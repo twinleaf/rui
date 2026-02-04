@@ -61,6 +61,6 @@ def tio_tool(args: list[str]) -> str:
 
     # For some reason tio-tool throws this on fail sometimes
     except TypeError: raise RuntimeError("tio-tool failure")
-    if stderr: raise RuntimeError(stderr.strip())
+    if stderr: stdout += stderr
 
     return stdout.strip()
