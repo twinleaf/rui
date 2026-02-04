@@ -6,7 +6,7 @@ from rpclib.rpclib import rpc_arg_type, rpc_ret_type
 
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QGridLayout, QPushButton
 from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit, QComboBox, QCompleter 
-from PyQt6.QtCore import Qt, QEvent
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QDoubleValidator, QIcon
 import random # for colors
 
@@ -85,18 +85,17 @@ class MainWindow(QWidget):
 
             case "search": 
                 index = self.tool_bar.dropdown.findText(self.tool_bar.search_bar.text())
-                value = self.tool_bar.search_bar.text()
+                value = self.tool_bar.search_bar.text() 
                 self.tool_bar.search_bar.initial = True
             case _: index = 0
 
         if index:
                 #check if rpc slider already displayed
                 idx = next((i + 1 for i, rpc in enumerate(self.rpcs_displayed[1:]) if rpc.name == value), None)
-                print(self.rpcs_displayed)
                 if idx:
                     if not self.rpcs_displayed[idx].widget_visible:
                         self.rpcs_displayed[idx].show_slider_box()
-                else: #else make new slider
+                elif value in self.tool_bar.rpc_string: #else make new slider
                     new_rpc = MakeRPCDisplay(self.rpc_list[index-1], 0, self.rpc_list[index-1].call())
                     self.rpcs_displayed.append(new_rpc)
                     self.rpc_layout.addLayout(new_rpc.grid_layout)
@@ -108,8 +107,6 @@ class ToolBar():
         self.menu = QVBoxLayout()
 
         self.dropdown = self.make_dropdown()
-        self.rpc_string.append("alice.bob")
-
         self.completer = self.make_completer()
         self.search_bar = self.make_searchbar()
 
