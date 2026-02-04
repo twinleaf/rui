@@ -1,11 +1,12 @@
 import os, sys, subprocess
 from typing import Callable
+from itertools import cycle
 from client.lib.rpc import RPC, RPCList
 from rpclib.rpclib import rpc_arg_type, rpc_ret_type
 
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton
-from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit, QComboBox, QScrollArea, QCompleter, QGridLayout
-from PyQt6.QtCore import Qt, QStringListModel
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QGridLayout, QPushButton
+from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit, QComboBox, QCompleter 
+from PyQt6.QtCore import Qt, QEvent
 from PyQt6.QtGui import QFont, QDoubleValidator, QIcon
 import random # for colors
 
@@ -59,6 +60,7 @@ class MainWindow(QWidget):
         self.tool_bar = ToolBar(rpc_full_list)
         self.tool_bar.dropdown.activated.connect(lambda: self.display_rpc_slider("drop"))
         self.tool_bar.completer.activated.connect(lambda: self.display_rpc_slider("search"))
+        self.tool_bar.search_bar.returnPressed.connect(lambda: self.display_rpc_slider("search"))
         self.rpcs_displayed = [0]
         
         for rpc in rpcs:
@@ -84,11 +86,13 @@ class MainWindow(QWidget):
             case "search": 
                 index = self.tool_bar.dropdown.findText(self.tool_bar.search_bar.text())
                 value = self.tool_bar.search_bar.text()
+                self.tool_bar.search_bar.initial = True
             case _: index = 0
 
         if index:
                 #check if rpc slider already displayed
                 idx = next((i + 1 for i, rpc in enumerate(self.rpcs_displayed[1:]) if rpc.name == value), None)
+                print(self.rpcs_displayed)
                 if idx:
                     if not self.rpcs_displayed[idx].widget_visible:
                         self.rpcs_displayed[idx].show_slider_box()
@@ -98,12 +102,14 @@ class MainWindow(QWidget):
                     self.rpc_layout.addLayout(new_rpc.grid_layout)
     
 class ToolBar():
-    def __init__(self, rpc_full_list):
+    def __init__(self, rpc_full_list: RPCList):
         self.rpc_list = rpc_full_list
         self.rpc_string = []
         self.menu = QVBoxLayout()
 
         self.dropdown = self.make_dropdown()
+        self.rpc_string.append("alice.bob")
+
         self.completer = self.make_completer()
         self.search_bar = self.make_searchbar()
 
@@ -129,16 +135,33 @@ class ToolBar():
         return completer
 
     def make_searchbar(self) -> QLineEdit:
-        search_bar = QLineEdit()
+        search_bar = CustomLineEdit(self.rpc_string)
         search_bar.setPlaceholderText("Search rpcs")
         search_bar.setCompleter(self.completer)
-        #search_bar.selectionChanged.connect(self.tab_completion) //TODO: Functional tab completion
+        if search_bar.returnPressed: 
+            search_bar.initial = True
         return search_bar
 
-    def tab_completion(self, event):
-        if event.key() == Qt.Key.Key_Tab and self.completer.popup().isVisible():
-            self.completer.insertCompletion(self.completer.currentCompletion()) 
-            return
+class CustomLineEdit(QLineEdit):
+    def __init__(self, items, parent = None):
+        QLineEdit.__init__(self, parent)
+        self.completion_items = items
+        self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())])
+        self.initial = True
+    
+    def keyPressEvent(self, event):
+        if self.text() == None or event.key() == Qt.Key.Key_Backspace:
+            self.initial = True
+
+        if event.key() == Qt.Key.Key_Shift:
+            if self.initial: 
+                self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())]) 
+                self.initial = False
+            item = next(self.matches)
+            self.setText(item)   
+    
+        event.accept()
+        QLineEdit.keyPressEvent(self, event)
 
 class MakeRPCDisplay():
     def __init__(self, rpc: RPC, min_val: rpc_ret_type, max_val: rpc_ret_type):
@@ -300,6 +323,7 @@ def _generate_qss() -> str:
         border: 1px solid #5c5c5c;
         border-radius: 9px;
     }}
+
     """
 
 def _random_hex(total: int) -> str:
