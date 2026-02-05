@@ -1,14 +1,14 @@
 import os, sys, subprocess
 from typing import Callable
 from itertools import cycle
-from client.lib.rpc import RPC, RPCList
-from rpclib.rpclib import rpc_arg_type, rpc_ret_type
 
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QGridLayout, QPushButton
 from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit, QComboBox, QCompleter 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QDoubleValidator, QIcon
 import random # for colors
+
+from rui.lib.rpc import RPC, RPCList
 
 def slider(full_list: RPCList, selected: RPCList, fork: bool=True):
 
@@ -162,7 +162,7 @@ class CustomLineEdit(QLineEdit):
         QLineEdit.keyPressEvent(self, event)
 
 class MakeRPCDisplay():
-    def __init__(self, rpc: RPC, min_val: rpc_ret_type, max_val: rpc_ret_type):
+    def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float):
         self.rpc = rpc
         self.scale = 100 if rpc.arg_type == float else 1
         self.__get_value()
@@ -201,7 +201,7 @@ class MakeRPCDisplay():
         edit.returnPressed.connect(lambda: edit_func(self.__scale(edit.text())))
         return edit
 
-    def make_slider(self, min_val: rpc_ret_type, max_val: rpc_ret_type) -> QSlider:
+    def make_slider(self, min_val: int | float, max_val: int | float) -> QSlider:
         self.updating = False
         slider = QSlider(Qt.Orientation.Horizontal)
         slider.setRange(self.__scale(min_val), self.__scale(max_val))
@@ -267,9 +267,9 @@ class MakeRPCDisplay():
     def __result_display(self): return f"Current value: {self.value}"
     def __qfont(self, size: int=14): return QFont('Ubuntu', size)
 
-    def __scale(self, val: rpc_ret_type ) -> int:
+    def __scale(self, val: int | float ) -> int:
         return round(self.rpc.arg_type(val) * self.scale)
-    def __descale(self, val: int) -> rpc_arg_type:
+    def __descale(self, val: int) -> int | float:
         return self.rpc.arg_type(val / self.scale)
 
 def _generate_qss() -> str:

@@ -1,5 +1,5 @@
-from client.lib.rpc import RPCList
-from client.cli import rpcCLI, valid_input
+from rui.lib.rpc import RPCList
+from rui.lib.cli import rpcCLI, valid_input
 
 MATCH_ERR = lambda terms: f"Couldn't find {terms[0] if len(terms)==1 else 'a match'}."
 def search_select_loop(cli: rpcCLI, full_list: RPCList) -> RPCList:

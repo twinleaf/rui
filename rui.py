@@ -1,82 +1,50 @@
-import os, sys, time, signal
-from rpclib.rpclib import SOCKET_PATH
+#!/usr/bin/env -S bash -c 'exec "$( dirname $0 )/../twinleaf-python/.rpcvenv/bin/python" "$0" "$@"'
+import os, sys, time
+import twinleaf
 
-from client.main import main as client_main
-from client.itl import itl, kill_itl
+from rui.main import main
 
-from daemon.main import main as daemon_main
-from daemon.server import send_eof
-
+from test.testdev import TestDevice
 from test.record import record, list_recorded
 from test.playback import run_transcript
 from test.rerecord import rerecord_transcript
 
 if __name__ == "__main__":
-    # Handle SIGTERM and SIGINT as errors so we close sockets
-    def sigterm_handler(signum, frame): raise SystemExit
-    def sigint_handler(signum, frame): raise KeyboardInterrupt
-    try:
-        signal.signal(signal.SIGTERM, sigterm_handler)
-        signal.signal(signal.SIGINT,  sigint_handler)
-    except ValueError: pass # we're not a main thread
-
     args = sys.argv[1:]
 
     try:
         match args:
-            case ['daemon', *rest]:
-                daemon_main(rest)
-
-            case ['itl', *rest]:
-                itl()
-
-            case ['killitl', path, *rest]:
-                kill_itl(path)
-
-            case ['record', *rest]:
-                daemon_main(["test", "--thread"])
-
-                try:
-                    record(client_main, rest)
-                finally:
-                    send_eof(SOCKET_PATH)
+            case ['itl', *rest]: 
+                twinleaf.Device()._interact()
+            case ['test', *rest]: test_main(rest)
+            case ['record', *rest]: 
+                test_main = lambda args: main(TestDevice(), args)
+                record(test_main, rest)
 
             case ['playback', *rest]:
-                passed, total = 0, 0
+                passed = 0
                 for test in list_recorded():
-                    daemon_main(["test", "--thread"])
-                    total += 1
-                    while not os.path.exists(SOCKET_PATH): pass
+                    test_main = lambda args: main(TestDevice(), args)
+                    passed += run_transcript(test_main, test)
 
-                    try:
-                        passed += run_transcript(client_main, test)
-                    finally:
-                        send_eof(SOCKET_PATH)
-                        print() # spacer
-                print(f"RESULTS: PASSED {passed} OUT OF {total}")
+                    print() # spacer
+                print(f"RESULTS: PASSED {passed} OUT OF {len(list_recorded())}")
 
             case ['rerecord', *rest]:
                 for test in list_recorded():
-                    daemon_main(["test", "--thread"])
-                    while not os.path.exists(SOCKET_PATH): pass
+                    test_main = lambda args: main(TestDevice(), args)
+                    passed = run_transcript(test_main, test, silent=True)
 
-                    try:
-                        passed = run_transcript(client_main, test, silent=True)
-                    finally:
-                        send_eof(SOCKET_PATH)
+                    if not passed: 
+                        test_main = lambda args: main(TestDevice(), args)
+                        rerecord_transcript(test_main, test)
 
-                    if passed:
-                        print(test.name, "passed")
-                    else:
-                        daemon_main(["test", "--thread"])
-                        while not os.path.exists(SOCKET_PATH): pass
-                        try:
-                            rerecord_transcript(client_main, test)
-                        finally:
-                            send_eof(SOCKET_PATH)
-                            print() # spacer
+                    print(test.name + " passed" if passed else "")
 
             case _:
-                client_main(args)
+                dev = twinleaf.Device(instantiate=False)
+                dev._instantiate_rpcs()
+                main(dev, args)
+
     except (EOFError, KeyboardInterrupt):
         print("\nInterrupted, exiting")

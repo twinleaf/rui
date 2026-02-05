@@ -1,37 +1,30 @@
 from __future__ import annotations
-from typing import Callable
 from difflib import get_close_matches
-from client.lib.send_request import daemon_shell_rpc, daemon_check_is_sample
-from rpclib.rpclib import rpc_arg_type, rpc_ret_type
-from rpclib.rpclib import TYPE_NAME, IS_ARG_TYPE, IS_RET_TYPE
+
+rpc_type = int | float | str | bytes | None
+def type_name(t: type | None): return t.__name__ if t is not None else ''
 
 class RPC:
     ''' Interface for an RPC, supporting name, calling, type, and search '''
-    def __init__(self, name: str, arg_type: type | None, is_sample: bool | None=None):
-        self.name, self.arg_type, self.is_sample = name, arg_type, is_sample
-        self.value_cache = None
+    def __init__(self, name: str, func: callable, 
+                 arg_type: type | None, ret_type: type | None):
+        self.name, self.func = name, func
+        self.arg_type, self.ret_type = arg_type, ret_type
 
+    # throws AssertionError, TypeError
     def call(self, arg: rpc_arg_type=None) -> rpc_ret_type:
-        ret = daemon_shell_rpc(self.name, self.arg_type, arg)
-        self.value_cache = ret
-        return ret
+        if self.arg_type is None: assert arg is None
+        arg = None if arg is None else self.arg_type(arg)
+
+        value = self.func(arg)
+        if type(value) is float: value = round(value, 2)
+        if type(value) is bytes: value = value.decode()
+        return value
 
     def value(self) -> rpc_ret_type:
-        if self.value_cache is None:
-            return self.call()
-        elif self.is_sample:
-            # TODO: Thread samples
-            return self.call()
-        else:
-            return self.value_cache
+        return self.call()
 
-    def check_is_sample(self) -> bool:
-        # If True, GUI needs to check for this changing while we aren't looking
-        if self.is_sample is None:
-            self.is_sample = daemon_check_is_sample(self.name)
-        return self.is_sample
-
-    def __repr__(self): return self.name + '(' + TYPE_NAME(self.arg_type) + ')'
+    def __repr__(self): return self.name + '(' + type_name(self.arg_type) + ')'
     def __len__(self): return len(self.name)
     def __getitem__(self, key): return self.name[key]
     def __contains__(self, item): return item in self.name
