@@ -14,9 +14,8 @@ class RPC:
     # throws AssertionError, TypeError
     def call(self, arg: rpc_arg_type=None) -> rpc_ret_type:
         if self.arg_type is None: assert arg is None
-        arg = None if arg is None else self.arg_type(arg)
+        value = self.func() if arg is None else self.func(self.arg_type(arg))
 
-        value = self.func(arg)
         if type(value) is float: value = round(value, 2)
         if type(value) is bytes: value = value.decode()
         return value

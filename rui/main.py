@@ -1,7 +1,6 @@
 import os, sys
 from rui.lib.listfiles import get_rpclist
-from rui.lib.search_select import search_select_loop
-from rui.lib.call_io import input_call_output_loop
+from rui.lib.io_methods import search_select_loop, input_call_output_loop
 
 from rui.lib.cli import rpcCLI, InputQuit
 from rui.gui import slider
