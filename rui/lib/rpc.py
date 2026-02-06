@@ -1,4 +1,6 @@
 from __future__ import annotations
+from inspect import getmembers, signature
+from typing import get_args
 from difflib import get_close_matches
 
 rpc_type = int | float | str | bytes | None
@@ -6,18 +8,32 @@ def type_name(t: type | None): return t.__name__ if t is not None else ''
 
 class RPC:
     ''' Interface for an RPC, supporting name, calling, type, and search '''
-    def __init__(self, name: str, func: callable, 
-                 arg_type: type | None, ret_type: type | None):
-        self.name, self.func = name, func
-        self.arg_type, self.ret_type = arg_type, ret_type
+    def __init__(self, node: "twinleaf.rpc"):
+        self._node = node
+        self.name = node.__name__
+        sig = signature(node.__call__)
+        self.ret_type = sig.return_annotation
 
-    # throws AssertionError, TypeError
+        params = sig.parameters
+        try:
+            arg_type = params['arg'].annotation
+            if arg_type == int | None: arg_type = int
+            if arg_type == float | None: arg_type = float
+            if arg_type == str | None: arg_type = str
+        except KeyError:
+            arg_type = None
+        self.arg_type = arg_type
+
+    # TODO: catch TypeError, RuntimeError
     def call(self, arg: rpc_arg_type=None) -> rpc_ret_type:
-        if self.arg_type is None: assert arg is None
-        value = self.func() if arg is None else self.func(self.arg_type(arg))
+        if arg is None:
+            value = self._node.__call__()
+        else:
+            value = self._node.__call__(self.arg_type(arg))
 
         if type(value) is float: value = round(value, 2)
-        if type(value) is bytes: value = value.decode()
+        if type(value) is bytes and self.ret_type is not bytes: 
+            value = value.decode()  # TODO: what to do with real bytes rpcs, like capture blocks 
         return value
 
     def value(self) -> rpc_ret_type:
@@ -73,3 +89,14 @@ class RPCList:
     def __contains__(self, item): return item in self.list
     def __plus__(self, other): return RPCList(self.list + other.list)
     def __iadd__(self, other): return RPCList(self.list + other.list)
+
+''' dev to RPC class interface '''
+def is_rpc(x): return type(x).__name__.lower() == "rpc"
+def is_survey(x): return type(x).__name__.lower() == "survey"
+def rpc_dfs(parent) -> list["rpc"]:
+    rpcs = []
+    nodes = [v for a, v in getmembers(parent) if is_rpc(v) or is_survey(v)]
+    for node in nodes:
+        if is_rpc(node): rpcs += [node]
+        rpcs += rpc_dfs(node)
+    return rpcs

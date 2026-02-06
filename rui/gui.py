@@ -20,14 +20,6 @@ def slider(full_list: RPCList, selected: RPCList, fork: bool=True):
     non_numeric = RPCList([r for r in selected if r.arg_type not in {int, float}])
     for rpc in non_numeric: print(f"{rpc} has type {rpc.arg_type}, can't make a slider")
 
-    if fork:
-        pid = os.fork()         # we use fork to keep child alive after parent ends
-        if pid > 0: sys.exit()  # we're a parent, exit
-        os.setsid()             # detach from terminal
-        sys.stdin.close()       # close streams
-        sys.stdout.close()
-        sys.stderr.close()
-
     app = QApplication([sys.argv[0]])
     window = MainWindow(numeric_selected, numeric_full)
     window.show()
