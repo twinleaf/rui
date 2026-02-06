@@ -4,7 +4,7 @@ from itertools import cycle
 from client.lib.rpc import RPC, RPCList
 from rpclib.rpclib import rpc_arg_type, rpc_ret_type
 
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QGridLayout, QPushButton
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QGridLayout, QPushButton, QHBoxLayout
 from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit, QComboBox, QCompleter 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QDoubleValidator, QIcon
@@ -22,8 +22,6 @@ def slider(full_list: RPCList, selected: RPCList, fork: bool=True):
 
     # See which rpcs we need to watch out for changes behind our backs
     for rpc in numeric_selected: rpc.check_is_sample()
-
-    if numeric_selected.empty(): sys.exit("No rpcs to slide!")
 
     if fork:
         pid = os.fork()         # we use fork to keep child alive after parent ends
@@ -49,12 +47,13 @@ class MainWindow(QWidget):
 
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)  
-        self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        #self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setWindowTitle('RUI GUI')
         self.setMinimumWidth(500)
         self.rpc_box = QWidget()
         self.rpc_layout = QVBoxLayout() 
         self.rpc_layout.setSpacing(0)
+        self.rpc_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignVCenter)
         self.rpc_list = rpc_full_list 
 
         self.tool_bar = ToolBar(rpc_full_list)
@@ -63,6 +62,10 @@ class MainWindow(QWidget):
         self.tool_bar.search_bar.returnPressed.connect(lambda: self.display_rpc_slider("search"))
         self.rpcs_displayed = [0]
         
+        self.rpc_box.setLayout(self.rpc_layout)
+        self.main_layout.addLayout(self.tool_bar.menu, 1)
+        self.main_layout.addWidget(self.rpc_box)
+
         for rpc in rpcs:
             try: min_val = RPC(rpc.name+'.min', rpc.arg_type).call()
             except RuntimeError: min_val = 0
@@ -70,23 +73,19 @@ class MainWindow(QWidget):
             except RuntimeError: max_val = rpc.call()
 
             self.display = MakeRPCDisplay(rpc, min_val, max_val)
-            self.rpc_layout.addLayout(self.display.grid_layout, 1)
+            self.rpc_layout.addLayout(self.display.grid_layout)
+            self.rpc_layout.setSpacing(0)
             self.rpcs_displayed.append(self.display)
-        
-        self.rpc_box.setLayout(self.rpc_layout)
-        self.main_layout.addLayout(self.tool_bar.menu, 1)
-        self.main_layout.addWidget(self.rpc_box)
 
+        
     def display_rpc_slider(self, selection_type): 
         match selection_type:
             case "drop": 
                 index = self.tool_bar.dropdown.currentIndex()
                 value = self.tool_bar.dropdown.currentText()
-
             case "search": 
                 index = self.tool_bar.dropdown.findText(self.tool_bar.search_bar.text())
                 value = self.tool_bar.search_bar.text() 
-                self.tool_bar.search_bar.initial = True
             case _: index = 0
 
         if index:
@@ -97,8 +96,10 @@ class MainWindow(QWidget):
                         self.rpcs_displayed[idx].show_slider_box()
                 elif value in self.tool_bar.rpc_string: #else make new slider
                     new_rpc = MakeRPCDisplay(self.rpc_list[index-1], 0, self.rpc_list[index-1].call())
-                    self.rpcs_displayed.append(new_rpc)
                     self.rpc_layout.addLayout(new_rpc.grid_layout)
+                    self.rpc_layout.setSpacing(0)
+                    self.rpcs_displayed.append(new_rpc)
+
     
 class ToolBar():
     def __init__(self, rpc_full_list: RPCList):
@@ -135,8 +136,6 @@ class ToolBar():
         search_bar = CustomLineEdit(self.rpc_string)
         search_bar.setPlaceholderText("Search rpcs")
         search_bar.setCompleter(self.completer)
-        if search_bar.returnPressed: 
-            search_bar.initial = True
         return search_bar
 
 class CustomLineEdit(QLineEdit):
@@ -145,19 +144,14 @@ class CustomLineEdit(QLineEdit):
         self.completion_items = items
         self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())])
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        self.initial = True
     
     def keyPressEvent(self, event):
-        if self.text() == None or event.key() == Qt.Key.Key_Backspace:
-            self.initial = True
-
         if event.key() == Qt.Key.Key_Tab:
-            if self.initial: 
-                self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())]) 
-                self.initial = False
             item = next(self.matches)
-            self.setText(item)   
-    
+            self.setText(item)  
+        else:
+            self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())]) 
+
         event.accept()
         QLineEdit.keyPressEvent(self, event)
 
@@ -176,14 +170,19 @@ class MakeRPCDisplay():
         self.min_label = self.make_edit(str(min_val), self.slider.setMinimum)
         self.max_label = self.make_edit(str(max_val), self.slider.setMaximum)
 
-        self.grid_layout = QGridLayout()
-        self.grid_layout.setSpacing(0)
-        self.grid_layout.addWidget(self.name_label, 0, 0)
-        self.grid_layout.addWidget(self.result_label, 0, 1, alignment= Qt.AlignmentFlag.AlignHCenter)
-        self.grid_layout.addWidget(self.delete_button, 0, 2, alignment =Qt.AlignmentFlag.AlignLeft)
-        self.grid_layout.addWidget(self.min_label, 1, 0)
-        self.grid_layout.addWidget(self.slider, 1, 1)
-        self.grid_layout.addWidget(self.max_label, 1, 2, alignment= Qt.AlignmentFlag.AlignLeft)
+        self.grid_layout = QVBoxLayout()
+        self.first_row = QHBoxLayout()
+        self.second_row = QHBoxLayout()
+        self.second_row.setSpacing(3)
+        self.first_row.addWidget(self.name_label)
+        self.first_row.addWidget(self.result_label, alignment = Qt.AlignmentFlag.AlignHCenter)
+        self.first_row.addWidget(self.delete_button, alignment = Qt.AlignmentFlag.AlignRight)
+        self.second_row.addWidget(self.min_label)
+        self.second_row.addWidget(self.slider)
+        self.second_row.addWidget(self.max_label)
+        self.grid_layout.addLayout(self.first_row)
+        self.grid_layout.addLayout(self.second_row)
+
 
     def make_label(self, name) -> QLabel:
         label = QLabel(name)
@@ -232,12 +231,12 @@ class MakeRPCDisplay():
         return button
 
     def hide_slider_box(self):
-        self.grid_layout.removeWidget(self.name_label)
-        self.grid_layout.removeWidget(self.result_label)
-        self.grid_layout.removeWidget(self.delete_button)
-        self.grid_layout.removeWidget(self.min_label)
-        self.grid_layout.removeWidget(self.slider)
-        self.grid_layout.removeWidget(self.max_label)
+        self.first_row.removeWidget(self.name_label)
+        self.first_row.removeWidget(self.result_label)
+        self.first_row.removeWidget(self.delete_button)
+        self.second_row.removeWidget(self.min_label)
+        self.second_row.removeWidget(self.slider)
+        self.second_row.removeWidget(self.max_label)
         self.name_label.hide()
         self.result_label.hide()
         self.delete_button.hide()
@@ -253,12 +252,18 @@ class MakeRPCDisplay():
         self.slider.show()
         self.min_label.show()
         self.max_label.show() 
-        self.grid_layout.addWidget(self.name_label)
-        self.grid_layout.addWidget(self.result_label)
-        self.grid_layout.addWidget(self.delete_button)
-        self.grid_layout.addWidget(self.min_label)
-        self.grid_layout.addWidget(self.slider)
-        self.grid_layout.addWidget(self.max_label)
+        self.first_row.addWidget(self.name_label, alignment = Qt.AlignmentFlag.AlignLeft)
+        self.first_row.addWidget(self.result_label, alignment = Qt.AlignmentFlag.AlignHCenter)
+        self.first_row.addWidget(self.delete_button, alignment = Qt.AlignmentFlag.AlignRight)
+        self.second_row.addWidget(self.min_label)
+        self.second_row.addWidget(self.slider)
+        self.second_row.addWidget(self.max_label)
+        #TODO: Determine why these are snapping to the bottom, potentially something to do with the 
+        #rpc vbox total layout, could also be the initial creation of the rpc displays causing this issue. 
+        #could create separate rpc display function in main app and determine
+        #Could also be a glitch because it's running when connected 
+        self.first_row.setAlignment(Qt.AlignmentFlag.AlignBottom)
+        self.second_row.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.widget_visible = True
 
     def __get_value(self):
