@@ -29,7 +29,7 @@ class ReRecorder(Recorder):
     def readline(self):
         # Get next input line and pass it to our program
         while (next_line := self.ref_transcript.readline())[:2] != "> ":
-            if not next_line: 
+            if not next_line:
                 self.write_stdout("\nExpected input, got transcript end\n")
                 self.passed = False
                 raise IOError

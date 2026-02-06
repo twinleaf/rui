@@ -14,10 +14,10 @@ if __name__ == "__main__":
 
     try:
         match args:
-            case ['itl', *rest]: 
+            case ['itl', *rest]:
                 twinleaf.Device()._interact()
             case ['test', *rest]: test_main(rest)
-            case ['record', *rest]: 
+            case ['record', *rest]:
                 test_main = lambda args: main(TestDevice(), args)
                 record(test_main, rest)
 
@@ -35,7 +35,7 @@ if __name__ == "__main__":
                     test_main = lambda args: main(TestDevice(), args)
                     passed = run_transcript(test_main, test, silent=True)
 
-                    if not passed: 
+                    if not passed:
                         test_main = lambda args: main(TestDevice(), args)
                         rerecord_transcript(test_main, test)
 

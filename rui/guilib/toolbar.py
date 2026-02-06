@@ -16,7 +16,7 @@ class ToolBar:
 
         self.menu.addWidget(self.search_bar)
         self.menu.addWidget(self.dropdown)
-    
+
     def make_dropdown(self) -> QComboBox:
         dropdown = QComboBox()
         dropdown.adjustSize()
@@ -28,7 +28,7 @@ class ToolBar:
             dropdown.addItem(rpc.name)
             self.rpc_string.append(rpc.name)
         return dropdown
-    
+
     def make_completer(self) -> QCompleter:
         completer = QCompleter(self.rpc_string)
         completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
@@ -49,13 +49,13 @@ class CustomLineEdit(QLineEdit):
         self.completion_items = items
         self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())])
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-    
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Tab:
             item = next(self.matches)
-            self.setText(item)  
+            self.setText(item)
         else:
-            self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())]) 
+            self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())])
 
         event.accept()
         QLineEdit.keyPressEvent(self, event)

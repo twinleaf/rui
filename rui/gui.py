@@ -38,14 +38,14 @@ class MainWindow(QWidget):
         self.rpc_layout = QVBoxLayout()
         self.rpc_layout.setSpacing(0)
         self.rpc_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignVCenter)
-        self.rpc_list = rpc_full_list 
+        self.rpc_list = rpc_full_list
 
         self.tool_bar = ToolBar(rpc_full_list)
         self.tool_bar.dropdown.activated.connect(lambda: self.display_rpc_slider("drop"))
         self.tool_bar.completer.activated.connect(lambda: self.display_rpc_slider("search"))
         self.tool_bar.search_bar.returnPressed.connect(lambda: self.display_rpc_slider("search"))
         self.rpcs_displayed = [0]
-        
+
         self.rpc_box.setLayout(self.rpc_layout)
         self.main_layout.addLayout(self.tool_bar.menu, 1)
         self.main_layout.addWidget(self.rpc_box)

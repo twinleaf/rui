@@ -93,24 +93,24 @@ class RPCDisplay:
         self.min_label.hide()
         self.max_label.hide()
         self.widget_visible = False
-    
+
     def show_slider_box(self):
         self.name_label.show()
         self.result_label.show()
         self.delete_button.show()
         self.slider.show()
         self.min_label.show()
-        self.max_label.show() 
+        self.max_label.show()
         self.first_row.addWidget(self.name_label, alignment = Qt.AlignmentFlag.AlignLeft)
         self.first_row.addWidget(self.result_label, alignment = Qt.AlignmentFlag.AlignHCenter)
         self.first_row.addWidget(self.delete_button, alignment = Qt.AlignmentFlag.AlignRight)
         self.second_row.addWidget(self.min_label)
         self.second_row.addWidget(self.slider)
         self.second_row.addWidget(self.max_label)
-        #TODO: Determine why these are snapping to the bottom, potentially something to do with the 
-        #rpc vbox total layout, could also be the initial creation of the rpc displays causing this issue. 
+        #TODO: Determine why these are snapping to the bottom, potentially something to do with the
+        #rpc vbox total layout, could also be the initial creation of the rpc displays causing this issue.
         #could create separate rpc display function in main app and determine
-        #Could also be a glitch because it's running when connected 
+        #Could also be a glitch because it's running when connected
         self.first_row.setAlignment(Qt.AlignmentFlag.AlignBottom)
         self.second_row.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.widget_visible = True
@@ -118,9 +118,9 @@ class RPCDisplay:
     def __get_value(self):
         self.value = self.rpc.value()
         self.value_scaled = self.__scale(self.value)
-    def __result_display(self): 
+    def __result_display(self):
         return f"Current value: {self.value}"
-    def __scale(self, val: int | float ) -> int: 
+    def __scale(self, val: int | float ) -> int:
         return round(self.rpc.arg_type(val) * self.scale)
-    def __descale(self, val: int) -> int | float: 
+    def __descale(self, val: int) -> int | float:
         return self.rpc.arg_type(val / self.scale)
