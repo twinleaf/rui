@@ -1,7 +1,6 @@
 import sys
 from typing import TypeVar, Callable
-from client.lib.rpc import RPC, RPCList
-from rpclib.rpclib import rpc_arg_type
+from rui.lib.rpc import RPC, RPCList
 
 ALL_MODES = {'-', '+', '++', '*', '@', '/', '|', 'debug', 'regen'}
 FLAGS = {

@@ -1,6 +1,12 @@
 $ [+ -]
 Enter search terms: \
 > Ki
-pump.lock.control.Ki(float)
+1. alice.lock.control.Ki(float)
+2. bob.lock.control.Ki(float)
+3. chris.lock.control.Ki(float)
+4. pump.lock.control.Ki(float)
+5. zachary.lock.control.Ki(float)
+Select rpc, or /[search] to keep searching: \
+> 1
 Reply: 0
 Plus (continuous input) and dash (no argument) modes incompatible, exiting

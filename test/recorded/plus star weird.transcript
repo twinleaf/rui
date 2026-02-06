@@ -1,11 +1,15 @@
 $ [+]
 Enter search terms: \
 > K
-1. pump.lock.control.Ki(float)
-2. pump.lock.control.Kp(float)
+1. alice.lock.control.Ki(float)
+2. bob.lock.control.Ki(float)
+3. chris.lock.control.Ki(float)
+4. pump.lock.control.Ki(float)
+5. pump.lock.control.Kp(float)
+6. zachary.lock.control.Ki(float)
 Select rpc, or /[search] to keep searching: \
 > *
-pump.lock.control.Ki(float)
+alice.lock.control.Ki(float)
 Currently: 0
 Enter argument: \
 > 1

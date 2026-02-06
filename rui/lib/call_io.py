@@ -1,6 +1,5 @@
-from client.cli import rpcCLI, valid_input
-from client.lib.rpc import RPC, RPCList
-from rpclib.rpclib import rpc_arg_type
+from rui.lib.cli import rpcCLI, valid_input
+from rui.lib.rpc import RPC, RPCList, rpc_type
 
 DASH_PLUS_ERR = "Plus (continuous input) and dash (no argument) modes incompatible, exiting"
 def input_call_output_loop(cli: rpcCLI, selected: RPCList):
@@ -16,7 +15,7 @@ def input_call_output_loop(cli: rpcCLI, selected: RPCList):
                 else: print(DASH_PLUS_ERR)
             break                         # TODO: what to do if + mode but multiple rpcs?
 
-def print_get_arg(rpc: RPC, cli: rpcCLI) -> rpc_arg_type:
+def print_get_arg(rpc: RPC, cli: rpcCLI) -> rpc_type:
     ''' print current rpc value and ask user for what to change it to if any '''
 
     # if we can't set a value, we don't need this function

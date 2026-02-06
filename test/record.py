@@ -4,6 +4,7 @@ from pathlib import Path
 class Recorder:
     ''' Logs stdin and stdout to transcript files before redirecting back to terminal '''
     def __init__(self, transcript_dir: Path):
+        self.transcript_dir = transcript_dir
         self.temp_path = transcript_dir / 'tmp'
 
     def write_transcript(self, data: str | None=None):
@@ -52,7 +53,7 @@ class Recorder:
             while not (test_name := input("Recorded, enter test name: ")): pass
 
             new_transcript_path = f"{test_name}.transcript"
-            self.temp_path.rename(dest_dir / new_transcript_path)
+            self.temp_path.rename(self.transcript_dir / new_transcript_path)
 
             print("-- Recorded to", new_transcript_path, "--")
 

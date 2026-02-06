@@ -3,17 +3,19 @@ from pathlib import Path
 
 class Playback:
     ''' Sends stdin from transcript, reads stdout and asserts against transcript '''
-    def __init__(self, transcript_path: str):
+    def __init__(self, transcript_path: Path, silent: bool):
         self.transcript_path = transcript_path
+        self.silent = silent
         self.write_buffer = ""
         self.passed = True
 
     def println(self, data: str):
         # we can't use print() because we own stdout, this also helps debug newlines
-        data = data.replace('\n', '\\n')
-        data += '\n'
-        self.stdout.write(data)
-        self.stdout.flush()
+        if not self.silent:
+            data = data.replace('\n', '\\n')
+            data += '\n'
+            self.stdout.write(data)
+            self.stdout.flush()
 
     def __enter__(self):
         self.transcript = open(self.transcript_path, 'r')
@@ -83,17 +85,17 @@ class Playback:
 
         if exc_type: return False # propagate exception
 
-def run_transcript(program, transcript_path: str) -> int:
-    print("-- Testing", transcript_path, "--")
+def run_transcript(program, transcript_path: Path, silent: bool=False) -> int:
+    if not silent: print("-- Testing", transcript_path, "--")
     try:
-        with Playback(transcript_path) as playback:
+        with Playback(transcript_path, silent) as playback:
             args = playback.parse_args()
             program(args)
             status = "-- PASSED --" if playback.passed else "!!!! FAILED !!!!"
             passed = playback.passed
     except TypeError: # raised on input fail
-        print("Expected input, got nothing")
+        if not silent: print("Expected input, got nothing")
         status, passed = "!!!! FAILED !!!!", False
 
-    print(status + '\n')
+    if not silent: print(status)
     return int(passed)

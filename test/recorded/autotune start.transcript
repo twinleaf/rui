@@ -1,14 +1,8 @@
 $ []
 Enter search terms: \
-> .
-1. dev.name()
-2. mode.autostart(int)
-3. pump.lock.control.Ki(float)
-4. pump.lock.control.Kp(float)
-5. pump.therm.control.autotune.start()
-6. signal.capture.block()
-7. signal.capture.size()
-8. signal.capture.trigger()
+> auto
+1. mode.autostart(int)
+2. pump.therm.control.autotune.start()
 Select rpc, or /[search] to keep searching: \
-> 5
+> 2
 Reply: OK
