@@ -20,9 +20,6 @@ def slider(full_list: RPCList, selected: RPCList, fork: bool=True):
     non_numeric = RPCList([r for r in selected if r.arg_type not in {int, float}])
     for rpc in non_numeric: print(f"{rpc} has type {rpc.arg_type}, can't make a slider")
 
-    # See which rpcs we need to watch out for changes behind our backs
-    for rpc in numeric_selected: rpc.check_is_sample()
-
     if fork:
         pid = os.fork()         # we use fork to keep child alive after parent ends
         if pid > 0: sys.exit()  # we're a parent, exit
@@ -67,10 +64,9 @@ class MainWindow(QWidget):
         self.main_layout.addWidget(self.rpc_box)
 
         for rpc in rpcs:
-            try: min_val = RPC(rpc.name+'.min', rpc.arg_type).call()
-            except RuntimeError: min_val = 0
-            try: max_val = RPC(rpc.name+'.max', rpc.arg_type).call()
-            except RuntimeError: max_val = rpc.call()
+            min_val = 0
+            max_val = rpc.call()
+            # TODO: try to guess min and max value but with getattr
 
             self.display = MakeRPCDisplay(rpc, min_val, max_val)
             self.rpc_layout.addLayout(self.display.grid_layout)
