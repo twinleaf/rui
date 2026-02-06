@@ -1,17 +1,12 @@
-import os, sys, subprocess
-from typing import Callable
-from itertools import cycle
-
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QGridLayout, QPushButton, QHBoxLayout
-from PyQt6.QtWidgets import QSlider, QLabel, QLineEdit, QComboBox, QCompleter 
+import sys, subprocess
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QDoubleValidator, QIcon
-import random # for colors
+from rui.guilib.toolbar import ToolBar
+from rui.guilib.rpcdisplay import RPCDisplay
 
-from rui.lib.rpc import RPC, RPCList
+from rui.lib.rpc import RPCList
 
-def slider(full_list: RPCList, selected: RPCList, fork: bool=True):
-
+def slider(full_list: RPCList, selected: RPCList):
     # Need to know which RPCs we can slide
     numeric_full = RPCList([r for r in full_list if r.arg_type in {int, float}])
     numeric_selected= RPCList([r for r in selected if r.arg_type in {int, float}])
@@ -35,12 +30,12 @@ class MainWindow(QWidget):
         super().__init__()
 
         self.main_layout = QVBoxLayout()
-        self.setLayout(self.main_layout)  
+        self.setLayout(self.main_layout)
         #self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setWindowTitle('RUI GUI')
         self.setMinimumWidth(500)
         self.rpc_box = QWidget()
-        self.rpc_layout = QVBoxLayout() 
+        self.rpc_layout = QVBoxLayout()
         self.rpc_layout.setSpacing(0)
         self.rpc_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignVCenter)
         self.rpc_list = rpc_full_list 
@@ -56,24 +51,24 @@ class MainWindow(QWidget):
         self.main_layout.addWidget(self.rpc_box)
 
         for rpc in rpcs:
-            min_val = 0
-            max_val = rpc.call()
-            # TODO: try to guess min and max value but with getattr
+            try: min_val = rpc._node.min()
+            except AttributeError: min_val = 0
+            try: max_val = rpc._node.max()
+            except AttributeError: max_val = rpc.call()
 
-            self.display = MakeRPCDisplay(rpc, min_val, max_val)
+            self.display = RPCDisplay(rpc, min_val, max_val)
             self.rpc_layout.addLayout(self.display.grid_layout)
-            self.rpc_layout.setSpacing(0)
+            self.rpc_layout.setSpacing(8)
             self.rpcs_displayed.append(self.display)
 
-        
-    def display_rpc_slider(self, selection_type): 
+    def display_rpc_slider(self, selection_type):
         match selection_type:
-            case "drop": 
+            case "drop":
                 index = self.tool_bar.dropdown.currentIndex()
                 value = self.tool_bar.dropdown.currentText()
-            case "search": 
+            case "search":
                 index = self.tool_bar.dropdown.findText(self.tool_bar.search_bar.text())
-                value = self.tool_bar.search_bar.text() 
+                value = self.tool_bar.search_bar.text()
             case _: index = 0
 
         if index:
@@ -83,245 +78,7 @@ class MainWindow(QWidget):
                     if not self.rpcs_displayed[idx].widget_visible:
                         self.rpcs_displayed[idx].show_slider_box()
                 elif value in self.tool_bar.rpc_string: #else make new slider
-                    new_rpc = MakeRPCDisplay(self.rpc_list[index-1], 0, self.rpc_list[index-1].call())
+                    new_rpc = RPCDisplay(self.rpc_list[index-1], 0, self.rpc_list[index-1].call())
                     self.rpc_layout.addLayout(new_rpc.grid_layout)
-                    self.rpc_layout.setSpacing(0)
+                    self.rpc_layout.setSpacing(8)
                     self.rpcs_displayed.append(new_rpc)
-
-    
-class ToolBar():
-    def __init__(self, rpc_full_list: RPCList):
-        self.rpc_list = rpc_full_list
-        self.rpc_string = []
-        self.menu = QVBoxLayout()
-
-        self.dropdown = self.make_dropdown()
-        self.completer = self.make_completer()
-        self.search_bar = self.make_searchbar()
-
-        self.menu.addWidget(self.search_bar)
-        self.menu.addWidget(self.dropdown)
-    
-    def make_dropdown(self) -> QComboBox:
-        dropdown = QComboBox()
-        dropdown.adjustSize()
-        dropdown.setStyleSheet(_generate_qss())
-        dropdown.addItem("Select new rpc")
-
-        for rpc in self.rpc_list:
-            dropdown.addItem(rpc.name)
-            self.rpc_string.append(rpc.name)
-        return dropdown
-    
-    def make_completer(self) -> QCompleter:
-        completer = QCompleter(self.rpc_string)
-        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        completer.setFilterMode(Qt.MatchFlag.MatchContains)
-        completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
-        return completer
-
-    def make_searchbar(self) -> QLineEdit:
-        search_bar = CustomLineEdit(self.rpc_string)
-        search_bar.setPlaceholderText("Search rpcs")
-        search_bar.setCompleter(self.completer)
-        return search_bar
-
-class CustomLineEdit(QLineEdit):
-    def __init__(self, items, parent = None):
-        QLineEdit.__init__(self, parent)
-        self.completion_items = items
-        self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())])
-        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-    
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_Tab:
-            item = next(self.matches)
-            self.setText(item)  
-        else:
-            self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())]) 
-
-        event.accept()
-        QLineEdit.keyPressEvent(self, event)
-
-class MakeRPCDisplay():
-    def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float):
-        self.rpc = rpc
-        self.scale = 100 if rpc.arg_type == float else 1
-        self.__get_value()
-
-        self.widget_visible = True
-        self.name = rpc.name
-        self.name_label = self.make_label(rpc.name)
-        self.result_label = self.make_label(self.__result_display())
-        self.delete_button = self.make_button()
-        self.slider = self.make_slider(min_val, max_val)
-        self.min_label = self.make_edit(str(min_val), self.slider.setMinimum)
-        self.max_label = self.make_edit(str(max_val), self.slider.setMaximum)
-
-        self.grid_layout = QVBoxLayout()
-        self.first_row = QHBoxLayout()
-        self.second_row = QHBoxLayout()
-        self.second_row.setSpacing(3)
-        self.first_row.addWidget(self.name_label)
-        self.first_row.addWidget(self.result_label, alignment = Qt.AlignmentFlag.AlignHCenter)
-        self.first_row.addWidget(self.delete_button, alignment = Qt.AlignmentFlag.AlignRight)
-        self.second_row.addWidget(self.min_label)
-        self.second_row.addWidget(self.slider)
-        self.second_row.addWidget(self.max_label)
-        self.grid_layout.addLayout(self.first_row)
-        self.grid_layout.addLayout(self.second_row)
-
-
-    def make_label(self, name) -> QLabel:
-        label = QLabel(name)
-        label.setFont(self.__qfont())
-        return label
-
-    def make_edit(self, default: str, edit_func: Callable[[int], None]) -> QLineEdit:
-        edit = QLineEdit()
-        edit.setText(default)
-        edit.setFont(self.__qfont())
-        edit.setFixedWidth(50)
-        edit.setValidator(QDoubleValidator())
-        edit.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-        edit.setStyleSheet(_generate_qss())
-        edit.returnPressed.connect(lambda: edit_func(self.__scale(edit.text())))
-        return edit
-
-    def make_slider(self, min_val: int | float, max_val: int | float) -> QSlider:
-        self.updating = False
-        slider = QSlider(Qt.Orientation.Horizontal)
-        slider.setRange(self.__scale(min_val), self.__scale(max_val))
-        slider.setValue(self.value_scaled)
-        slider.setSingleStep(1)
-        slider.setPageStep(10)
-        slider.setStyleSheet(_generate_qss())
-        slider.valueChanged.connect(self.update_slider)
-        return slider
-
-    def update_slider(self, value: int):
-        if not self.updating: # don't recursively call this
-            self.updating = True
-            value_real = self.__descale(value)
-            self.rpc.call(value_real)
-            self.__get_value()
-            self.result_label.setText(self.__result_display())
-            self.slider.setValue(self.value_scaled)
-            self.updating = False
-
-    def make_button(self):
-        button = QPushButton()
-        icon = QIcon().fromTheme("edit-delete")
-        button.setIcon(icon)
-        button.setStyleSheet(_generate_qss())
-        if (self.widget_visible == True):
-            button.clicked.connect(self.hide_slider_box)
-        return button
-
-    def hide_slider_box(self):
-        self.first_row.removeWidget(self.name_label)
-        self.first_row.removeWidget(self.result_label)
-        self.first_row.removeWidget(self.delete_button)
-        self.second_row.removeWidget(self.min_label)
-        self.second_row.removeWidget(self.slider)
-        self.second_row.removeWidget(self.max_label)
-        self.name_label.hide()
-        self.result_label.hide()
-        self.delete_button.hide()
-        self.slider.hide()
-        self.min_label.hide()
-        self.max_label.hide()
-        self.widget_visible = False
-    
-    def show_slider_box(self):
-        self.name_label.show()
-        self.result_label.show()
-        self.delete_button.show()
-        self.slider.show()
-        self.min_label.show()
-        self.max_label.show() 
-        self.first_row.addWidget(self.name_label, alignment = Qt.AlignmentFlag.AlignLeft)
-        self.first_row.addWidget(self.result_label, alignment = Qt.AlignmentFlag.AlignHCenter)
-        self.first_row.addWidget(self.delete_button, alignment = Qt.AlignmentFlag.AlignRight)
-        self.second_row.addWidget(self.min_label)
-        self.second_row.addWidget(self.slider)
-        self.second_row.addWidget(self.max_label)
-        #TODO: Determine why these are snapping to the bottom, potentially something to do with the 
-        #rpc vbox total layout, could also be the initial creation of the rpc displays causing this issue. 
-        #could create separate rpc display function in main app and determine
-        #Could also be a glitch because it's running when connected 
-        self.first_row.setAlignment(Qt.AlignmentFlag.AlignBottom)
-        self.second_row.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.widget_visible = True
-
-    def __get_value(self):
-        self.value = self.rpc.value()
-        self.value_scaled = self.__scale(self.value)
-    def __result_display(self): return f"Current value: {self.value}"
-    def __qfont(self, size: int=14): return QFont('Ubuntu', size)
-
-    def __scale(self, val: int | float ) -> int:
-        return round(self.rpc.arg_type(val) * self.scale)
-    def __descale(self, val: int) -> int | float:
-        return self.rpc.arg_type(val / self.scale)
-
-def _generate_qss() -> str:
-    return f"""
-    QComboBox {{
-        border: 2px solid grey;
-        border-radius: 5px;
-        min-width: 6em;
-        color:black;
-        background-color:white;}}
-    QComboBox:hover{{background-color:lightgrey}}
-
-    QComboBox QAbstractItemView{{
-        border-color:2px solid black;
-        border-radius: 5px;
-        color:white;
-        selection-background-color:lightgrey}}
-
-    QSlider::groove:horizontal {{
-        border: 3px solid #999999;
-        height: 8px; /* the groove height */
-        background: #e0e0e0;
-        margin: 2px 0;
-        border-radius: 4px;
-    }}
-
-    QSlider::handle:horizontal {{
-        background: #ffffff;
-        border: 3px solid #5c5c5c;
-        width: 18px;
-        height: 18px;
-        margin: -6px 0; /* center the handle vertically within the groove */
-        border-radius: 9px; /* makes the handle circular */
-    }}
-
-    QSlider::add-page:horizontal {{
-        background: #b0b0b0; /* color for the part after the handle */
-    }}
-
-    QSlider::sub-page:horizontal {{
-        background: {_random_hex(500)}; /* color for the part before the handle */
-    }}
-
-    QPushButton {{
-        background-color: transparent;
-        color: red;
-    }}
-
-    QLineEdit {{
-        border: 1px solid #5c5c5c;
-        border-radius: 9px;
-    }}
-
-    """
-
-def _random_hex(total: int) -> str:
-    ret = "#"
-    for i in range(3):
-        max = 255 if total > 255 else total
-        r = random.randint(0, max)
-        ret += hex(r)[2:].zfill(2)
-    return ret

@@ -32,8 +32,8 @@ class RPC:
             value = self._node.__call__(self.arg_type(arg))
 
         if type(value) is float: value = round(value, 2)
-        if type(value) is bytes and self.ret_type is not bytes: 
-            value = value.decode()  # TODO: what to do with real bytes rpcs, like capture blocks 
+        if type(value) is bytes and self.ret_type is not bytes:
+            value = value.decode()  # TODO: what to do with real bytes rpcs, like capture blocks
         return value
 
     def value(self) -> rpc_ret_type:
