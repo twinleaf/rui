@@ -16,7 +16,9 @@ if __name__ == "__main__":
         match args:
             case ['itl', *rest]:
                 twinleaf.Device()._interact()
-            case ['test', *rest]: test_main(rest)
+            case ['test', *rest]:
+                test_main = lambda args: main(TestDevice(), args)
+                test_main(rest)
             case ['record', *rest]:
                 test_main = lambda args: main(TestDevice(), args)
                 record(test_main, rest)
