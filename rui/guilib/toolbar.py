@@ -7,37 +7,24 @@ from rui.lib.rpc import RPCList
 class ToolBar:
     def __init__(self, rpc_full_list: RPCList):
         self.rpc_list = rpc_full_list
-        self.rpc_string = []
+        self.rpc_names = []
         self.menu = QVBoxLayout()
 
-        self.dropdown = self.make_dropdown()
         self.completer = self.make_completer()
         self.search_bar = self.make_searchbar()
 
         self.menu.addWidget(self.search_bar)
-        self.menu.addWidget(self.dropdown)
-
-    def make_dropdown(self) -> QComboBox:
-        dropdown = QComboBox()
-        dropdown.adjustSize()
-        dropdown.setStyleSheet(generate_qss())
-        dropdown.addItem("Select new rpc")
-        dropdown.setFont(qfont())
-
-        for rpc in self.rpc_list:
-            dropdown.addItem(rpc.name)
-            self.rpc_string.append(rpc.name)
-        return dropdown
 
     def make_completer(self) -> QCompleter:
-        completer = QCompleter(self.rpc_string)
+        for rpc in self.rpc_list: self.rpc_names.append(rpc.name)
+        completer = QCompleter(self.rpc_names)
         completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         completer.setFilterMode(Qt.MatchFlag.MatchContains)
         completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
         return completer
 
     def make_searchbar(self) -> QLineEdit:
-        search_bar = CustomLineEdit(self.rpc_string)
+        search_bar = CustomLineEdit(self.rpc_names)
         search_bar.setPlaceholderText("Search rpcs")
         search_bar.setCompleter(self.completer)
         return search_bar

@@ -41,10 +41,9 @@ class MainWindow(QWidget):
         self.rpc_list = rpc_full_list
 
         self.tool_bar = ToolBar(rpc_full_list)
-        self.tool_bar.dropdown.activated.connect(lambda: self.display_rpc_slider("drop"))
-        self.tool_bar.completer.activated.connect(lambda: self.display_rpc_slider("search"))
-        self.tool_bar.search_bar.returnPressed.connect(lambda: self.display_rpc_slider("search"))
-        self.rpcs_displayed = [0]
+        self.tool_bar.completer.activated.connect(self.display_rpc_slider)
+        self.tool_bar.search_bar.returnPressed.connect(self.display_rpc_slider)
+        self.rpcs_displayed = []
 
         self.rpc_box.setLayout(self.rpc_layout)
         self.main_layout.addLayout(self.tool_bar.menu, 1)
@@ -61,24 +60,16 @@ class MainWindow(QWidget):
             self.rpc_layout.setSpacing(8)
             self.rpcs_displayed.append(self.display)
 
-    def display_rpc_slider(self, selection_type):
-        match selection_type:
-            case "drop":
-                index = self.tool_bar.dropdown.currentIndex()
-                value = self.tool_bar.dropdown.currentText()
-            case "search":
-                index = self.tool_bar.dropdown.findText(self.tool_bar.search_bar.text())
-                value = self.tool_bar.search_bar.text()
-            case _: index = 0
-
-        if index:
-                #check if rpc slider already displayed
-                idx = next((i + 1 for i, rpc in enumerate(self.rpcs_displayed[1:]) if rpc.name == value), None)
-                if idx:
-                    if not self.rpcs_displayed[idx].widget_visible:
-                        self.rpcs_displayed[idx].show_slider_box()
-                elif value in self.tool_bar.rpc_string: #else make new slider
-                    new_rpc = RPCDisplay(self.rpc_list[index-1], 0, self.rpc_list[index-1].call())
-                    self.rpc_layout.addLayout(new_rpc.grid_layout)
-                    self.rpc_layout.setSpacing(8)
-                    self.rpcs_displayed.append(new_rpc)
+    def display_rpc_slider(self):
+        index = self.tool_bar.rpc_names.index(self.tool_bar.search_bar.text())
+        value = self.tool_bar.search_bar.text()
+        #check if rpc slider already displayed
+        idx = next((i for i, rpc in enumerate(self.rpcs_displayed) if rpc.name == value), None)
+        if idx is not None:
+            if not self.rpcs_displayed[idx].widget_visible:
+                self.rpcs_displayed[idx].show_slider_box()
+        elif value in self.tool_bar.rpc_names: #else make new slider
+            new_rpc = RPCDisplay(self.rpc_list[index], 0, self.rpc_list[index].call())
+            self.rpc_layout.addLayout(new_rpc.grid_layout)
+            self.rpc_layout.setSpacing(8)
+            self.rpcs_displayed.append(new_rpc)
