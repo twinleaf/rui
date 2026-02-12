@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from test.record import list_recorded
 
 class Playback:
     ''' Sends stdin from transcript, reads stdout and asserts against transcript '''
@@ -96,6 +97,12 @@ def run_transcript(program, transcript_path: Path, silent: bool=False) -> int:
     except TypeError: # raised on input fail
         if not silent: print("Expected input, got nothing")
         status, passed = "!!!! FAILED !!!!", False
+    if not silent: print(status+'\n')
+    return passed
 
-    if not silent: print(status)
-    return int(passed)
+def playback(program):
+    num_passed = 0
+    for test in list_recorded():
+        passed = run_transcript(program, test)
+        num_passed += int(passed)
+    print(f"RESULTS: PASSED {num_passed} OUT OF {len(list_recorded())}")

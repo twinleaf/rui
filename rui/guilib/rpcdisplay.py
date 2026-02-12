@@ -101,16 +101,15 @@ class RPCDisplay:
         self.slider.show()
         self.min_label.show()
         self.max_label.show()
+
         self.first_row.addWidget(self.name_label, alignment = Qt.AlignmentFlag.AlignLeft)
         self.first_row.addWidget(self.result_label, alignment = Qt.AlignmentFlag.AlignHCenter)
         self.first_row.addWidget(self.delete_button, alignment = Qt.AlignmentFlag.AlignRight)
+
         self.second_row.addWidget(self.min_label)
         self.second_row.addWidget(self.slider)
         self.second_row.addWidget(self.max_label)
-        #TODO: Determine why these are snapping to the bottom, potentially something to do with the
-        #rpc vbox total layout, could also be the initial creation of the rpc displays causing this issue.
-        #could create separate rpc display function in main app and determine
-        #Could also be a glitch because it's running when connected
+
         self.first_row.setAlignment(Qt.AlignmentFlag.AlignBottom)
         self.second_row.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.widget_visible = True

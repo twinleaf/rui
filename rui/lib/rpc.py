@@ -100,3 +100,5 @@ def rpc_dfs(parent) -> list["rpc"]:
         if is_rpc(node): rpcs += [node]
         rpcs += rpc_dfs(node)
     return rpcs
+def get_dev_list(dev):
+    return RPCList([RPC(node) for node in rpc_dfs(dev.settings)])

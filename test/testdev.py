@@ -1,4 +1,5 @@
 import os
+# TODO: this can inherit twinleaf.device but be totally evil
 
 def call_test_rpc(rpc, arg: int | float | None) -> int | float | None:
     if arg is None:

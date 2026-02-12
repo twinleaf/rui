@@ -1,4 +1,5 @@
-from test.record import Recorder
+from test.record import Recorder, list_recorded
+from test.playback import run_transcript
 import sys
 from pathlib import Path
 
@@ -74,12 +75,16 @@ class ReRecorder(Recorder):
                 if answer in {'y', 'Y'} and self.transcript_path.exists():
                     self.transcript_path.unlink()
 
-def rerecord_transcript(program, transcript_path: Path) -> int:
-    print("-- Re-recording", transcript_path, "--")
-    try:
-        with ReRecorder(transcript_path) as rerecorder:
-            args = rerecorder.parse_args()
-            program(args)
-    except TypeError:
-        print("Expected input, got nothing")
-        print("Rejected, not recording")
+def rerecord_transcripts(program) -> int:
+    for test in list_recorded():
+        passed = run_transcript(program, test, silent=True)
+        if not passed:
+            print("-- Re-recording", test, "--")
+            try:
+                with ReRecorder(test) as rerecorder:
+                    args = rerecorder.parse_args()
+                    program(args)
+            except TypeError:
+                print("Expected input, got nothing")
+                print("Rejected, not recording")
+        print(test.name + " passed" if passed else "")
