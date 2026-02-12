@@ -32,12 +32,12 @@ class Device(twinleaf.Device):
             sys.exit(f"Something went wrong with the cache path: {e}")
         except RuntimeError as e:
             sys.exit(f"RPC failed: {e}")
-        except ValueError:
-            sys.exit(f"Invalid cache at {file_path}, consider inspecting or removing")
+        except ValueError as e:
+            sys.exit(f"Invalid cache at {file_path}, consider inspecting or removing: {e}")
 
     def _read_rpc_cache(self, file):
         for line in file.readlines():
-            meta, name = line.split(' ')
+            meta, name = line.strip().split(' ')
             meta_hex = int(meta, 16)
             self._metaprogram_rpc(meta_hex, name)
 
@@ -55,7 +55,7 @@ class Device(twinleaf.Device):
             meta = int.from_bytes(res[0:2], "little")
             name = res[2:].decode()
             self._metaprogram_rpc(meta, name)
-            file.write(f"{meta} {name}\n")
+            file.write(f"{hex(meta)[2:].zfill(4)} {name}\n")
         print("\nDone!")
 
     def _metaprogram_rpc(self, meta, name):
