@@ -2,16 +2,13 @@ import sys
 from typing import TypeVar, Callable
 from rui.lib.rpc import RPC, RPCList
 
-ALL_MODES = {'-', '+', '++', '*', '@', '/', '|'}
+ALL_MODES = {'-', '++', '*', '@'}
 FLAGS = {
         'no-arg': '-',
-        'continuous': '+',
         'sliders': '++',
         'slider': '++',
         'select-all': '*',
         'exact': '@',
-        'keep-searching': '/',
-        'match-any': '|',
         }
 
 class rpcCLI:
@@ -45,23 +42,19 @@ class rpcCLI:
                             default=self.search_terms)
 
         # Add the exact flag to terms that aren't already exact
-        # Ignore backslash, since that exits search upstream
-        if self.exact(): terms = ['@' + term if term[0] not in {'\\', '@'}
+        # TODO: different way to exit search?
+        # TODO: also indicate that - is no arg
+        if self.exact(): terms = ['@' + term if term[0] != '@'
                                   else term for term in terms]
 
         # Save and return
         self.search_terms = terms
         return terms
 
-    def reset_search(self): self.search_terms = []
-
     def add_mode(self, mode: str): self.modes.add(mode)
-    def any(self) -> bool: return '|' in self.modes # match any term, not just all
     def star(self) -> bool: return '*' in self.modes # select all rpcs
     def dash(self) -> bool: return '-' in self.modes # no argument
-    def plus(self) -> bool: return '+' in self.modes # loop calls forever
-    def slash(self) -> bool: return '/' in self.modes # keep searching until \
-    def slider(self) -> bool: return '++' in self.modes #Qt slider
+    def slider(self) -> bool: return '++' in self.modes # Qt slider
     def exact(self) -> bool: return '@' in self.modes # exact instead of fuzzy match
 
 '''           ''

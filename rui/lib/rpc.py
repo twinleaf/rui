@@ -54,9 +54,8 @@ class RPCList:
     def pick(self, indices: list[int]) -> RPCList:
         return RPCList([self[i] for i in indices])
 
-    def search(self, terms: list[str], match_any: bool) -> RPCList:
-        selector = any if match_any else all
-        sieve = lambda x: selector(self.fuzzy_match(term, x) for term in terms)
+    def search(self, terms: list[str]) -> RPCList:
+        sieve = lambda x: all(self.fuzzy_match(term, x) for term in terms)
         return self.filter(sieve)
 
     def print(self):
@@ -67,7 +66,6 @@ class RPCList:
                 print(f"{i+1}.", self[i])
 
     def fuzzy_match(self, search_for: str, search_in: str) -> bool:
-        if search_for[0] == '/': search_for = search_for[1:] # ignore /
         if search_for[0] == '@': return search_for[1:] in search_in
         if search_for[0] == '.': return search_for in search_in
 
