@@ -31,6 +31,12 @@ if __name__ == "__main__":
                 rerecord_transcripts(test_main())
             case ['slider' | 'sliders', *rest]:
                 slider(get_dev_list(Device()))
+            case args if 'regen' in args:
+                args.remove('regen')
+                dev = Device()
+                with open(dev._cache_path(), 'w') as f:
+                    dev._write_rpc_cache(f)
+                main(Device(), args)
             case []:
                 main(Device(), [])
             case _:

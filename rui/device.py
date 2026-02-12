@@ -36,7 +36,9 @@ class Device(twinleaf.Device):
             sys.exit(f"Invalid cache at {file_path}, consider inspecting or removing: {e}")
 
     def _read_rpc_cache(self, file):
-        for line in file.readlines():
+        lines = file.readlines()
+        if not lines: raise OSError("Empty cache file!")
+        for line in lines:
             meta, name = line.strip().split(' ')
             meta_hex = int(meta, 16)
             self._metaprogram_rpc(meta_hex, name)
