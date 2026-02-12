@@ -2,7 +2,7 @@ import sys
 from typing import TypeVar, Callable
 from rui.lib.rpc import RPC, RPCList
 
-ALL_MODES = {'-', '+', '++', '*', '@', '/', '|', 'regen'}
+ALL_MODES = {'-', '+', '++', '*', '@', '/', '|'}
 FLAGS = {
         'no-arg': '-',
         'continuous': '+',
@@ -12,7 +12,6 @@ FLAGS = {
         'exact': '@',
         'keep-searching': '/',
         'match-any': '|',
-        'regen': 'regen'
         }
 
 class rpcCLI:
@@ -64,7 +63,6 @@ class rpcCLI:
     def slash(self) -> bool: return '/' in self.modes # keep searching until \
     def slider(self) -> bool: return '++' in self.modes #Qt slider
     def exact(self) -> bool: return '@' in self.modes # exact instead of fuzzy match
-    def regen(self) -> bool: return 'regen' in self.modes # regenerate rpc-list file
 
 '''           ''
     I/O core
