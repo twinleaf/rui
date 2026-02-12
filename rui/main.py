@@ -1,7 +1,7 @@
 import os, sys
 from rui.lib.cli import rpcCLI, valid_input, InputQuit
 from rui.lib.rpc import RPC, RPCList, get_dev_list, rpc_type
-from rui.gui import slider
+from rui.gui import control_panel
 
 '''               ''
     main script
@@ -17,7 +17,7 @@ def main(dev, args: list[str]):
             print("Didn't select anything")
 
         if cli.slider(): 
-            slider(full_list, selected)
+            control_panel(full_list, selected)
         else: 
             input_call_output(cli, selected)
 

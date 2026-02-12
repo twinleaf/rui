@@ -6,7 +6,7 @@ from rui.guilib.rpcdisplay import RPCDisplay
 
 from rui.lib.rpc import RPCList
 
-def slider(full_list: RPCList, selected: RPCList=[]):
+def control_panel(full_list: RPCList, selected: RPCList=[]):
     # Need to know which RPCs we can slide
     numeric_full = RPCList([r for r in full_list if r.arg_type in {int, float}])
     numeric_selected= RPCList([r for r in selected if r.arg_type in {int, float}])

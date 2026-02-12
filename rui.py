@@ -4,7 +4,7 @@ import twinleaf
 
 from rui.main import main
 from rui.lib.rpc import get_dev_list
-from rui.gui import slider
+from rui.gui import control_panel
 from rui.device import Device
 
 from test.testdev import TestDevice
@@ -29,8 +29,8 @@ if __name__ == "__main__":
                 playback(test_main())
             case ['rerecord', *rest]:
                 rerecord_transcripts(test_main())
-            case ['slider' | 'sliders', *rest]:
-                slider(get_dev_list(Device()))
+            case ['gui', *rest]:
+                control_panel(get_dev_list(Device()))
             case args if 'regen' in args:
                 args.remove('regen')
                 dev = Device()
