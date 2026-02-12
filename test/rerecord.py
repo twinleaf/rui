@@ -84,7 +84,7 @@ def rerecord_transcripts(program) -> int:
                 with ReRecorder(test) as rerecorder:
                     args = rerecorder.parse_args()
                     program(args)
-            except TypeError:
-                print("Expected input, got nothing")
+            except Exception as e:
+                print(e)
                 print("Rejected, not recording")
         print(test.name + " passed" if passed else "")

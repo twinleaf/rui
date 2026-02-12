@@ -94,8 +94,8 @@ def run_transcript(program, transcript_path: Path, silent: bool=False) -> int:
             program(args)
             status = "-- PASSED --" if playback.passed else "!!!! FAILED !!!!"
             passed = playback.passed
-    except TypeError: # raised on input fail
-        if not silent: print("Expected input, got nothing")
+    except Exception as e:
+        if not silent: print(e)
         status, passed = "!!!! FAILED !!!!", False
     if not silent: print(status+'\n')
     return passed
