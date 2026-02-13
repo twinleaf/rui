@@ -3,7 +3,7 @@ $HOME/python/bin/pip install twinleaf
 $HOME/python/bin/pip install pyqt6
 
 rui_alias="alias rui=\"$HOME/python/bin/python $( pwd )/rui.py\""
-rc="$HOME/.$( basename $( readlink -f "/proc/$$/exe" ) )rc"
+rc="$HOME/.$( ps cp "$$" -o command= )rc"
 if ! cat "$rc" | grep -qe "^$rui_alias$"; then
 	cat << EOF >> "$rc"
 

@@ -25,6 +25,7 @@ class RPC:
         self.arg_type = arg_type
 
     # TODO: catch TypeError, RuntimeError
+    # TODO: On RuntimeError, check if device might still exist. If not, it needs a new proxy, see if we can call the __new__ function to get it that
     def call(self, arg: rpc_arg_type=None) -> rpc_ret_type:
         if arg is None:
             value = self._node.__call__()
