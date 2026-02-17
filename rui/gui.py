@@ -4,7 +4,7 @@ from PyQt6.QtCore import Qt
 from rui.guilib.toolbar import ToolBar
 from rui.guilib.rpcdisplay import RPCDisplay
 
-from rui.lib.rpc import RPCList
+from rui.rpc import RPCList
 
 def control_panel(full_list: RPCList, selected: RPCList=[]):
     # Need to know which RPCs we can slide

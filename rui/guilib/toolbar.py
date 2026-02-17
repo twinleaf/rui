@@ -2,7 +2,7 @@ from itertools import cycle
 from PyQt6.QtWidgets import QVBoxLayout, QComboBox, QCompleter, QLineEdit
 from PyQt6.QtCore import Qt
 from rui.guilib.style import qfont, generate_qss
-from rui.lib.rpc import RPCList
+from rui.rpc import RPCList
 
 class ToolBar:
     def __init__(self, rpc_full_list: RPCList):

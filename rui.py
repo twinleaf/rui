@@ -2,10 +2,10 @@
 import os, sys, time
 import twinleaf
 
-from rui.main import main
-from rui.lib.rpc import get_dev_list
-from rui.gui import control_panel
+from rui.rpc import RPCClient
 from rui.device import Device
+from rui.main import main
+from rui.gui import control_panel
 
 from test.testdev import TestDevice
 from test.record import record
@@ -29,8 +29,11 @@ if __name__ == "__main__":
                 playback(test_main())
             case ['rerecord', *rest]:
                 rerecord_transcripts(test_main())
+            case ['gui']:
+                control_panel(RPCClient(Device()))
             case ['gui', *rest]:
-                control_panel(get_dev_list(Device()))
+                main(Device(), ['+'] + rest)
+
             case args if 'regen' in args:
                 args.remove('regen')
                 dev = Device()

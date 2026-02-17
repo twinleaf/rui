@@ -1,6 +1,6 @@
 import os, sys
-from rui.lib.cli import rpcCLI, valid_input, InputQuit
-from rui.lib.rpc import RPC, RPCList, get_dev_list, rpc_type
+from typing import TypeVar, Callable
+from rui.rpc import RPC, RPCList, RPCClient, rpc_type
 from rui.gui import control_panel
 
 '''               ''
@@ -8,41 +8,62 @@ from rui.gui import control_panel
 ''               '''
 
 def main(dev, args: list[str]):
+    opts, terms = parse_args(args)
+    client = RPCClient(dev)
+
     try:
-        cli         = rpcCLI(args)
-        full_list   = get_dev_list(dev)
+        selected = search_select(client.list, terms, opts['*'])
+        if not selected: print("Didn't select anything")
 
-        selected    = search_select(cli, full_list)
-        if not selected: 
-            print("Didn't select anything")
-
-        if cli.slider(): 
-            control_panel(full_list, selected)
-        else: 
-            input_call_output(cli, selected)
+        if opts['+']:
+            control_panel(client.list, selected)
+        else:
+            input_call_output(selected, opts['arg'], opts['-'])
 
     # User just wanted to exit, do so peacefully
     except InputQuit: return
 
-def search_select(cli: rpcCLI, full_list: RPCList) -> RPCList:
-    matched = full_list.search(cli.terms())
+'''             ''
+    parse args
+''             '''
+ALL_MODES = {'-', '+', '*', '@'}
+FLAGS = {'--peek': '-', '--slider': '+', '--all': '*', '--exact': '@'}
+def parse_args(args: list[str]) -> tuple[dict, list[str]]:
+    opts = {'-': False, '+': False, '*': False, '@': False, 'arg': None}
+    search_terms = []
+
+    for arg in args:
+        if arg in ALL_MODES: opts[arg] = True
+        elif arg in FLAGS: opts[FLAGS[arg]] = True
+        else:
+            try: opts['arg'] = float(arg)
+            except ValueError: search_terms.append(arg)
+
+    terms = valid_input(SEARCH_PROMPT, "", SEARCH_TEST, default=search_terms)
+    if opts['@']: terms = ['@' + term if term[0] != '@' else term for term in terms]
+    return opts, terms
+
+'''                    ''
+    RPC search/select
+''                    '''
+def search_select(full_list: RPCList, terms: list[str], star: bool) -> RPCList:
+    matched = full_list.search(terms)
     matched.print()
 
     if matched.empty():
-        terms = cli.terms()
-        print(f"Couldn't find {terms[0] if len(terms)==1 else 'a match'}.")
+        print(MATCH_ERR(terms))
         return RPCList() # empty list
     else:
-        return __select_input(matched, cli.star())
+        return __select_input(matched, star)
 
 def __select_input(rpclist: RPCList, star: bool=False) -> RPCList:
     if rpclist.lonely() or star: return rpclist
-    return valid_input("Select rpc, or /[search] to keep searching: ",
-                         f"Invalid. Select a number from 1 to {len(rpclist)}.\n",
-                         lambda x: __select_rpcs(rpclist, x))
+    return valid_input(SELECT_PROMPT, SELECT_ERR(rpclist), lambda x: __select_rpcs(rpclist, x))
 
-def __select_rpcs(rpcs: RPCList, selection: str, match_any: bool=False) -> RPCList:
-    ''' pick rpcs or recurse to __select_input if we keep searching '''
+def __select_rpcs(rpcs: RPCList, selection: str) -> RPCList:
+    match list(selection):
+        case ['/', *rest]:
+            return __select_input(rpcs.search(''.join(rest).split()))
     if selection[0] == '/': # recursive case, go back to select_input with narrowed search
         return __select_input(rpcs.search(selection[1:].split(), match_any))
     elif selection == '*':
@@ -50,17 +71,58 @@ def __select_rpcs(rpcs: RPCList, selection: str, match_any: bool=False) -> RPCLi
     else:
         return rpcs.pick([int(s)-1 for s in selection.split()])
 
-def input_call_output(cli: rpcCLI, selected: RPCList):
+'''                         ''
+    RPC command line calls
+''                         '''
+def input_call_output(selected: RPCList, arg: rpc_type, peek: bool):
     for rpc in selected:
-        if len(selected) > 1: print(rpc)    # print where we are in call list
-        arg = __print_get_arg(rpc, cli)     # ask user for argument to rpc
-        output = rpc.call(arg)              # make call
-        print("Reply:", output)             # print current value
+        # Print where we are in the call list
+        if len(selected) > 1:
+            print(rpc)
 
-def __print_get_arg(rpc: RPC, cli: rpcCLI) -> rpc_type:
-    if cli.dash() or rpc.arg_type == None: return None
-    print("Previously:" if cli.default_arg is not None else "Currently:", rpc.call())
-    return valid_input("Enter argument: ",
-                       f"Invalid. Argument should be of {str(rpc.arg_type)[1:-1]}.\n",
-                       lambda x: rpc.arg_type(x) if x not in {'-', ''} else None,
-                       default=cli.default_arg)
+        # Let the user know the current/previous value
+        if peek or rpc.arg_type == None:
+            arg = None
+        else:
+            current = rpc.call()
+            print(CURRENT_VAL_MSG(arg, current))
+            arg = valid_input(ARG_PROMPT, ARG_ERR(rpc), ARG_TEST(rpc), default=arg)
+
+        # Make call and print new value
+        output = rpc.call(arg)
+        print("Reply:", output)
+
+'''           ''
+    I/O core
+''           '''
+
+class InputQuit(Exception): pass
+def __input(msg: str, default=None):
+    if default is not None: return default
+    i = input(msg)
+    if i == "quit" or i == "exit":
+        raise InputQuit
+    return i
+
+RT = TypeVar('RT')
+def valid_input(input_msg: str, error_msg: str, test: Callable[[str], RT], default=None) -> RT:
+    # Get input/default, try to apply test and return
+    try: return test(__input(input_msg, default))
+
+    # If that didn't work, recurse until they get it right
+    except (ValueError, IndexError):
+        print(error_msg, end='')
+        return valid_input(input_msg, error_msg, test)
+
+SEARCH_PROMPT = "Enter search terms: "
+SEARCH_TEST = lambda t: t if t[0] is not None and type(t) is list else t.split()
+MATCH_ERR = lambda t: f"Couldn't find {t[0] if len(t)==1 else 'a match'}."
+
+SELECT_PROMPT = "Select rpc, or /[search] to keep searching: "
+SELECT_ERR = lambda l: f"Invalid. Select a number from 1 to {len(l)}.\n"
+
+ARG_PROMPT = "Enter argument: "
+ARG_ERR = lambda r: f"Invalid. Argument should be of {str(r.arg_type)[1:-1]}.\n"
+ARG_TEST = lambda r: lambda x: r.arg_type(x) if x not in {'-', ''} else None
+
+CURRENT_VAL_MSG = lambda a, v: f"Previously: {v}" if a is not None else f"Currently: {v}"

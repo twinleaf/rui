@@ -1,8 +1,8 @@
-from rui.lib.rpc import RPC
 from PyQt6.QtWidgets import QPushButton, QSlider, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout
 from PyQt6.QtGui import QDoubleValidator, QIcon
 from PyQt6.QtCore import Qt
 from rui.guilib.style import qfont, generate_qss
+from rui.rpc import RPC
 
 class RPCDisplay:
     def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float):
