@@ -74,7 +74,7 @@ def __select_rpcs(rpcs: RPCList, selection: str) -> RPCList:
 '''                         ''
     RPC command line calls
 ''                         '''
-def input_call_output(selected: RPCList, arg: rpc_type, peek: bool):
+def input_call_output(selected: RPCList, cli_arg: rpc_type, peek: bool):
     for rpc in selected:
         # Print where we are in the call list
         if len(selected) > 1:
@@ -85,8 +85,8 @@ def input_call_output(selected: RPCList, arg: rpc_type, peek: bool):
             arg = None
         else:
             current = rpc.call()
-            print(CURRENT_VAL_MSG(arg, current))
-            arg = valid_input(ARG_PROMPT, ARG_ERR(rpc), ARG_TEST(rpc), default=arg)
+            print(CURRENT_VAL_MSG(cli_arg, current))
+            arg = valid_input(ARG_PROMPT, ARG_ERR(rpc), ARG_TEST(rpc), default=cli_arg)
 
         # Make call and print new value
         output = rpc.call(arg)
