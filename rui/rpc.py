@@ -26,7 +26,7 @@ class RPCClient:
                 value = value.decode()
             return value
 
-        except RuntimeError:
+        except RuntimeError as e:
             try:
                 self.call(self.test_rpc)
             except RuntimeError:
@@ -34,7 +34,7 @@ class RPCClient:
                 pass
             else:
                 # test rpc worked, our rpc just failed
-                return "ERROR"
+                return f"ERROR: {e}"
 
 class RPC:
     ''' Interface for an RPC, supporting name, calling, type, and search '''
