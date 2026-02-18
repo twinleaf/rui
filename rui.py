@@ -30,7 +30,7 @@ if __name__ == "__main__":
             case ['rerecord', *rest]:
                 rerecord_transcripts(test_main())
             case ['gui']:
-                control_panel(RPCClient(Device()))
+                control_panel(RPCClient(Device()).list)
             case ['gui', *rest]:
                 main(Device(), ['+'] + rest)
 
