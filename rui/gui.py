@@ -1,4 +1,4 @@
-import sys, subprocess
+import sys, signal, subprocess
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt6.QtCore import Qt
 from rui.guilib.toolbar import ToolBar
@@ -15,6 +15,10 @@ def control_panel(full_list: RPCList, selected: RPCList=[]):
     non_numeric = RPCList([r for r in selected if r.arg_type not in {int, float}])
     for rpc in non_numeric: print(f"{rpc} has type {rpc.arg_type}, can't make a slider")
 
+    # Enable ctrl+C in terminal to exit
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+    # Make app window
     app = QApplication([sys.argv[0]])
     window = MainWindow(numeric_selected, numeric_full)
     window.show()
