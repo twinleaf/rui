@@ -1,7 +1,7 @@
 from pathlib import Path
 from PyQt6.QtWidgets import QPushButton, QSlider, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout
 from PyQt6.QtGui import QDoubleValidator, QIcon
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSize
 from rui.guilib.style import qfont, generate_qss
 from rui.rpc import RPC
 
@@ -43,7 +43,7 @@ class RPCDisplay:
         edit = QLineEdit()
         edit.setText(default)
         edit.setFont(qfont())
-        edit.setFixedWidth(50)
+        edit.setMaximumWidth(70)
         edit.setValidator(QDoubleValidator())
         edit.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         edit.setStyleSheet(generate_qss())
@@ -74,6 +74,7 @@ class RPCDisplay:
     def make_button(self):
         button = QPushButton()
         button.setIcon(QIcon(str(Path(__file__).resolve().parent / "./delete.xpm")))
+        button.setIconSize(QSize(35, 25))
         button.setStyleSheet(generate_qss())
         if (self.widget_visible == True):
             button.clicked.connect(self.hide_slider_box)
