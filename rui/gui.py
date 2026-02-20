@@ -77,3 +77,9 @@ class MainWindow(QWidget):
             self.rpc_layout.addLayout(new_rpc.grid_layout)
             self.rpc_layout.setSpacing(8)
             self.rpcs_displayed.append(new_rpc)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            self.close() 
+        else:
+            super().keyPressEvent(event)
