@@ -1,3 +1,4 @@
+from pathlib import Path
 from PyQt6.QtWidgets import QPushButton, QSlider, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout
 from PyQt6.QtGui import QDoubleValidator, QIcon
 from PyQt6.QtCore import Qt
@@ -72,8 +73,7 @@ class RPCDisplay:
 
     def make_button(self):
         button = QPushButton()
-        icon = QIcon().fromTheme("document-new")
-        button.setIcon(icon)
+        button.setIcon(QIcon(str(Path(__file__).resolve().parent / "./delete.xpm")))
         button.setStyleSheet(generate_qss())
         if (self.widget_visible == True):
             button.clicked.connect(self.hide_slider_box)

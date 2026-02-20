@@ -51,6 +51,13 @@ def generate_qss() -> str:
         border-radius: 9px;
     }}
 
+    QPushButton {{
+        background-color: white;
+        border-color: black;
+        border: 1px solid;
+        border-radius: 5px;
+        width: 50px;
+    }}
     """
 
 def _random_hex(total: int) -> str:
