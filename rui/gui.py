@@ -65,18 +65,21 @@ class MainWindow(QWidget):
             self.rpcs_displayed.append(self.display)
 
     def display_rpc_slider(self):
-        index = self.tool_bar.rpc_names.index(self.tool_bar.search_bar.text())
-        value = self.tool_bar.search_bar.text()
-        #check if rpc slider already displayed
-        idx = next((i for i, rpc in enumerate(self.rpcs_displayed) if rpc.name == value), None)
-        if idx is not None:
-            if not self.rpcs_displayed[idx].widget_visible:
-                self.rpcs_displayed[idx].show_slider_box()
-        elif value in self.tool_bar.rpc_names: #else make new slider
-            new_rpc = RPCDisplay(self.rpc_list[index], 0, self.rpc_list[index].call())
-            self.rpc_layout.addLayout(new_rpc.grid_layout)
-            self.rpc_layout.setSpacing(8)
-            self.rpcs_displayed.append(new_rpc)
+        try: 
+            index = self.tool_bar.rpc_names.index(self.tool_bar.search_bar.text())
+            value = self.tool_bar.search_bar.text()
+            #check if rpc slider already displayed
+            idx = next((i for i, rpc in enumerate(self.rpcs_displayed) if rpc.name == value), None)
+            if idx is not None:
+                if not self.rpcs_displayed[idx].widget_visible:
+                    self.rpcs_displayed[idx].show_slider_box()
+            elif value in self.tool_bar.rpc_names: #else make new slider
+                new_rpc = RPCDisplay(self.rpc_list[index], 0, self.rpc_list[index].call())
+                self.rpc_layout.addLayout(new_rpc.grid_layout)
+                self.rpc_layout.setSpacing(8)
+                self.rpcs_displayed.append(new_rpc)
+        except: 
+            pass
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
