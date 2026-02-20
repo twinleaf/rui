@@ -1,6 +1,6 @@
 from pathlib import Path
 from PyQt6.QtWidgets import QPushButton, QSlider, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout
-from PyQt6.QtGui import QDoubleValidator, QIcon
+from PyQt6.QtGui import QDoubleValidator, QIcon, QFontMetrics
 from PyQt6.QtCore import Qt, QSize
 from rui.guilib.style import qfont, generate_qss
 from rui.rpc import RPC
@@ -43,7 +43,8 @@ class RPCDisplay:
         edit = QLineEdit()
         edit.setText(default)
         edit.setFont(qfont())
-        edit.setMaximumWidth(70)
+        edit.setFixedWidth(30)
+        edit.textChanged.connect(lambda: edit.setFixedWidth(max(50, min(edit.fontMetrics().horizontalAdvance(edit.text()) + 10, 90))))
         edit.setValidator(QDoubleValidator())
         edit.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         edit.setStyleSheet(generate_qss())
