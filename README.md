@@ -13,9 +13,9 @@ rui --help
 RUI's GUI allows the user to select RPCs from an auto-completing dropdown (up/down arrow keys to tile through completions) and define ranges to slide their values around. It can be launched with the --gui flag to pre-populate with the command line-selected RPCs, or through `rui gui` for a blank slate.
 
 # Usage
-`rui gui`: Launch the GUI with no command line selection
+`rui gui [--url url] [-s route]`: Launch the GUI with no command line selection
 
-`rui [flags] [search terms] [argument], in any order`
+`rui [flags] [search terms] [argument] [--url url] [-s route], in any order`
 - Without any arguments, RUI will prompt for both search terms and an argument.
 - With only search terms, RUI will prompt to select an RPC from the search results, show its current value, then ask for an argument. Enter nothing, `-`, `quit`, or `exit` to not change it.
 - Select multiple search results by inputting their indices separated by spaces, or select all results by inputting `*` instead of an index.
@@ -28,6 +28,7 @@ RUI's GUI allows the user to select RPCs from an auto-completing dropdown (up/do
 - --all (-a) will select all matched RPCs instead of prompting for selection
 - --exact (-e) will search for exact strings instead of fuzzy-searching
 - --gui (-g) will open the slider interface instead of calling from command line.
+- --url and -s will specify the URL and route to look for a board at respectively
 
 # Examples
 ``` bash
