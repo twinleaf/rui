@@ -1,6 +1,14 @@
 # RUI: Rpc User Interface
 RUI is a multitool for controlling Twinleaf board RPCs, featuring fuzzy searching RPC names for easy command line use and a slider GUI popup.
 
+# Installation
+```bash
+git clone https://github.com/rasen68/rui.git
+cd rui
+source install.sh
+rui --help
+```
+
 # GUI
 RUI's GUI allows the user to select RPCs from an auto-completing dropdown (up/down arrow keys to tile through completions) and define ranges to slide their values around. It can be launched with the --gui flag to pre-populate with the command line-selected RPCs, or through `rui gui` for a blank slate.
 
