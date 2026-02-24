@@ -2,8 +2,8 @@ import twinleaf
 import os, sys, inspect, platform
 
 class Device(twinleaf.Device):
-    def __init__(self):
-        super().__init__(instantiate=False)
+    def __init__(self, url, route):
+        super().__init__(url=url, route=route, instantiate=False)
 
         # Check out instantiate code
         which_instantiate = inspect.getsource(super()._instantiate_rpcs)
