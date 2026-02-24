@@ -3,7 +3,7 @@ RUI is a multitool for controlling Twinleaf board RPCs, featuring fuzzy searchin
 
 # Installation
 ```bash
-git clone https://github.com/rasen68/rui.git
+git clone git@code.twinleaf.com:zhao/rui.git
 cd rui
 source install.sh
 rui --help
