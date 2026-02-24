@@ -9,7 +9,8 @@ class RPCDisplay:
     def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float):
         self.rpc, self.arg_type = rpc, rpc.arg_type
         self.scale = 100 if rpc.arg_type == float else 1
-        self.__get_value()
+        self.value = self.rpc.value()
+        self.value_scaled = self.__scale(self.value)
 
         self.widget_visible = True
         self.name = rpc.name
@@ -65,10 +66,17 @@ class RPCDisplay:
         if not self.updating: # don't recursively call this
             self.updating = True
             value_real = self.__descale(value)
-            self.rpc.call(value_real)
-            self.__get_value()
+            value = self.rpc.call(value_real)
+
+            if type(value) is str and value.startswith("ERROR"):
+                self.value = "ERROR"
+                self.value_scaled = "ERROR"
+            else:
+                self.value = value
+                self.value_scaled = self.__scale(self.value)
+                self.slider.setValue(self.value_scaled)
+
             self.result_label.setText(self.__result_display())
-            self.slider.setValue(self.value_scaled)
             self.updating = False
 
     def make_button(self):
@@ -115,9 +123,6 @@ class RPCDisplay:
         self.second_row.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.widget_visible = True
 
-    def __get_value(self):
-        self.value = self.rpc.value()
-        self.value_scaled = self.__scale(self.value)
     def __result_display(self):
         return f"Current value: {self.value}"
     def __scale(self, val: int | float | str) -> int:

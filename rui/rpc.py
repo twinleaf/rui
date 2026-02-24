@@ -31,6 +31,7 @@ class RPCClient:
                 self.call(self.test_rpc)
             except RuntimeError:
                 # test rpc doesn't work, we have a broken device
+                sys.exit("Broken device")
                 pass
             else:
                 # test rpc worked, our rpc just failed
