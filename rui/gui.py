@@ -65,7 +65,7 @@ class MainWindow(QWidget):
             self.rpcs_displayed.append(self.display)
 
     def display_rpc_slider(self):
-        try: 
+        try:
             index = self.tool_bar.rpc_names.index(self.tool_bar.search_bar.text())
             value = self.tool_bar.search_bar.text()
             #check if rpc slider already displayed
@@ -78,11 +78,11 @@ class MainWindow(QWidget):
                 self.rpc_layout.addLayout(new_rpc.grid_layout)
                 self.rpc_layout.setSpacing(8)
                 self.rpcs_displayed.append(new_rpc)
-        except: 
+        except:
             pass
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
-            self.close() 
+            self.close()
         else:
             super().keyPressEvent(event)

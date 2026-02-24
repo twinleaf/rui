@@ -38,11 +38,6 @@ class CustomLineEdit(QLineEdit):
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_Tab:
-            item = next(self.matches)
-            self.setText(item)
-        else:
-            self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())])
-
+        self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())])
         event.accept()
         QLineEdit.keyPressEvent(self, event)

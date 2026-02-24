@@ -7,7 +7,7 @@ from rui.rpc import RPC
 
 class RPCDisplay:
     def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float):
-        self.rpc = rpc
+        self.rpc, self.arg_type = rpc, rpc.arg_type
         self.scale = 100 if rpc.arg_type == float else 1
         self.__get_value()
 
@@ -32,7 +32,6 @@ class RPCDisplay:
         self.second_row.addWidget(self.max_label)
         self.grid_layout.addLayout(self.first_row)
         self.grid_layout.addLayout(self.second_row)
-
 
     def make_label(self, name) -> QLabel:
         label = QLabel(name)
@@ -121,7 +120,7 @@ class RPCDisplay:
         self.value_scaled = self.__scale(self.value)
     def __result_display(self):
         return f"Current value: {self.value}"
-    def __scale(self, val: int | float ) -> int:
-        return round(self.rpc.arg_type(val) * self.scale)
+    def __scale(self, val: int | float | str) -> int:
+        return min(round(self.rpc.arg_type(val) * self.scale), 2**31-1)
     def __descale(self, val: int) -> int | float:
         return self.rpc.arg_type(val / self.scale)
