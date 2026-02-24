@@ -9,16 +9,21 @@ from rui.gui import control_panel
 
 def main(dev, args: list[str]):
     opts, terms = parse_args(args)
+    if opts['invalid']: return
+
+    terms = valid_input(SEARCH_PROMPT, "", SEARCH_TEST, default=terms)
+    if opts['exact']: terms = ['@' + term if term[0] != '@' else term for term in terms]
+
     client = RPCClient(dev)
 
     try:
-        selected = search_select(client.list, terms, opts['*'])
+        selected = search_select(client.list, terms, opts['all'])
         if not selected: print("Didn't select anything")
 
-        if opts['+']:
+        if opts['gui']:
             control_panel(client.list, selected)
         else:
-            input_call_output(selected, opts['arg'], opts['-'])
+            input_call_output(selected, opts['arg'], opts['peek'])
 
     # User just wanted to exit, do so peacefully
     except InputQuit: return
@@ -26,22 +31,32 @@ def main(dev, args: list[str]):
 '''             ''
     parse args
 ''             '''
-ALL_MODES = {'-', '+', '*', '@'}
-FLAGS = {'--peek': '-', '--slider': '+', '--all': '*', '--exact': '@'}
+ALL_MODES = ['peek', 'gui', 'all', 'exact', 'help']
 def parse_args(args: list[str]) -> tuple[dict, list[str]]:
-    opts = {'-': False, '+': False, '*': False, '@': False, 'arg': None}
+    opts = {'peek': False, 'gui': False, 'all': False, 'exact': False,
+            'invalid': False, 'arg': None}
     search_terms = []
 
     for arg in args:
-        if arg in ALL_MODES: opts[arg] = True
-        elif arg in FLAGS: opts[FLAGS[arg]] = True
+        if arg.startswith('--'):
+            if arg[2:] in ALL_MODES: opts[arg[2:]] = True
+            else:
+                print("Invalid flag: " + arg)
+                opts['invalid'] = True
+        elif arg.startswith('-'):
+            for char in arg[1:]:
+                for mode in ALL_MODES:
+                    if char == mode[0]:
+                        opts[mode] = True
+                        break
+                else:
+                    print("Invalid flag: " + arg)
+                    opts['invalid'] = True
         else:
             try: opts['arg'] = float(arg)
             except ValueError: search_terms.append(arg)
 
-    terms = valid_input(SEARCH_PROMPT, "", SEARCH_TEST, default=search_terms)
-    if opts['@']: terms = ['@' + term if term[0] != '@' else term for term in terms]
-    return opts, terms
+    return opts, search_terms
 
 '''                    ''
     RPC search/select
@@ -126,3 +141,14 @@ ARG_ERR = lambda r: f"Invalid. Argument should be of {str(r.arg_type)[1:-1]}.\n"
 ARG_TEST = lambda r: lambda x: r.arg_type(x) if x not in {'-', ''} else None
 
 CURRENT_VAL_MSG = lambda a, v: f"Previously: {v}" if a is not None else f"Currently: {v}"
+HELP_MSG = """
+RUI - Rpc User Interface for easy control of Twinleaf devices
+rui [flags] [search terms] [argument], in any order
+
+FLAGS:
+    --peek (-p) will just check the value of RPCs without prompting to change
+    --all (-a) will select all matched RPCs
+    --exact (-e) will search for exact strings instead of fuzzy-searching
+    --gui (-g) will open the slider interface instead of calling RPCs from command line
+        - "rui gui ..." also works
+"""

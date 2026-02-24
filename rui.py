@@ -4,7 +4,7 @@ import twinleaf
 
 from rui.rpc import RPCClient
 from rui.device import Device
-from rui.main import main
+from rui.main import main, HELP_MSG
 from rui.gui import control_panel
 
 from test.testdev import TestDevice
@@ -19,8 +19,12 @@ if __name__ == "__main__":
 
     try:
         match args:
+            case args if any(h in args for h in ['help', '-h', '--help']):
+                print(HELP_MSG)
             case ['itl', *rest]:
                 Device()._interact()
+            case ['test', 'gui', *rest] | ['gui', 'test', *rest]:
+                control_panel(RPCClient(TestDevice()).list)
             case ['test', *rest]:
                 test_main()(rest)
             case ['record', *rest]:
