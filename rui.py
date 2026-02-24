@@ -16,6 +16,10 @@ def test_main(): return lambda args: main(TestDevice(), args)
 
 if __name__ == "__main__":
     args = sys.argv[1:]
+    if 'test' in args:
+        args.remove('test')
+        Device = TestDevice
+        main = test_main
 
     try:
         match args:
@@ -23,10 +27,6 @@ if __name__ == "__main__":
                 print(HELP_MSG)
             case ['itl', *rest]:
                 Device()._interact()
-            case ['test', 'gui', *rest] | ['gui', 'test', *rest]:
-                control_panel(RPCClient(TestDevice()).list)
-            case ['test', *rest]:
-                test_main()(rest)
             case ['record', *rest]:
                 record(test_main(), rest)
             case ['playback', *rest]:
