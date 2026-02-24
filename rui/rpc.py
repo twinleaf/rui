@@ -28,11 +28,10 @@ class RPCClient:
 
         except RuntimeError as e:
             try:
-                self.call(self.test_rpc)
+                self.test_rpc._call()
             except RuntimeError:
                 # test rpc doesn't work, we have a broken device
-                sys.exit("Broken device")
-                pass
+                return "FATAL: Device proxy failed"
             else:
                 # test rpc worked, our rpc just failed
                 return f"ERROR: {e}"

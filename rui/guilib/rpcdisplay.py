@@ -68,9 +68,13 @@ class RPCDisplay:
             value_real = self.__descale(value)
             value = self.rpc.call(value_real)
 
-            if type(value) is str and value.startswith("ERROR"):
-                self.value = "ERROR"
-                self.value_scaled = "ERROR"
+            if type(value) is str:
+                if value.startswith("ERROR"):
+                    self.value = "ERROR"
+                    self.value_scaled = "ERROR"
+                elif value.startswith("FATAL"):
+                    print(value)
+                    quit()
             else:
                 self.value = value
                 self.value_scaled = self.__scale(self.value)
