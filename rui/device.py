@@ -1,5 +1,5 @@
 import twinleaf
-import os, sys, inspect, platform
+import os, sys, struct, inspect, platform
 
 class Device(twinleaf.Device):
     def __init__(self, url, route):
@@ -85,6 +85,6 @@ class Device(twinleaf.Device):
         os.makedirs(cache_dir, exist_ok=True)
 
         dev_name = self._rpc("dev.name", b"").decode()
-        rpc_hash = self._rpc("rpc.hash", b"").hex()
+        rpc_hash = hex(struct.unpack('<I', self._rpc("rpc.hash", b""))[0])[2:].zfill(8)
         base_name = f"{dev_name}.{rpc_hash}.rpcs"
         return os.path.join(cache_dir, base_name)
