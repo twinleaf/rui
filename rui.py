@@ -56,7 +56,7 @@ if __name__ == "__main__":
             case ['gui']:
                 control_panel(RPCClient(dev()).list)
             case ['gui', *rest]:
-                main(dev(), ['+'] + rest)
+                main(dev(), ['--gui'] + rest)
 
             case args if 'regen' in args:
                 args.remove('regen')
