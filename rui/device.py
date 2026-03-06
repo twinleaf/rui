@@ -39,9 +39,12 @@ class Device(twinleaf.Device):
         lines = file.readlines()
         if not lines: raise OSError("Empty cache file!")
         for line in lines:
-            meta, name = line.strip().split(' ')
-            meta_hex = int(meta, 16)
-            self._metaprogram_rpc(meta_hex, name)
+            try:
+                meta, name = line.strip().split(' ')
+                meta_hex = int(meta, 16)
+                self._metaprogram_rpc(meta_hex, name)
+            except ValueError:
+                continue
 
     def _write_rpc_cache(self, file):
         print("Generating RPC cache.... ", end='', flush=True)

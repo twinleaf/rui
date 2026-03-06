@@ -9,7 +9,10 @@ $HOME/python/bin/pip install twinleaf
 $HOME/python/bin/pip install pyqt6
 
 rui_alias="$HOME/python/bin/python $( pwd )/rui.py"
-rc="$HOME/.$( ps cp "$$" -o command= )rc"
+shellname="$( ps cp "$$" -o command= )"
+shellname=${shellname#-}
+rc="$HOME/.${shellname}rc"
+
 if ! cat "$rc" | grep -qe "$rui_alias"; then
 	cat << EOF >> "$rc"
 
