@@ -1,0 +1,16 @@
+$ [-s /0]
+Enter search terms: \
+> lock
+1. alice.lock.control.Ki(float)
+2. bob.lock.control.Ki(float)
+3. chris.lock.control.Ki(float)
+4. pump.lock.control.Ki(float)
+5. pump.lock.control.Kp(float)
+6. signal.capture.block()
+7. zachary.lock.control.Ki(float)
+Select rpc, or /[search] to keep searching: \
+> 2
+Currently: 0
+Enter argument: \
+> 2
+Reply: 2.0

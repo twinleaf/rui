@@ -1,7 +1,7 @@
-from test.record import Recorder, list_recorded
-from test.playback import run_transcript
 import sys
 from pathlib import Path
+from test.record import Recorder, list_recorded
+from test.playback import run_transcript
 
 class ReRecorder(Recorder):
     ''' Sends stdin from transcript, reads stdout and asks if it's right '''
@@ -48,7 +48,7 @@ class ReRecorder(Recorder):
         sys.stdin = self.stdin
 
         # TODO: clean up end prompt and add ability to re-record with same name/args
-        if exc_type is IOError:
+        if exc_type is IOError or exc_type is SystemExit:
             answer = input("Rejected, not recording. Delete? y/[_] ")
             if answer in {'y', 'Y'} and self.transcript_path.exists():
                 self.transcript_path.unlink()
@@ -75,16 +75,16 @@ class ReRecorder(Recorder):
                 if answer in {'y', 'Y'} and self.transcript_path.exists():
                     self.transcript_path.unlink()
 
-def rerecord_transcripts(program) -> int:
+def rerecord(program, default_args: list[str]=[]):
     for test in list_recorded():
-        passed = run_transcript(program, test, silent=True)
+        passed = run_transcript(program, test, default_args, silent=True)
         if not passed:
             print("-- Re-recording", test, "--")
             try:
                 with ReRecorder(test) as rerecorder:
-                    args = rerecorder.parse_args()
-                    program(args)
-            except Exception as e:
+                    sys.argv = [''] + default_args + rerecorder.parse_args()
+                    program()
+            except BaseException as e:
                 print(e)
                 print("Rejected, not recording")
         print(test.name + " passed" if passed else "")

@@ -3,12 +3,17 @@ from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt6.QtCore import Qt
 from rui.guilib.toolbar import ToolBar
 from rui.guilib.rpcdisplay import RPCDisplay
+from rui.rpc import RPCList, RPCClient
+from rui.cli import search_select, InputQuit
 
-from rui.rpc import RPCList
+def gui(dev, args):
+    client = RPCClient(dev)
+    try:
+        selected = search_select(client.list, args.terms, args.exact, args.all)
+    except InputQuit: return
 
-def control_panel(full_list: RPCList, selected: RPCList=[]):
     # Need to know which RPCs we can slide
-    numeric_full = RPCList([r for r in full_list if r.arg_type in {int, float}])
+    numeric_full = RPCList([r for r in client.list if r.arg_type in {int, float}])
     numeric_selected= RPCList([r for r in selected if r.arg_type in {int, float}])
 
     # If user selected a non-numeric RPC, tell them

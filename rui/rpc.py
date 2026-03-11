@@ -1,6 +1,6 @@
 from __future__ import annotations
 from inspect import getmembers, signature
-from typing import get_args
+from typing import Callable
 from difflib import get_close_matches
 
 rpc_type = int | float | str | bytes | None
@@ -54,7 +54,7 @@ class RPC:
             arg_type = None
         self.arg_type = arg_type
 
-    def call(self, arg: rpc_arg_type=None) -> rpc_type:
+    def call(self, arg: rpc_type=None) -> rpc_type:
         return self._client.call(self, arg)
     def value(self) -> rpc_type:
         return self.call()

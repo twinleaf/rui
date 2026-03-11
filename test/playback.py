@@ -86,23 +86,27 @@ class Playback:
 
         if exc_type: return False # propagate exception
 
-def run_transcript(program, transcript_path: Path, silent: bool=False) -> int:
+def run_transcript(program,
+                   transcript_path: Path,
+                   default_args: list[str],
+                   silent: bool=False
+                   ) -> int:
     if not silent: print("-- Testing", transcript_path, "--")
     try:
         with Playback(transcript_path, silent) as playback:
-            args = playback.parse_args()
-            program(args)
+            sys.argv = [''] +  default_args + playback.parse_args()
+            program()
             status = "-- PASSED --" if playback.passed else "!!!! FAILED !!!!"
             passed = playback.passed
-    except Exception as e:
+    except BaseException as e:
         if not silent: print(e)
         status, passed = "!!!! FAILED !!!!", False
     if not silent: print(status+'\n')
     return passed
 
-def playback(program):
+def playback(program, default_args: list[str]=[]):
     num_passed = 0
     for test in list_recorded():
-        passed = run_transcript(program, test)
+        passed = run_transcript(program, test, default_args)
         num_passed += int(passed)
     print(f"RESULTS: PASSED {num_passed} OUT OF {len(list_recorded())}")

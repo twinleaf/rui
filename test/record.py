@@ -63,11 +63,12 @@ dest_dir.mkdir(exist_ok=True)
 def list_recorded() -> list[Path]:
     return list(dest_dir.iterdir())
 
-def record(program, args: list[str]=[]):
+def record(program, argv: list[str], default_args: list[str]=[]):
     with Recorder(dest_dir) as recorder:
         # first write arguments
-        arg_line = "$ [" + " ".join(args) + "]\n"
+        arg_line = "$ [" + " ".join(argv) + "]\n"
         recorder.write(arg_line)
 
-        # now do whatever we're testing
-        program(args)
+        # Now do whatever we're testing
+        sys.argv = [''] + default_args + argv
+        program()
