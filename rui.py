@@ -61,6 +61,8 @@ def main():
     record_parser = subparsers.add_parser('record', help="[dev] Record a test")
     record_parser.set_defaults(func=lambda _d, _a: record(main, sys.argv[2:],
                                                           default_args=["--test"]))
+    record_parser.add_argument('-p', '--peek', action='store_true',
+                            help="Don't prompt to change RPC value")
     add_global_opts(record_parser)
     add_search_opts(record_parser)
     playback_parser = subparsers.add_parser('playback', help="[dev] Playback tests")

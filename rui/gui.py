@@ -10,7 +10,7 @@ def gui(dev, args):
     client = RPCClient(dev)
     try:
         if args.terms:
-            selected = search_select(client.list, args.terms, args.exact, args.all)
+            selected = search_select(client.list, args.terms, args.exact, args.all, args.multisearch)
         else:
             selected = []
     except InputQuit: return

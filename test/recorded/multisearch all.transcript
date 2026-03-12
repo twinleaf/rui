@@ -1,0 +1,15 @@
+$ [-ma]
+Enter search terms: \
+> alice bob
+alice.lock.control.Ki(float)
+Current value: 0
+Enter argument: \
+> 1
+Reply: 1.0
+
+bob.lock.control.Ki(float)
+Current value: 0
+Enter argument: \
+> 1
+Reply: 1.0
+

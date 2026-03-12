@@ -74,8 +74,9 @@ class RPCList:
     def pick(self, indices: list[int]) -> RPCList:
         return RPCList([self[i] for i in indices])
 
-    def search(self, terms: list[str]) -> RPCList:
-        sieve = lambda x: all(self.fuzzy_match(term, x) for term in terms)
+    def search(self, terms: list[str], match_any: bool=False) -> RPCList:
+        a = any if match_any else all
+        sieve = lambda x: a(self.fuzzy_match(term, x) for term in terms)
         return self.filter(sieve)
 
     def print(self):

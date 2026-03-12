@@ -4,7 +4,7 @@ from rui.rpc import RPCList, RPCClient, rpc_type
 def cli(dev, args):
     client = RPCClient(dev)
     try:
-        selected = search_select(client.list, args.terms, args.exact, args.all)
+        selected = search_select(client.list, args.terms, args.exact, args.all, args.multisearch)
         input_call_output(selected, args.default_arg, args.peek)
     except InputQuit: return
 
@@ -12,12 +12,12 @@ def cli(dev, args):
     Select RPCs from list
 ''                         '''
 def search_select(full_list: RPCList, search_terms: list[str],
-                  exact: bool, select_all: bool#, match_any: bool
+                  exact: bool, select_all: bool, multisearch: bool
                   ) -> RPCList:
     terms = __valid_input(SEARCH_PROMPT, "", SEARCH_TEST, default=search_terms)
     if exact: terms = ['@' + term if term[0] != '@' else term for term in terms]
 
-    matched = full_list.search(terms)
+    matched = full_list.search(terms, multisearch)
     if matched.empty():
         print(MATCH_ERR(terms))
         return RPCList()

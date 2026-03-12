@@ -17,5 +17,4 @@ Select rpc, or /[search] to keep searching: \
 > 9
 
 signal.capture.block()
-Reply: 8
-
+Bytes RPCs not yet supported
