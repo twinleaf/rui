@@ -58,18 +58,18 @@ def main():
     add_global_opts(itl_parser)
 
     ## hidden test subparsers ###
-    record_parser = subparsers.add_parser('record', help=argparse.SUPPRESS)
+    record_parser = subparsers.add_parser('record', help="[dev] Record a test")
     record_parser.set_defaults(func=lambda _d, _a: record(main, sys.argv[2:],
                                                           default_args=["--test"]))
     add_global_opts(record_parser)
     add_search_opts(record_parser)
-    playback_parser = subparsers.add_parser('playback', help=argparse.SUPPRESS)
+    playback_parser = subparsers.add_parser('playback', help="[dev] Playback tests")
     playback_parser.set_defaults(func=lambda _d, _a: playback(main, default_args=["--test"]))
-    rerecord_parser = subparsers.add_parser('rerecord', help=argparse.SUPPRESS)
+    rerecord_parser = subparsers.add_parser('rerecord', help="[dev] Rerecord tests")
     rerecord_parser.set_defaults(func=lambda _d, _a: rerecord(main, default_args=["--test"]))
 
     # CLI is default arg
-    subcommands = ['-h', '--hlp',
+    subcommands = ['-h', '--help',
                    'cli', 'gui', 'itl',
                    'record', 'playback', 'rerecord']
     if not any([arg in sys.argv for arg in subcommands]):
