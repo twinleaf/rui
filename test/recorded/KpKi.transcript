@@ -15,10 +15,13 @@ Enter search terms: \
 12. zachary.lock.control.Ki(float)
 Select rpc, or /[search] to keep searching: \
 > 3 4
+
 chris.lock.control.Ki(float)
-Currently: 0
+Current value: 0
 Enter argument: \
 > 1
 Reply: 1.0
+
 dev.name()
 Reply: TEST
+

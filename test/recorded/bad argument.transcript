@@ -9,13 +9,18 @@ Enter search terms: \
 6. zachary.lock.control.Ki(float)
 Select rpc, or /[search] to keep searching: \
 > 1
-Currently: 0
+
+alice.lock.control.Ki(float)
+Current value: 0
 Enter argument: \
-> bf
+> sdbl
 Invalid. Argument should be of class 'float'.
+
 Enter argument: \
-> jsid
+> jdif
 Invalid. Argument should be of class 'float'.
+
 Enter argument: \
-> 
-Reply: 0
+> 0
+Reply: 0.0
+

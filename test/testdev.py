@@ -51,6 +51,7 @@ class Rpc:
         self._value = value
         self.__call__ = lambda arg=None: call_test_rpc(self, arg)
         self.__call__.__annotations__['arg'] = arg_type
+        self.__call__.__annotations__['return'] = ret_type
 
 class Survey:
     def __init__(self, name: str):

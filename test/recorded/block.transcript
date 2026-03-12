@@ -15,4 +15,7 @@ Enter search terms: \
 12. zachary.lock.control.Ki(float)
 Select rpc, or /[search] to keep searching: \
 > 9
+
+signal.capture.block()
 Reply: 8
+

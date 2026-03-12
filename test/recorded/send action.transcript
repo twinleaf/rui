@@ -1,0 +1,10 @@
+$ []
+Enter search terms: \
+> autotune
+pump.therm.control.autotune.start()
+Send RPC? [y]/n \
+> q
+Send RPC? [y]/n \
+> y
+Reply: OK
+

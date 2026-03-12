@@ -8,28 +8,34 @@ Enter search terms: \
 5. zachary.lock.control.Ki(float)
 Select rpc, or /[search] to keep searching: \
 > *
+
 alice.lock.control.Ki(float)
-Currently: 0
+Current value: 0
 Enter argument: \
 > 1
 Reply: 1.0
+
 bob.lock.control.Ki(float)
-Currently: 0
+Current value: 0
 Enter argument: \
 > 2
 Reply: 2.0
+
 chris.lock.control.Ki(float)
-Currently: 0
+Current value: 0
 Enter argument: \
 > 3
 Reply: 3.0
+
 pump.lock.control.Ki(float)
-Currently: 0
+Current value: 0
 Enter argument: \
 > 4
 Reply: 4.0
+
 zachary.lock.control.Ki(float)
-Currently: 0
+Current value: 0
 Enter argument: \
 > 5
 Reply: 5.0
+

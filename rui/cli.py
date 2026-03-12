@@ -18,7 +18,6 @@ def search_select(full_list: RPCList, search_terms: list[str],
     if exact: terms = ['@' + term if term[0] != '@' else term for term in terms]
 
     matched = full_list.search(terms)
-    matched.print()
     if matched.empty():
         print(MATCH_ERR(terms))
         return RPCList()
@@ -32,11 +31,13 @@ def search_select(full_list: RPCList, search_terms: list[str],
 
 def __select_input(matched: RPCList) -> RPCList:
     if matched.lonely(): return matched
+    else: matched.print()
     return __valid_input(SELECT_PROMPT,
                          SELECT_ERR(matched),
                          lambda x: __select_rpcs(matched, x))
 
 def __select_rpcs(matched: RPCList, selection: str) -> RPCList:
+    print() # Spacer before "Select..."
     if selection[0] == '/':
         # Recursive case, go back to select_input with narrowed search
         return __select_input(matched.search(selection[1:].split()))
@@ -50,21 +51,29 @@ def __select_rpcs(matched: RPCList, selection: str) -> RPCList:
 ''                         '''
 def input_call_output(selected: RPCList, cli_arg: rpc_type, peek: bool):
     for rpc in selected:
-        # Print where we are in the call list
-        if len(selected) > 1:
-            print(rpc)
+        # Print where we are in call list
+        print(rpc)
 
         # Let the user know the current/previous value
-        if peek or rpc.arg_type == None:
+        if rpc.ret_type is bytes:
+            print("Bytes RPCs not yet supported")
+            continue
+        elif peek or rpc.arg_type is None:
             arg = None
         else:
             current = rpc.call()
             print(CURRENT_VAL_MSG(cli_arg, current))
             arg = __valid_input(ARG_PROMPT, ARG_ERR(rpc), ARG_TEST(rpc), default=cli_arg)
 
+        # If we might be an "action" RPC, be careful
+        if rpc.ret_type is None:
+            answer = __valid_input(ACTION_PROMPT, ACTION_ERR, ACTION_TEST)
+            if answer == 'n':
+                continue
         # Make call and print new value
         output = rpc.call(arg)
         print("Reply:", output)
+        print() # spacer
 
 '''           ''
     I/O core
@@ -92,10 +101,14 @@ SEARCH_TEST = lambda t: t if t[0] is not None and type(t) is list else t.split()
 MATCH_ERR = lambda t: f"Couldn't find {t[0] if len(t)==1 else 'a match'}."
 
 SELECT_PROMPT = "Select rpc, or /[search] to keep searching: "
-SELECT_ERR = lambda l: f"Invalid. Select a number from 1 to {len(l)}.\n"
+SELECT_ERR = lambda l: f"Invalid. Select a number from 1 to {len(l)}.\n\n"
 
 ARG_PROMPT = "Enter argument: "
-ARG_ERR = lambda r: f"Invalid. Argument should be of {str(r.arg_type)[1:-1]}.\n"
+ARG_ERR = lambda r: f"Invalid. Argument should be of {str(r.arg_type)[1:-1]}.\n\n"
 ARG_TEST = lambda r: lambda x: r.arg_type(x) if x not in {'-', ''} else None
 
-CURRENT_VAL_MSG = lambda a, v: f"Previously: {v}" if a is not None else f"Currently: {v}"
+ACTION_PROMPT = "Send RPC? [y]/n "
+ACTION_ERR = ""
+ACTION_TEST = lambda a: a.lower() if ['y', 'Y', 'n', 'N', ''].index(a) + 1 else None
+
+CURRENT_VAL_MSG = lambda a, v: f"Previous value: {v}" if a is not None else f"Current value: {v}"

@@ -8,18 +8,24 @@ Enter search terms: \
 5. zachary.lock.control.Ki(float)
 Select rpc, or /[search] to keep searching: \
 > *
+
 alice.lock.control.Ki(float)
-Previously: 0
+Previous value: 0
 Reply: 1.0
+
 bob.lock.control.Ki(float)
-Previously: 0
+Previous value: 0
 Reply: 1.0
+
 chris.lock.control.Ki(float)
-Previously: 0
+Previous value: 0
 Reply: 1.0
+
 pump.lock.control.Ki(float)
-Previously: 0
+Previous value: 0
 Reply: 1.0
+
 zachary.lock.control.Ki(float)
-Previously: 0
+Previous value: 0
 Reply: 1.0
+
