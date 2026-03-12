@@ -42,6 +42,11 @@ def generate_qss() -> str:
         background: #b0b0b0; /* color for the part after the handle */
     }}
 
+    QSlider:focus {{
+        border: 2px solid lightblue;
+        border-radius: 5px;
+    }}
+
     QSlider::sub-page:horizontal {{
         background: {_random_hex(500)}; /* color for the part before the handle */
     }}
@@ -49,6 +54,10 @@ def generate_qss() -> str:
     QLineEdit {{
         border: 1px solid #5c5c5c;
         border-radius: 9px;
+    }}
+
+    QLineEdit::focus{{
+        border: 2px solid blue;
     }}
 
     QPushButton {{

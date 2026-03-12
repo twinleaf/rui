@@ -1,6 +1,6 @@
 import sys, signal, subprocess
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QSlider
+from PyQt6.QtCore import Qt, QEvent
 from rui.guilib.toolbar import ToolBar
 from rui.guilib.rpcdisplay import RPCDisplay
 from rui.rpc import RPCList, RPCClient
@@ -40,7 +40,6 @@ class MainWindow(QWidget):
 
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
-        #self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setWindowTitle('RUI GUI')
         self.setMinimumWidth(500)
         self.rpc_box = QWidget()
@@ -52,6 +51,8 @@ class MainWindow(QWidget):
         self.tool_bar = ToolBar(rpc_full_list)
         self.tool_bar.completer.activated.connect(self.display_rpc_slider)
         self.tool_bar.search_bar.returnPressed.connect(self.display_rpc_slider)
+        self.tool_bar.search_bar.returnPressed.connect(lambda: self.tool_bar.search_bar.clear())
+        
         self.rpcs_displayed = []
 
         self.rpc_box.setLayout(self.rpc_layout)
@@ -73,21 +74,33 @@ class MainWindow(QWidget):
         try:
             index = self.tool_bar.rpc_names.index(self.tool_bar.search_bar.text())
             value = self.tool_bar.search_bar.text()
+            self.tool_bar.search_bar.clearFocus()
             #check if rpc slider already displayed
             idx = next((i for i, rpc in enumerate(self.rpcs_displayed) if rpc.name == value), None)
             if idx is not None:
                 if not self.rpcs_displayed[idx].widget_visible:
                     self.rpcs_displayed[idx].show_slider_box()
+                self.rpcs_displayed[idx].slider.setFocus()
             elif value in self.tool_bar.rpc_names: #else make new slider
                 new_rpc = RPCDisplay(self.rpc_list[index], 0, self.rpc_list[index].call())
                 self.rpc_layout.addLayout(new_rpc.grid_layout)
                 self.rpc_layout.setSpacing(8)
                 self.rpcs_displayed.append(new_rpc)
+                new_rpc.slider.setFocus()
         except:
             pass
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
             self.close()
+        elif event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_W:
+            self.close()
+        elif event.text().isalpha():
+            self.tool_bar.search_bar.setFocus()
+            self.tool_bar.search_bar.setText(event.text())
         else:
             super().keyPressEvent(event)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.RightButton or event.button() == Qt.MouseButton.LeftButton: 
+            self.focusWidget().clearFocus() if self.focusWidget() else None

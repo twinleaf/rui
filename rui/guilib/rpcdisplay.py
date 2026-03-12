@@ -1,7 +1,7 @@
 from pathlib import Path
 from PyQt6.QtWidgets import QPushButton, QSlider, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout
-from PyQt6.QtGui import QDoubleValidator, QIcon, QFontMetrics
-from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QDoubleValidator, QIcon 
+from PyQt6.QtCore import Qt, QSize, QEvent
 from rui.guilib.style import qfont, generate_qss
 from rui.rpc import RPC
 
@@ -49,6 +49,8 @@ class RPCDisplay:
         edit.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         edit.setStyleSheet(generate_qss())
         edit.returnPressed.connect(lambda: edit_func(self.__scale(edit.text())))
+        edit.returnPressed.connect(lambda: edit.clearFocus())
+        edit.returnPressed.connect(lambda: self.slider.setFocus())
         return edit
 
     def make_slider(self, min_val: int | float, max_val: int | float) -> QSlider:
@@ -59,9 +61,12 @@ class RPCDisplay:
         slider.setSingleStep(1)
         slider.setPageStep(10)
         slider.setStyleSheet(generate_qss())
+        slider.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         slider.valueChanged.connect(self.update_slider)
+        slider.sliderPressed.connect(lambda: slider.setFocus())
+        slider.keyPressEvent = lambda event: self.keyPressEvent(event)
         return slider
-
+    
     def update_slider(self, value: int):
         if not self.updating: # don't recursively call this
             self.updating = True
@@ -126,6 +131,15 @@ class RPCDisplay:
         self.first_row.setAlignment(Qt.AlignmentFlag.AlignBottom)
         self.second_row.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.widget_visible = True
+    
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Right or event.key() == Qt.Key.Key_Left: 
+            slider_width = self.slider.width() * self.slider.devicePixelRatioF()
+            step_size = (self.slider.maximum() - self.slider.minimum()) // slider_width + 1
+            step_value = (self.slider.value() + (step_size if event.key() == Qt.Key.Key_Right else -step_size))
+            self.update_slider(step_value)
+        elif event.key() == Qt.Key.Key_Escape or event.text().isalpha():
+            self.slider.clearFocus()
 
     def __result_display(self):
         return f"Current value: {self.value}"
