@@ -9,7 +9,10 @@ from rui.cli import search_select, InputQuit
 def gui(dev, args):
     client = RPCClient(dev)
     try:
-        selected = search_select(client.list, args.terms, args.exact, args.all)
+        if args.terms:
+            selected = search_select(client.list, args.terms, args.exact, args.all)
+        else:
+            selected = []
     except InputQuit: return
 
     # Need to know which RPCs we can slide
