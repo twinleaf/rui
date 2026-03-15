@@ -1,0 +1,62 @@
+$ []
+Enter search terms: \
+> i
+1. alice.lock.control.Ki(float)
+2. bob.lock.control.Ki(float)
+3. chris.lock.control.Ki(float)
+4. pump.lock.control.Ki(float)
+5. signal.capture.block()
+6. signal.capture.size()
+7. signal.capture.trigger()
+8. zachary.lock.control.Ki(float)
+Select rpc(s) by #, or enter terms to narrow search: \
+> lock
+
+1. alice.lock.control.Ki(float)
+2. bob.lock.control.Ki(float)
+3. chris.lock.control.Ki(float)
+4. pump.lock.control.Ki(float)
+5. signal.capture.block()
+6. zachary.lock.control.Ki(float)
+Select rpc(s) by #, or enter terms to narrow search: \
+> control
+
+1. alice.lock.control.Ki(float)
+2. bob.lock.control.Ki(float)
+3. chris.lock.control.Ki(float)
+4. pump.lock.control.Ki(float)
+5. zachary.lock.control.Ki(float)
+Select rpc(s) by #, or enter terms to narrow search: \
+> 
+Select rpc(s) by #, or enter terms to narrow search: \
+> K
+
+1. alice.lock.control.Ki(float)
+2. bob.lock.control.Ki(float)
+3. chris.lock.control.Ki(float)
+4. pump.lock.control.Ki(float)
+5. zachary.lock.control.Ki(float)
+Select rpc(s) by #, or enter terms to narrow search: \
+> o
+
+1. alice.lock.control.Ki(float)
+2. bob.lock.control.Ki(float)
+3. chris.lock.control.Ki(float)
+4. pump.lock.control.Ki(float)
+5. zachary.lock.control.Ki(float)
+Select rpc(s) by #, or enter terms to narrow search: \
+> c
+
+1. alice.lock.control.Ki(float)
+2. bob.lock.control.Ki(float)
+3. chris.lock.control.Ki(float)
+4. pump.lock.control.Ki(float)
+5. zachary.lock.control.Ki(float)
+Select rpc(s) by #, or enter terms to narrow search: \
+> e
+
+alice.lock.control.Ki(float)
+Current value: 0
+Enter argument: \
+> 1
+Reply: 1.0

@@ -13,7 +13,7 @@ Enter search terms: \
 10. signal.capture.size()
 11. signal.capture.trigger()
 12. zachary.lock.control.Ki(float)
-Select rpc(s) by #, or /[search] to narrow search: \
+Select rpc(s) by #, or enter terms to narrow search: \
 > 3 4
 
 chris.lock.control.Ki(float)
@@ -24,4 +24,3 @@ Reply: 1.0
 
 dev.name()
 Reply: TEST
-

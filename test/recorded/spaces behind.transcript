@@ -1,6 +1,6 @@
-$ [-s /0]
+$ []
 Enter search terms: \
-> lock
+> lock   
 1. alice.lock.control.Ki(float)
 2. bob.lock.control.Ki(float)
 3. chris.lock.control.Ki(float)
@@ -9,10 +9,10 @@ Enter search terms: \
 6. signal.capture.block()
 7. zachary.lock.control.Ki(float)
 Select rpc(s) by #, or enter terms to narrow search: \
-> 2
+> 1     
 
-bob.lock.control.Ki(float)
+alice.lock.control.Ki(float)
 Current value: 0
 Enter argument: \
-> 2
+> 2     
 Reply: 2.0

@@ -89,6 +89,7 @@ class RPCList:
                 print(f"{i+1}.", self[i])
 
     def fuzzy_match(self, term: str, name: str) -> bool:
+        if not term: return False
         if term[0] == '@' and term[1:]: 
             return term[1:] in name
 

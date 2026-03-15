@@ -9,7 +9,7 @@ Enter search terms: \
 6. signal.capture.size()
 7. signal.capture.trigger()
 8. zachary.lock.control.Ki(float)
-Select rpc(s) by #, or /[search] to narrow search: \
+Select rpc(s) by #, or enter terms to narrow search: \
 > 4
 
 pump.lock.control.Ki(float)

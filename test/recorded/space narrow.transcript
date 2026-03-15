@@ -1,11 +1,11 @@
-$ [.Ki]
+$ [Ki]
 1. alice.lock.control.Ki(float)
 2. bob.lock.control.Ki(float)
 3. chris.lock.control.Ki(float)
 4. pump.lock.control.Ki(float)
 5. zachary.lock.control.Ki(float)
 Select rpc(s) by #, or enter terms to narrow search: \
-> /.Ki
+>    control
 
 1. alice.lock.control.Ki(float)
 2. bob.lock.control.Ki(float)
@@ -13,7 +13,7 @@ Select rpc(s) by #, or enter terms to narrow search: \
 4. pump.lock.control.Ki(float)
 5. zachary.lock.control.Ki(float)
 Select rpc(s) by #, or enter terms to narrow search: \
-> /chris.
+>    chris
 
 chris.lock.control.Ki(float)
 Current value: 0
