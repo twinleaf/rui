@@ -3,7 +3,7 @@ Enter search terms: \
 > alice bob
 1. alice.lock.control.Ki(float)
 2. bob.lock.control.Ki(float)
-Select rpc, or /[search] to keep searching: \
+Select rpc(s) by #, or /[search] to narrow search: \
 > *
 
 alice.lock.control.Ki(float)

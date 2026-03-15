@@ -55,6 +55,7 @@ def main():
 
     itl_parser = subparsers.add_parser('itl', help="Twinleaf IPython with RPC cache")
     itl_parser.set_defaults(func=lambda d, _a: d._interact())
+    itl_parser.add_argument('--test', action='store_true', help=argparse.SUPPRESS)
     add_global_opts(itl_parser)
 
     ## hidden test subparsers ###

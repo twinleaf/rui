@@ -8,7 +8,7 @@ Enter search terms: \
 5. pump.lock.control.Kp(float)
 6. signal.capture.block()
 7. zachary.lock.control.Ki(float)
-Select rpc, or /[search] to keep searching: \
+Select rpc(s) by #, or /[search] to narrow search: \
 > 2
 
 bob.lock.control.Ki(float)

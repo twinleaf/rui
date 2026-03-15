@@ -1,0 +1,8 @@
+$ [pump.]
+1. pump.lock.control.Ki(float)
+2. pump.lock.control.Kp(float)
+3. pump.therm.control.autotune.start()
+Select rpc(s) by #, or /[search] to narrow search: \
+> /lock.
+
+Couldn't find lock..

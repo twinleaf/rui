@@ -4,16 +4,14 @@ from PyQt6.QtCore import Qt, QEvent
 from rui.guilib.toolbar import ToolBar
 from rui.guilib.rpcdisplay import RPCDisplay
 from rui.rpc import RPCList, RPCClient
-from rui.cli import search_select, InputQuit
+from rui.cli import search_select
 
 def gui(dev, args):
     client = RPCClient(dev)
-    try:
-        if args.terms:
-            selected = search_select(client.list, args.terms, args.exact, args.all, args.multisearch)
-        else:
-            selected = []
-    except InputQuit: return
+    if args.terms:
+        selected = search_select(client.list, args.terms, args.exact, args.all, args.multisearch)
+    else:
+        selected = []
 
     # Need to know which RPCs we can slide
     numeric_full = RPCList([r for r in client.list if r.arg_type in {int, float}])

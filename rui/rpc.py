@@ -74,8 +74,10 @@ class RPCList:
     def pick(self, indices: list[int]) -> RPCList:
         return RPCList([self[i] for i in indices])
 
-    def search(self, terms: list[str], match_any: bool=False) -> RPCList:
+    def search(self, terms: list[str], exact: bool=False, match_any: bool=False) -> RPCList:
         a = any if match_any else all
+        if exact:
+            terms = ['@' + term if not term.startswith('@') else term for term in terms]
         sieve = lambda x: a(self.fuzzy_match(term, x) for term in terms)
         return self.filter(sieve)
 
@@ -86,17 +88,22 @@ class RPCList:
             for i in range(len(self)):
                 print(f"{i+1}.", self[i])
 
-    def fuzzy_match(self, search_for: str, search_in: str) -> bool:
-        if search_for[0] == '@': return search_for[1:] in search_in
-        if search_for[0] == '.': return search_for in search_in
+    def fuzzy_match(self, term: str, name: str) -> bool:
+        if term[0] == '@' and term[1:]: 
+            return term[1:] in name
 
-        st = search_for.replace('.', '..')  # be less forgiving with matching dots
-        name = search_in.replace('.', '..')
-        substrings = [name[i:i+len(st)] for i in range(len(name)-len(st)+1)]
+        if term[0] == '.' and term[-1] == '.' and term[1:-1]:
+            substrings = [name[i:i+len(term)] for i in range(name.index('.'), name.rindex('.')-len(term))]
+        elif term[0] == '.' and term[1:]:
+            substrings = [name[-len(term):]]
+        elif term[-1] == '.' and term[:-1]:
+            substrings = [name[:len(term)]]
+        else:
+            substrings = [name[i:i+len(term)] for i in range(len(name)-len(term)+1)]
 
         chars_per_mistake = 4 # match 'ferq' to 'freq' but not 'fer' to 'fre'
         cutoff = 1 - 1/chars_per_mistake # 0.75
-        return get_close_matches(st, substrings, cutoff=cutoff) != []
+        return get_close_matches(term, substrings, cutoff=cutoff) != []
 
     def empty(self): return len(self) == 0
     def lonely(self): return len(self) <= 1
@@ -119,3 +126,4 @@ def rpc_dfs(parent) -> list["rpc"]:
         if is_rpc(node): rpcs += [node]
         rpcs += rpc_dfs(node)
     return rpcs
+

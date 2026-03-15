@@ -1,0 +1,34 @@
+$ []
+Enter search terms: \
+> s
+1. chris.lock.control.Ki(float)
+2. mode.autostart(int)
+3. pump.therm.control.autotune.start()
+4. signal.capture.block()
+5. signal.capture.size()
+6. signal.capture.trigger()
+Select rpc(s) by #, or /[search] to narrow search: \
+> 
+
+Invalid. Select a number from 1 to 6.
+1. chris.lock.control.Ki(float)
+2. mode.autostart(int)
+3. pump.therm.control.autotune.start()
+4. signal.capture.block()
+5. signal.capture.size()
+6. signal.capture.trigger()
+Select rpc(s) by #, or /[search] to narrow search: \
+> 
+
+Invalid. Select a number from 1 to 6.
+1. chris.lock.control.Ki(float)
+2. mode.autostart(int)
+3. pump.therm.control.autotune.start()
+4. signal.capture.block()
+5. signal.capture.size()
+6. signal.capture.trigger()
+Select rpc(s) by #, or /[search] to narrow search: \
+> 5
+
+signal.capture.size()
+Reply: 8

@@ -20,7 +20,10 @@ RUI's GUI allows the user to select RPCs from an auto-completing dropdown (up/do
 - With only search terms, RUI will prompt to select an RPC from the search results, show its current value, then ask for an argument. Enter nothing, `-`, `quit`, or `exit` to not change it.
 - Select multiple search results by inputting their indices separated by spaces, or select all results by inputting `*` instead of an index.
 - Instead of an index, type /[search] to narrow the search further.
-- Use `@` in front of an argument to exact-search instead of fuzzy-search it. `.` in front of an argument will exact-search it including the `.`, so `rui .lock` will get `...control.lockrange` but not `...capture.block`.
+- Use `.` at the start of an argument to search for it at the end of RPCs (e.g. `.enable`)
+- Use `.` at the end of an argument to search for it at the start of RPCs (e.g. `pump.`)
+- Use `.` at the start and end of an argument to search for it in the middle of RPCs (e.g. `.control.`).
+- Use `@` at the start of an argument to exact-search instead of fuzzy-search it. `.` in front of an argument will exact-search it including the `.`, so `rui .lock` will get `...control.lockrange` but not `...capture.block`.
 - If only one result is found, RUI will go directly to that rpc. So `rui [exact search] [arg or -p]` is the same as `tio-tool rpc [exact rpc name] [arg or N/A]` but with less demanding syntax.
 
 # Flags

@@ -2,5 +2,6 @@ $ []
 Enter search terms: \
 > autotune
 pump.therm.control.autotune.start()
-Send RPC? [y]/n \
+Send RPC? y/[n] \
 > n
+Not sending RPC

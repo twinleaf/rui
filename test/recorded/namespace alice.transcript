@@ -1,6 +1,6 @@
-$ [--exact alice.lock]
+$ [alice.]
 alice.lock.control.Ki(float)
 Current value: 0
 Enter argument: \
-> 1
-Reply: 1.0
+> 2
+Reply: 2.0

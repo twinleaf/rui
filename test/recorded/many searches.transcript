@@ -13,7 +13,7 @@ Enter search terms: \
 10. signal.capture.size()
 11. signal.capture.trigger()
 12. zachary.lock.control.Ki(float)
-Select rpc, or /[search] to keep searching: \
+Select rpc(s) by #, or /[search] to narrow search: \
 > /lock
 
 1. alice.lock.control.Ki(float)
@@ -23,7 +23,7 @@ Select rpc, or /[search] to keep searching: \
 5. pump.lock.control.Kp(float)
 6. signal.capture.block()
 7. zachary.lock.control.Ki(float)
-Select rpc, or /[search] to keep searching: \
+Select rpc(s) by #, or /[search] to narrow search: \
 > /control
 
 1. alice.lock.control.Ki(float)
@@ -32,7 +32,7 @@ Select rpc, or /[search] to keep searching: \
 4. pump.lock.control.Ki(float)
 5. pump.lock.control.Kp(float)
 6. zachary.lock.control.Ki(float)
-Select rpc, or /[search] to keep searching: \
+Select rpc(s) by #, or /[search] to narrow search: \
 > /i
 
 1. alice.lock.control.Ki(float)
@@ -40,7 +40,7 @@ Select rpc, or /[search] to keep searching: \
 3. chris.lock.control.Ki(float)
 4. pump.lock.control.Ki(float)
 5. zachary.lock.control.Ki(float)
-Select rpc, or /[search] to keep searching: \
+Select rpc(s) by #, or /[search] to narrow search: \
 > /chris
 
 chris.lock.control.Ki(float)

@@ -6,7 +6,7 @@ Enter search terms: \
 3. chris.lock.control.Ki(float)
 4. pump.lock.control.Ki(float)
 5. zachary.lock.control.Ki(float)
-Select rpc, or /[search] to keep searching: \
+Select rpc(s) by #, or /[search] to narrow search: \
 > *
 
 alice.lock.control.Ki(float)
