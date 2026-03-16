@@ -73,7 +73,7 @@ def input_call_output(selected: RPCList, cli_arg: rpc_type=None, peek: bool=Fals
 
             # Get argument of appropriate type
             arg = cli_arg
-            while not cli_arg:
+            while cli_arg is None:
                 try:
                     answer = input(ARG_PROMPT)
                     arg = rpc.arg_type(answer) if answer else None
