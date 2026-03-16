@@ -21,7 +21,12 @@ def search_select(full_list: RPCList, search_terms: list[str],
     if matched.empty():
         print(MATCH_ERR(terms))
 
-    return matched if select_all else select_input(matched)
+    if select_all:
+        matched.print()
+        print() # spacer
+        return matched
+    else:
+        return select_input(matched)
 
 def select_input(matched: RPCList) -> RPCList:
     if matched.lonely(): 
