@@ -21,7 +21,12 @@ def search_select(full_list: RPCList, search_terms: list[str],
     if matched.empty():
         print(MATCH_ERR(terms))
 
-    return matched if select_all else select_input(matched)
+    if select_all:
+        matched.print()
+        print() # spacer
+        return matched
+    else:
+        return select_input(matched)
 
 def select_input(matched: RPCList) -> RPCList:
     if matched.lonely(): 
@@ -68,7 +73,7 @@ def input_call_output(selected: RPCList, cli_arg: rpc_type=None, peek: bool=Fals
 
             # Get argument of appropriate type
             arg = cli_arg
-            while not cli_arg:
+            while cli_arg is None:
                 try:
                     answer = input(ARG_PROMPT)
                     arg = rpc.arg_type(answer) if answer else None
