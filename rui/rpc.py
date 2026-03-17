@@ -11,7 +11,7 @@ class RPCClient:
     def __init__(self, device):
         self.device = device
         self.list = RPCList([RPC(self, node) for node in rpc_dfs(device.settings)])
-        self.test_rpc = RPC(self, device.settings.dev.name)
+        self.dev_name_rpc = RPC(self, device.settings.dev.name)
 
     def call(self, rpc: RPC, arg: rpc_type=None) -> rpc_type:
         try:
@@ -28,7 +28,7 @@ class RPCClient:
 
         except RuntimeError as e:
             try:
-                self.test_rpc._call()
+                self.dev_name_rpc._call()
             except RuntimeError:
                 # test rpc doesn't work, we have a broken device
                 return "FATAL: Device proxy failed"

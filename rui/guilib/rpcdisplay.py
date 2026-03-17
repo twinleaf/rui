@@ -1,17 +1,19 @@
 from pathlib import Path
 from PyQt6.QtWidgets import QPushButton, QSlider, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout
 from PyQt6.QtGui import QDoubleValidator, QIcon 
-from PyQt6.QtCore import Qt, QSize, QEvent
+from PyQt6.QtCore import Qt, QSize
 from rui.guilib.style import qfont, generate_qss
 from rui.rpc import RPC
+from rui.min_max import RuiConfigs
 
 class RPCDisplay:
-    def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float):
+    def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float, config: RuiConfigs): 
         self.rpc, self.arg_type = rpc, rpc.arg_type
         self.scale = 100 if rpc.arg_type == float else 1
         self.value = self.rpc.value()
         self.value_scaled = self.__scale(self.value)
 
+        self.config = config
         self.widget_visible = True
         self.name = rpc.name
         self.name_label = self.make_label(rpc.name)
@@ -33,6 +35,7 @@ class RPCDisplay:
         self.second_row.addWidget(self.max_label)
         self.grid_layout.addLayout(self.first_row)
         self.grid_layout.addLayout(self.second_row)
+        self.config.update_displayed_rpcs(self.name, self.min_label.text(), self.max_label.text())
 
     def make_label(self, name) -> QLabel:
         label = QLabel(name)
@@ -43,7 +46,7 @@ class RPCDisplay:
         edit = QLineEdit()
         edit.setText(default)
         edit.setFont(qfont())
-        edit.setFixedWidth(30)
+        edit.setFixedWidth(max(50, min(edit.fontMetrics().horizontalAdvance(edit.text()) + 10, 90)))
         edit.textChanged.connect(lambda: edit.setFixedWidth(max(50, min(edit.fontMetrics().horizontalAdvance(edit.text()) + 10, 90))))
         edit.setValidator(QDoubleValidator())
         edit.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
@@ -51,6 +54,7 @@ class RPCDisplay:
         edit.returnPressed.connect(lambda: edit_func(self.__scale(edit.text())))
         edit.returnPressed.connect(lambda: edit.clearFocus())
         edit.returnPressed.connect(lambda: self.slider.setFocus())
+        edit.returnPressed.connect(lambda: self.config.update_displayed_rpcs(self.name, self.min_label.text(), self.max_label.text()))
         return edit
 
     def make_slider(self, min_val: int | float, max_val: int | float) -> QSlider:
