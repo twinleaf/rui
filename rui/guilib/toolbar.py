@@ -1,43 +1,33 @@
 from itertools import cycle
 from PyQt6.QtWidgets import QVBoxLayout, QComboBox, QCompleter, QLineEdit
 from PyQt6.QtCore import Qt
-from rui.guilib.style import qfont, generate_qss
-from rui.rpc import RPCList
+from rui.guilib.style import qfont 
 
-class ToolBar:
-    def __init__(self, rpc_full_list: RPCList):
-        self.rpc_list = rpc_full_list
-        self.rpc_names = []
-        self.menu = QVBoxLayout()
-
-        self.completer = self.make_completer()
-        self.search_bar = self.make_searchbar()
-
-        self.menu.addWidget(self.search_bar)
-
-    def make_completer(self) -> QCompleter:
-        for rpc in self.rpc_list: self.rpc_names.append(rpc.name)
-        completer = QCompleter(self.rpc_names)
-        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        completer.setFilterMode(Qt.MatchFlag.MatchContains)
-        completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
-        return completer
-
-    def make_searchbar(self) -> QLineEdit:
-        search_bar = CustomLineEdit(self.rpc_names)
-        search_bar.setPlaceholderText("Search rpcs")
-        search_bar.setCompleter(self.completer)
-        return search_bar
-
-class CustomLineEdit(QLineEdit):
-    def __init__(self, items, parent = None):
+class ToolBar(QLineEdit):
+    def __init__(self, rpc_full_list, parent = None):
         QLineEdit.__init__(self, parent)
         self.setFont(qfont())
-        self.completion_items = items
+        self.rpc_names =[]
+        for rpc in rpc_full_list: self.rpc_names.append(rpc.name)
+        self.completion_items = self.rpc_names
         self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())])
+
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.completer = CustomCompleter(self.completion_items)
+        self.setCompleter(self.completer)
+        self.setPlaceholderText("Search rpcs")
+
+        self.menu = QVBoxLayout()
+        self.menu.addWidget(self)
 
     def keyPressEvent(self, event):
         self.matches = cycle([item for item in self.completion_items if item.startswith(self.text())])
         event.accept()
         QLineEdit.keyPressEvent(self, event)
+
+class CustomCompleter(QCompleter):
+    def __init__(self, rpc_names, parent=None):
+        QCompleter.__init__(self, rpc_names, parent)
+        self.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.setFilterMode(Qt.MatchFlag.MatchContains)
+        self.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
