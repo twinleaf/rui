@@ -6,23 +6,33 @@ from rui.guilib.style import qfont, generate_qss
 from rui.rpc import RPC
 from rui.min_max import RuiConfigs
 
-class RPCDisplay:
+class RPCDisplay():
     def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float, config: RuiConfigs): 
-        self.rpc, self.arg_type = rpc, rpc.arg_type
-        self.scale = 100 if rpc.arg_type == float else 1
-        self.value = self.rpc.value()
-        self.value_scaled = self.__scale(self.value)
-
         self.config = config
         self.widget_visible = True
         self.name = rpc.name
-        self.name_label = self.make_label(rpc.name)
-        self.result_label = self.make_label(self.__result_display())
-        self.delete_button = self.make_button()
-        self.slider = self.make_slider(min_val, max_val)
-        self.min_label = self.make_edit(str(min_val), self.slider.setMinimum)
-        self.max_label = self.make_edit(str(max_val), self.slider.setMaximum)
 
+        self.slider = Sliderz(rpc, min_val, max_val)
+        self.name_label = RPCLabel(self.name)
+        self.result_label = RPCLabel(self.__result_display())
+        self.min_label = EditBox(str(min_val))
+        self.max_label = EditBox(str(max_val))
+        self.delete_button = RPCButton()
+
+        if (self.widget_visible == True):
+            self.delete_button.clicked.connect(self.hide_slider_box)
+        self.slider.valueChanged.connect(lambda: self.result_label.setText(self.__result_display()))
+        self.min_label.returnPressed.connect(lambda: self.slider.setMinimum(self.slider._Sliderz__scale(self.min_label.text())))
+        self.max_label.returnPressed.connect(lambda: self.slider.setMaximum(self.slider._Sliderz__scale(self.max_label.text())))
+        self.min_label.returnPressed.connect(lambda: self.slider.setFocus())
+        self.max_label.returnPressed.connect(lambda: self.slider.setFocus())
+        self.min_label.returnPressed.connect(lambda: self.config.update_displayed_rpcs(self.name, self.min_label.text(), self.max_label.text())) 
+        self.max_label.returnPressed.connect(lambda: self.config.update_displayed_rpcs(self.name, self.min_label.text(), self.max_label.text())) 
+
+        self.setup_layout()
+        self.config.update_displayed_rpcs(self.name, self.min_label.text(), self.max_label.text())
+
+    def setup_layout(self):
         self.grid_layout = QVBoxLayout()
         self.first_row = QHBoxLayout()
         self.second_row = QHBoxLayout()
@@ -35,71 +45,6 @@ class RPCDisplay:
         self.second_row.addWidget(self.max_label)
         self.grid_layout.addLayout(self.first_row)
         self.grid_layout.addLayout(self.second_row)
-        self.config.update_displayed_rpcs(self.name, self.min_label.text(), self.max_label.text())
-
-    def make_label(self, name) -> QLabel:
-        label = QLabel(name)
-        label.setFont(qfont())
-        return label
-
-    def make_edit(self, default: str, edit_func: callable) -> QLineEdit:
-        edit = QLineEdit()
-        edit.setText(default)
-        edit.setFont(qfont())
-        edit.setFixedWidth(max(50, min(edit.fontMetrics().horizontalAdvance(edit.text()) + 10, 90)))
-        edit.textChanged.connect(lambda: edit.setFixedWidth(max(50, min(edit.fontMetrics().horizontalAdvance(edit.text()) + 10, 90))))
-        edit.setValidator(QDoubleValidator())
-        edit.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-        edit.setStyleSheet(generate_qss())
-        edit.returnPressed.connect(lambda: edit_func(self.__scale(edit.text())))
-        edit.returnPressed.connect(lambda: edit.clearFocus())
-        edit.returnPressed.connect(lambda: self.slider.setFocus())
-        edit.returnPressed.connect(lambda: self.config.update_displayed_rpcs(self.name, self.min_label.text(), self.max_label.text()))
-        return edit
-
-    def make_slider(self, min_val: int | float, max_val: int | float) -> QSlider:
-        self.updating = False
-        slider = QSlider(Qt.Orientation.Horizontal)
-        slider.setRange(self.__scale(min_val), self.__scale(max_val))
-        slider.setValue(self.value_scaled)
-        slider.setSingleStep(1)
-        slider.setPageStep(10)
-        slider.setStyleSheet(generate_qss())
-        slider.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        slider.valueChanged.connect(self.update_slider)
-        slider.sliderPressed.connect(lambda: slider.setFocus())
-        slider.keyPressEvent = lambda event: self.keyPressEvent(event)
-        return slider
-    
-    def update_slider(self, value: int):
-        if not self.updating: # don't recursively call this
-            self.updating = True
-            value_real = self.__descale(value)
-            value = self.rpc.call(value_real)
-
-            if type(value) is str:
-                if value.startswith("ERROR"):
-                    self.value = "ERROR"
-                    self.value_scaled = "ERROR"
-                elif value.startswith("FATAL"):
-                    print(value)
-                    quit()
-            else:
-                self.value = value
-                self.value_scaled = self.__scale(self.value)
-                self.slider.setValue(self.value_scaled)
-
-            self.result_label.setText(self.__result_display())
-            self.updating = False
-
-    def make_button(self):
-        button = QPushButton()
-        button.setIcon(QIcon(str(Path(__file__).resolve().parent / "./delete.xpm")))
-        button.setIconSize(QSize(35, 25))
-        button.setStyleSheet(generate_qss())
-        if (self.widget_visible == True):
-            button.clicked.connect(self.hide_slider_box)
-        return button
 
     def hide_slider_box(self):
         self.first_row.removeWidget(self.name_label)
@@ -135,18 +80,82 @@ class RPCDisplay:
         self.first_row.setAlignment(Qt.AlignmentFlag.AlignBottom)
         self.second_row.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.widget_visible = True
+
+    def __result_display(self):
+        return f"Current value: {self.slider.rpc_value}"
+
+class RPCLabel(QLabel):
+    def __init__(self, name, parent=None):
+        QLabel.__init__(self, name, parent)
+        self.setFont(qfont())
+
+class RPCButton(QPushButton):
+    def __init__(self, parent=None):
+        QPushButton.__init__(self, parent)
+        self.setIcon(QIcon(str(Path(__file__).resolve().parent/"./delete.xpm")))
+        self.setIconSize(QSize(35, 25))
+        self.setStyleSheet(generate_qss())
+
+class EditBox(QLineEdit):
+    def __init__(self, default: str, parent=None):
+        QLineEdit.__init__(self, parent)
+        self.setText(default)
+        self.setFont(qfont())
+        self.setFixedWidth(max(50, min(self.fontMetrics().horizontalAdvance(self.text()) + 10, 90)))
+        self.textChanged.connect(lambda: self.setFixedWidth(max(50, min(self.fontMetrics().horizontalAdvance(self.text()) + 10, 90))))
+        self.setValidator(QDoubleValidator())
+        self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        self.setStyleSheet(generate_qss())
+        self.returnPressed.connect(lambda: self.clearFocus())
+
+class Sliderz(QSlider):
+    def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float, parent=None):
+        self.rpc, self.arg_type = rpc, rpc.arg_type
+        self.scale = 100 if rpc.arg_type == float else 1 
+        self.rpc_value = self.rpc.value()
+        self.value_scaled = self.__scale(self.rpc_value)
+        self.updating = False
+
+        QSlider.__init__(self, parent)
+        self.setOrientation(Qt.Orientation.Horizontal)
+        self.setRange(self.__scale(min_val), self.__scale(max_val))
+        self.setValue(self.value_scaled)
+        self.setSingleStep(1)
+        self.setPageStep(10)
+        self.setStyleSheet(generate_qss())
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.valueChanged.connect(self.update_slider)
+        self.sliderPressed.connect(lambda: self.setFocus())
+
+    def update_slider(self, value: int):
+        if not self.updating: # don't recursively call this
+            self.updating = True
+            value_real = self.__descale(value)
+            value = self.rpc.call(value_real)
+
+            if type(value) is str:
+                if value.startswith("ERROR"):
+                    self.rpc_value = "ERROR"
+                    self.value_scaled = "ERROR"
+                elif value.startswith("FATAL"):
+                    print(value)
+                    quit()
+            else:
+                self.rpc_value = value
+                self.value_scaled = self.__scale(self.rpc_value)
+                self.setValue(self.value_scaled)
+
+            self.updating = False
     
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Right or event.key() == Qt.Key.Key_Left: 
-            slider_width = self.slider.width() * self.slider.devicePixelRatioF()
-            step_size = (self.slider.maximum() - self.slider.minimum()) // slider_width + 1
-            step_value = (self.slider.value() + (step_size if event.key() == Qt.Key.Key_Right else -step_size))
+            slider_width = self.width() * self.devicePixelRatioF()
+            step_size = (self.maximum() - self.minimum()) // slider_width + 1
+            step_value = (self.value() + (step_size if event.key() == Qt.Key.Key_Right else -step_size))
             self.update_slider(step_value)
         elif event.key() == Qt.Key.Key_Escape or event.text().isalpha():
-            self.slider.clearFocus()
-
-    def __result_display(self):
-        return f"Current value: {self.value}"
+            self.clearFocus()
+    
     def __scale(self, val: int | float | str) -> int:
         return min(round(self.rpc.arg_type(val) * self.scale), 2**31-1)
     def __descale(self, val: int) -> int | float:

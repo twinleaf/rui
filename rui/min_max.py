@@ -25,8 +25,10 @@ class RuiConfigs():
             file_path = self._cache_path()
             with open(file_path, 'w') as f:
                 self._write_rpc_cache(f)
-        except: 
-            pass
+        except OSError as e:
+            sys.exit(f"Something went wrong with the cache path: {e}")
+        except ValueError as e:
+            sys.exit(f"Invalid cache at {file_path}, consider inspecting or removing: {e}")
     
     def get_rpc_min(self, name):
         try:
