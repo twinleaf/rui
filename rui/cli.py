@@ -20,6 +20,7 @@ def search_select(full_list: RPCList, search_terms: list[str],
     matched = full_list.search(terms, exact, multisearch)
     if matched.empty():
         print(MATCH_ERR(terms))
+        return matched
 
     if select_all:
         matched.print()

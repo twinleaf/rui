@@ -25,12 +25,13 @@ def add_search_opts(p: argparse.ArgumentParser):
     p.add_argument('rui_args', nargs='*', metavar="search terms [+arg]",
                    help="RPC search terms and argument to call with")
 
-def parse_rui_args(rui_args: list[str]) -> tuple[float, list[str]]:
+def parse_rui_args(args):
     default_arg, search_terms = None, []
-    for arg in rui_args:
+    for arg in args.rui_args:
         try: default_arg = float(arg)
         except ValueError: search_terms.append(arg)
-    return default_arg, search_terms
+    setattr(args, 'default_arg', default_arg)
+    setattr(args, 'terms', search_terms)
 
 def main():
     ### parser setup ###
@@ -79,6 +80,9 @@ def main():
         sys.argv.insert(1, 'cli')
 
     args = parser.parse_args()
+    if hasattr(args, 'rui_args'):
+        parse_rui_args(args)
+
     try:
         if hasattr(args, 'test') and not args.test:
             try:
@@ -92,10 +96,6 @@ def main():
 
         else:
             dev = TestDevice()
-        if hasattr(args, 'rui_args'):
-            default_arg, search_terms = parse_rui_args(args.rui_args)
-            setattr(args, 'default_arg', default_arg)
-            setattr(args, 'terms', search_terms)
 
         args.func(dev, args)
     except (EOFError, KeyboardInterrupt):
