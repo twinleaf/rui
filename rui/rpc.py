@@ -1,10 +1,15 @@
 from __future__ import annotations
 from inspect import getmembers, signature
 from typing import Callable
+from enum import Enum, auto
 from difflib import get_close_matches
 
 rpc_type = int | float | str | bytes | None
 def type_name(t: type | None): return t.__name__ if t is not None else ''
+class MatchResult(Enum):
+    NONE = 0,
+    EXACT = 1,
+    FUZZY = 2,
 
 class RPCClient:
     ''' Calls RPCs while handling device-level tasks like proxy errors '''
@@ -78,8 +83,9 @@ class RPCList:
         a = any if match_any else all
         if exact:
             terms = ['@' + term if not term.startswith('@') else term for term in terms]
-        sieve = lambda x: a(self.fuzzy_match(term, x) for term in terms)
-        return self.filter(sieve)
+        exact = lambda x: a(self.fuzzy_match(term, x) == MatchResult.EXACT for term in terms)
+        fuzzy = lambda x: a(self.fuzzy_match(term, x) != MatchResult.NONE for term in terms)
+        return self.filter(exact) or self.filter(fuzzy)
 
     def print(self):
         if len(self) == 0: return
@@ -88,14 +94,22 @@ class RPCList:
             for i in range(len(self)):
                 print(f"{i+1}.", self[i])
 
-    def fuzzy_match(self, term: str, name: str) -> bool:
+    def fuzzy_match(self, term: str, name: str) -> MatchResult:
         if not term:
-            return False
+            return MatchResult.NONE
+        if term == '.':
+            return MatchResult.EXACT
         elif term[0] == '@' and term[1:]:
-            return term[1:] in name
+            return MatchResult.EXACT if term[1:] in name else MatchResult.NONE
 
         if '.' in term:
-            substrings = [name[i:i+len(term)] for i in range(len(name)-len(term)+1)]
+            subterms = [t for t in term.split('.') if t]
+            if all(self.fuzzy_match(t, name) == MatchResult.EXACT for t in subterms):
+                return MatchResult.EXACT
+            elif all(self.fuzzy_match(t, name) == MatchResult.FUZZY for t in subterms):
+                return MatchResult.FUZZY
+            else:
+                return MatchResult.NONE
         else:
             substrings = []
             for word in name.split('.'):
@@ -104,9 +118,15 @@ class RPCList:
                 else:
                     substrings += [word[i:i+len(term)] for i in range(len(word)-len(term)+1)]
 
-        chars_per_mistake = 4 # match 'ferq' to 'freq' but not 'fer' to 'fre'
-        cutoff = 1 - 1/chars_per_mistake # 0.75
-        return get_close_matches(term, substrings, cutoff=cutoff) != []
+        if term in substrings:
+            return MatchResult.EXACT
+        else:
+            chars_per_mistake = 4 # match 'ferq' to 'freq' but not 'fer' to 'fre'
+            cutoff = 1 - 1/chars_per_mistake # 0.75
+            if get_close_matches(term, substrings, cutoff=cutoff):
+                return MatchResult.FUZZY
+            else:
+                return MatchResult.NONE
 
     def empty(self): return len(self) == 0
     def lonely(self): return len(self) <= 1
