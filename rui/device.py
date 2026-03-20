@@ -2,7 +2,9 @@ import twinleaf
 import os, sys, struct, inspect, platform
 
 class Device(twinleaf.Device):
+    class InitError(Exception): pass
     def __init__(self, url, route):
+        self._url, self._route = url, route
         super().__init__(url=url, route=route, instantiate=False)
 
         # Check out instantiate code
@@ -14,7 +16,9 @@ class Device(twinleaf.Device):
             # Instatiate code can call new Rust cacheing RPC list, use it
             super()._instantiate_rpcs()
         else:
-            sys.exit("Don't know what device you have, check your twinleaf pip install?")
+            raise DevInitError("Can't recognize device code, check your twinleaf pip install?")
+
+        self._instantiate_samples()
 
     def _instantiate_rpcs(self):
         cls = self._get_obj_survey(self)
@@ -29,22 +33,22 @@ class Device(twinleaf.Device):
                 with open(file_path, 'w') as f:
                     self._write_rpc_cache(f)
         except OSError as e:
-            sys.exit(f"Something went wrong with the cache path: {e}")
+            raise Device.InitError(f"Something went wrong with the cache path: {e}")
         except RuntimeError as e:
-            sys.exit(f"RPC failed: {e}")
-        except ValueError as e:
-            sys.exit(f"Invalid cache at {file_path}, consider inspecting or removing: {e}")
+            raise Device.InitError(f"Aborting device init on RPC failure: {e}")
+        except ValueError:
+            raise Device.InitError(f"Invalid cache at {file_path}, fix or remove")
 
     def _read_rpc_cache(self, file):
         lines = file.readlines()
         if not lines: raise OSError("Empty cache file!")
         for line in lines:
-            try:
-                meta, name = line.strip().split(' ')
-                meta_hex = int(meta, 16)
-                self._metaprogram_rpc(meta_hex, name)
-            except ValueError:
-                continue
+            # Not going to bother to replicate rust hash, we'll just ignore it if we see it
+            if len(line.strip()) == 16 and all(char in '0123456789abcdef\n' for char in line):
+                return
+            meta, name = line.strip().split(' ')
+            meta_hex = int(meta, 16)
+            self._metaprogram_rpc(meta_hex, name)
 
     def _write_rpc_cache(self, file):
         print("Generating RPC cache.... ", end='', flush=True)

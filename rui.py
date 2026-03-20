@@ -87,10 +87,9 @@ def main():
         if hasattr(args, 'test') and not args.test:
             try:
                 dev = Device(args.root, args.sensor)
-            except BaseException as e:
-                if type(e) is SystemExit:
-                    print(e)
-                print("\nRUI: Couldn't initialize a device.")
+            except Device.InitError as e:
+                print(e)
+                print("RUI: Couldn't initialize a device.")
                 print(f"Might want to check root: {args.root} & sensor: {args.sensor}")
                 return
 
