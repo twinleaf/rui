@@ -89,18 +89,20 @@ class RPCList:
                 print(f"{i+1}.", self[i])
 
     def fuzzy_match(self, term: str, name: str) -> bool:
-        if not term: return False
-        if term[0] == '@' and term[1:]: 
+        if not term:
+            return False
+        elif term[0] == '@' and term[1:]:
             return term[1:] in name
 
-        if term[0] == '.' and term[-1] == '.' and term[1:-1]:
-            substrings = [name[i:i+len(term)] for i in range(name.index('.'), name.rindex('.')-len(term))]
-        elif term[0] == '.' and term[1:]:
-            substrings = [name[-len(term):]]
-        elif term[-1] == '.' and term[:-1]:
-            substrings = [name[:len(term)]]
-        else:
+        if '.' in term:
             substrings = [name[i:i+len(term)] for i in range(len(name)-len(term)+1)]
+        else:
+            substrings = []
+            for word in name.split('.'):
+                if len(word) < len(term):
+                    substrings += [word]
+                else:
+                    substrings += [word[i:i+len(term)] for i in range(len(word)-len(term)+1)]
 
         chars_per_mistake = 4 # match 'ferq' to 'freq' but not 'fer' to 'fre'
         cutoff = 1 - 1/chars_per_mistake # 0.75
