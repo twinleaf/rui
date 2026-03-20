@@ -4,7 +4,7 @@ from PyQt6.QtGui import QDoubleValidator, QIcon
 from PyQt6.QtCore import Qt, QSize
 from rui.guilib.style import qfont, generate_qss
 from rui.rpc import RPC
-from rui.min_max import RuiConfigs
+from rui.guilib.min_max import RuiConfigs
 
 class RPCDisplay():
     def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float, config: RuiConfigs): 

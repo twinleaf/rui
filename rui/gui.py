@@ -3,9 +3,9 @@ from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout
 from PyQt6.QtCore import Qt
 from rui.guilib.toolbar import ToolBar
 from rui.guilib.rpcdisplay import RPCDisplay
+from rui.guilib.min_max import RuiConfigs
 from rui.rpc import RPC, RPCList, RPCClient
 from rui.cli import search_select
-from rui.min_max import RuiConfigs
 
 def gui(dev, args):
     client = RPCClient(dev)
