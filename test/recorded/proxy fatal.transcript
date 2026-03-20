@@ -1,0 +1,23 @@
+$ []
+Enter search terms: \
+> .
+1. alice.lock.control.Ki(float)
+2. bob.lock.control.Ki(float)
+3. chris.lock.control.Ki(float)
+4. dev.name()
+5. mode.autostart(int)
+6. pump.lock.control.Ki(float)
+7. pump.lock.control.Kp(float)
+8. pump.therm.control.autotune.start()
+9. signal.capture.block()
+10. signal.capture.size()
+11. signal.capture.trigger()
+12. zachary.lock.control.Ki(float)
+Select rpc(s) by #, or enter terms to narrow search: \
+> 1
+
+alice.lock.control.Ki(float)
+Current value: 0
+Enter argument: \
+> 404
+FATAL: Device proxy failed

@@ -1,0 +1,36 @@
+$ [Ki --all]
+1. alice.lock.control.Ki(float)
+2. bob.lock.control.Ki(float)
+3. chris.lock.control.Ki(float)
+4. pump.lock.control.Ki(float)
+5. zachary.lock.control.Ki(float)
+
+alice.lock.control.Ki(float)
+Current value: 0
+Enter argument: \
+> 1
+Reply: 1.0
+
+bob.lock.control.Ki(float)
+Current value: 0
+Enter argument: \
+> 444
+ERROR: 
+
+chris.lock.control.Ki(float)
+Current value: 0
+Enter argument: \
+> 444
+ERROR: 
+
+pump.lock.control.Ki(float)
+Current value: 0
+Enter argument: \
+> 2
+Reply: 2.0
+
+zachary.lock.control.Ki(float)
+Current value: 0
+Enter argument: \
+> 
+Reply: 0
