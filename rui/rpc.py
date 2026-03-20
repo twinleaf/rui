@@ -5,6 +5,8 @@ from enum import Enum, auto
 from difflib import get_close_matches
 
 rpc_type = int | float | str | bytes | None
+PROXY_FATAL = "FATAL: Device proxy failed"
+def RPC_ERROR(e=''): return f"ERROR: {e}"
 def type_name(t: type | None): return t.__name__ if t is not None else ''
 class MatchResult(Enum):
     NONE = 0,
@@ -14,40 +16,71 @@ class MatchResult(Enum):
 class RPCClient:
     ''' Calls RPCs while handling device-level tasks like proxy errors '''
     def __init__(self, device):
-        self.device = device
-        self.list = RPCList([RPC(self, node) for node in rpc_dfs(device.settings)])
-        self.dev_name_rpc = RPC(self, device.settings.dev.name)
+        self._device = device
+        nodes = rpc_dfs(device.settings)
+        self.dict = {node.__name__: node for node in nodes}
+        self.list = RPCList([RPC.from_node(self, node) for node in nodes])
 
-    def call(self, rpc: RPC, arg: rpc_type=None) -> rpc_type:
+    def call_by_name(self, name: str, arg: rpc_type=None) -> rpc_type:
         try:
+            rpc = self.dict[name]
             if arg is None:
-                value = rpc._call()
+                value = rpc.__call__()
             else:
-                value = rpc._call(rpc.arg_type(arg))
-
+                value = rpc.__call__(arg)
             if type(value) is float: value = round(value, 2)
-            if type(value) is bytes and rpc.ret_type is not bytes:
-                # TODO: what to do with real bytes rpcs
-                value = value.decode()
+            if type(value) is bytes: value = value.decode() # TODO: what about real bytes rpcs
             return value
 
+        except KeyError:
+            if self.dict:
+                return RPC_ERROR(f"RPC {name} does not exist")
+            else: # RPC isn't in our dict because we don't have a dict!
+                try:
+                    self._device.reinit()
+                    self.__init__(self._device)
+                    return self.call_by_name(name, arg)
+                except:
+                    return PROXY_FATAL
+
+        # rpc.__call__ failed
         except RuntimeError as e:
-            try:
-                self.dev_name_rpc._call()
-            except RuntimeError:
-                # test rpc doesn't work, we have a broken device
-                return "FATAL: Device proxy failed"
+            if self.validate_device():
+                return RPC_ERROR(e)
             else:
-                # test rpc worked, our rpc just failed
-                return f"ERROR: {e}"
+                try:
+                    self._device.reinit()
+                    self.__init__(self._device)
+                    return self.call_by_name(name, arg)
+                except:
+                    return PROXY_FATAL
+
+    def validate_device(self) -> bool:
+        # Test our device connection by calling a universal RPC
+        # If it fails
+        try:
+            self.dict["dev.name"].__call__()
+        except RuntimeError:
+            self.reset_device()
+            return False
+        else:
+            return True
+
+    def reset_device(self):
+        self.dict = {}
+        self.list = RPCList()
 
 class RPC:
     ''' Interface for an RPC, supporting name, calling, type, and search '''
-    def __init__(self, client: RPCClient, node: "twinleaf.rpc"):
-        self._client, self._call = client, node.__call__
-        self.name = node.__name__
+    def __init__(self, client: RPCClient, name: str, arg_type: type, ret_type: type):
+        self._client, self.name = client, name
+        self.arg_type, self.ret_type = arg_type, ret_type
+
+    @classmethod
+    def from_node(cls, client: RPCClient, node: "twinleaf.rpc"):
+        name = node.__name__
         sig = signature(node.__call__)
-        self.ret_type = sig.return_annotation
+        ret_type = sig.return_annotation
 
         params = sig.parameters
         try:
@@ -57,10 +90,11 @@ class RPC:
             if arg_type == str | None: arg_type = str
         except KeyError:
             arg_type = None
-        self.arg_type = arg_type
+        arg_type = arg_type
+        return cls(client, name, arg_type, ret_type)
 
     def call(self, arg: rpc_type=None) -> rpc_type:
-        return self._client.call(self, arg)
+        return self._client.call_by_name(self.name, arg)
     def value(self) -> rpc_type:
         return self.call()
 

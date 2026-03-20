@@ -39,7 +39,7 @@ class MainWindow(QWidget):
     def __init__(self, client: RPCClient, rpcs: RPCList):
         super().__init__()
 
-        self.slider_configs = RuiConfigs(client.call(client.dev_name_rpc))
+        self.slider_configs = RuiConfigs(client.call_by_name("dev.name"))
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
         self.setWindowTitle('RUI GUI')

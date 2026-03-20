@@ -20,6 +20,10 @@ class Device(twinleaf.Device):
 
         self._instantiate_samples()
 
+    def reinit(self):
+        self.settings.__dict__ = {}
+        self.__dict__ = Device(self._url, self._route).__dict__
+
     def _instantiate_rpcs(self):
         cls = self._get_obj_survey(self)
         setattr(self, 'settings', cls())

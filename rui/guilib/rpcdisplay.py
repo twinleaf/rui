@@ -3,8 +3,8 @@ from PyQt6.QtWidgets import QPushButton, QSlider, QLabel, QLineEdit, QVBoxLayout
 from PyQt6.QtGui import QDoubleValidator, QIcon 
 from PyQt6.QtCore import Qt, QSize
 from rui.guilib.style import qfont, generate_qss
-from rui.rpc import RPC
 from rui.guilib.min_max import RuiConfigs
+from rui.rpc import RPC, RPC_ERROR, PROXY_FATAL
 
 class RPCDisplay():
     def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float, config: RuiConfigs): 
@@ -127,19 +127,19 @@ class Sliderz(QSlider):
         self.valueChanged.connect(self.update_slider)
         self.sliderPressed.connect(lambda: self.setFocus())
 
-    def update_slider(self, value: int):
+    def update_slider(self, value: int | str):
         if not self.updating: # don't recursively call this
             self.updating = True
             value_real = self.__descale(value)
             value = self.rpc.call(value_real)
 
             if type(value) is str:
-                if value.startswith("ERROR"):
+                if value.startswith(RPC_ERROR()):
+                    self.setValue(self.value_scaled)
                     self.rpc_value = "ERROR"
-                    self.value_scaled = "ERROR"
-                elif value.startswith("FATAL"):
-                    print(value)
-                    quit()
+                elif value == PROXY_FATAL:
+                    self.setValue(self.value_scaled)
+                    self.rpc_value = "FATAL"
             else:
                 self.rpc_value = value
                 self.value_scaled = self.__scale(self.rpc_value)
