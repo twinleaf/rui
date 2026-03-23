@@ -5,17 +5,20 @@ RUI is a multitool for controlling Twinleaf board RPCs, featuring fuzzy searchin
 ```bash
 git clone git@code.twinleaf.com:zhao/rui.git
 cd rui
-source install.sh
+./install.sh
 rui --help
 ```
 
-# GUI
-RUI's GUI allows the user to select RPCs from an auto-completing dropdown (up/down arrow keys to tile through completions) and define ranges to slide their values around. It can be launched with the --gui flag to pre-populate with the command line-selected RPCs, or through `rui gui` for a blank slate.
+# Features
+RUI CLI allows the user to search for RPCs and call them through simple command line IO.
+RUI GUI allows the user to select RPCs from an auto-completing dropdown (up/down arrow keys to tile through completions) and define ranges to slide their values around.
 
 # Usage
-`rui gui [--url url] [-s route]`: Launch the GUI with no command line selection
+`rui gui [flags] [search terms]`
+Launch the RUI GUI in a pop-up window. Search terms, if given, will use the search/select CLI pre-populate the control panel; otherwise, it will be a blank slate to add sliders to.
 
-`rui [flags] [search terms] [argument] [--url url] [-s route], in any order`
+`rui [flags] [search terms] [argument], in any order`
+RUI's default behaviour is RUI CLI, which asks for search terms to select one or more RPCs, and then prompts values to call them with.
 - Without any arguments, RUI will prompt for both search terms and an argument.
 - With only search terms, RUI will prompt to select an RPC from the search results, show its current value, then ask for an argument. Enter nothing, `-`, `quit`, or `exit` to not change it.
 - Select multiple search results by inputting their indices separated by spaces, or select all results by inputting `*` instead of an index.
@@ -30,65 +33,76 @@ RUI's GUI allows the user to select RPCs from an auto-completing dropdown (up/do
 - --peek (-p) will just check the value(s) of selected RPC(s) without prompting to change
 - --all (-a) will select all matched RPCs instead of prompting for selection
 - --exact (-e) will search for exact strings instead of fuzzy-searching
-- --gui (-g) will open the slider interface instead of calling from command line.
+- --multisearch (-m) will search for RPCs that match any of the space-separated search terms
 - --url and -s will specify the URL and route to look for a board at respectively
 
 # Examples
 ``` bash
 $ rui septoint --peek #(sic)
-> 1. probe.therm.control.setpoint(f32)
-> 2. pump.therm.control.setpoint(f32)
-> 3. pump.therm.control.setpoint.min(f32)
-> 4. pump.lock.control.setpoint(f32)
-> 5. cell.therm.control.setpoint(f32)
+> 1. cell.therm.control.setpoint(float)
+> 2. probe.therm.control.setpoint(float)
+> 3. pump.therm.control.setpoint(float)
 >
-> Select rpc, or /[search] to keep searching: 
+> Select rpc(s) by #, or enter terms to narrow search:
 >>> 2
 >
 > Reply: 60.0
 ```
 ``` bash
+$ rui pump.setpoint
+> pump.therm.control.setpoint(float)
+> Current value: 60.0
+> Enter argument:
+>>> 68
+> Reply: 60.0
+```
+``` bash
 $ rui decim 1 --all
-> 1. field.data.decimation(u32)
-> 2. vector.data.decimation(u32)
-> 3. vectorcal.data.decimation(u32)
-> 4. status.data.decimation(u32)
-> 5. aux.data.decimation(u32)
-> 6. therm.data.decimation(u32)
+> 1. field.data.decimation(int)
+> 2. vector.data.decimation(int)
+> 3. vectorcal.data.decimation(int)
+> 4. status.data.decimation(int)
+> 5. aux.data.decimation(int)
+> 6. therm.data.decimation(int)
 >
-> field.data.decimation(u32)
-> Previously: 1
+> field.data.decimation(int)
+> Previous value: 1
 > Reply: 1
 >
-> vector.data.decimation(u32)
-> Previously: 1
+> vector.data.decimation(int)
+> Previous value: 1
 > Reply: 1
 >
-> vectorcal.data.decimation(u32)
-> Previously: 100
+> vectorcal.data.decimation(int)
+> Previous value: 100
 > Reply: 1
 >
-> status.data.decimation(u32)
-> Previously: 100
+> status.data.decimation(int)
+> Previous value: 100
 > Reply: 1
 >
-> aux.data.decimation(u32)
-> Previously: 100
+> aux.data.decimation(int)
+> Previous value: 100
 > Reply: 1
 >
-> therm.data.decimation(u32)
-> Previously: 5
+> therm.data.decimation(int)
+> Previous value: 5
 > Reply: 1
 ```
 ``` bash
-$ rui setpoint --gui
-> 1. probe.therm.control.setpoint(f32)
-> 2. pump.therm.control.setpoint(f32)
-> 3. pump.therm.control.setpoint.min(f32)
-> 4. pump.lock.control.setpoint(f32)
-> 5. cell.therm.control.setpoint(f32)
->
-> Select rpc, or /[search] to keep searching: 
->>> 2
+$ rui gui probe control
+> 1. probe.therm.control.Kd(float)
+> 2. probe.therm.control.Ki(float)
+> 3. probe.therm.control.Kp(float)
+> 4. probe.therm.control.enable(int)
+> 5. probe.therm.control.lingertime(float)
+> 6. probe.therm.control.locklevel(float)
+> 7. probe.therm.control.manual(int)
+> 8. probe.therm.control.reset()
+> 9. probe.therm.control.searchrate(float)
+> 10. probe.therm.control.setpoint(float)
+> 11. probe.therm.control.unlocktime(float)
+> Select rpc(s) by #, or enter terms to narrow search:
+>>> 1 2 3 4 6 10
 --- slider popup ----
 ```
