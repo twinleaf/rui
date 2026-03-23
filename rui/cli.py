@@ -97,8 +97,8 @@ def input_call_output(selected: RPCList, cli_arg: rpc_type=None, peek: bool=Fals
             arg = cli_arg
             while cli_arg is None:
                 try:
-                    answer = input(ARG_PROMPT)
-                    arg = rpc.arg_type(answer) if answer else None
+                    answer = input(ARG_PROMPT).strip()
+                    arg = rpc.to_arg_type(answer)
                     break
                 except ValueError:
                     print(ARG_ERR(rpc))

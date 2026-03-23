@@ -90,13 +90,18 @@ class RPC:
             if arg_type == str | None: arg_type = str
         except KeyError:
             arg_type = None
-        arg_type = arg_type
         return cls(client, name, arg_type, ret_type)
 
     def call(self, arg: rpc_type=None) -> rpc_type:
-        return self._client.call_by_name(self.name, arg)
+        return self._client.call_by_name(self.name, self.to_arg_type(arg))
     def value(self) -> rpc_type:
         return self.call()
+
+    def to_arg_type(self, arg: rpc_type) -> rpc_type:
+        if arg in { None, '' }:
+            return None
+        else:
+            return self.arg_type(arg)
 
     def __repr__(self): return self.name + '(' + type_name(self.arg_type) + ')'
     def __len__(self): return len(self.name)

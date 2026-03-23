@@ -110,7 +110,7 @@ class EditBox(QLineEdit):
 
 class Sliderz(QSlider):
     def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float, parent=None):
-        self.rpc, self.arg_type = rpc, rpc.arg_type
+        self.rpc = rpc
         self.scale = 100 if rpc.arg_type == float else 1 
         self.rpc_value = self.rpc.value()
         self.value_scaled = self.__scale(self.rpc_value)
@@ -157,6 +157,6 @@ class Sliderz(QSlider):
             self.clearFocus()
     
     def __scale(self, val: int | float | str) -> int:
-        return min(round(self.rpc.arg_type(val) * self.scale), 2**31-1)
+        return min(round(self.rpc.to_arg_type(val) * self.scale), 2**31-1)
     def __descale(self, val: int) -> int | float:
-        return self.rpc.arg_type(val / self.scale)
+        return self.rpc.to_arg_type(val / self.scale)
