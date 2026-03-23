@@ -47,15 +47,15 @@ def _select_input(matched: RPCList) -> RPCList:
                 return matched.pick([int(n)-1 for n in nums.split()])
             case nums if all([n.isnumeric() for n in nums.split()]):
                 print(SELECT_ERR(matched))
-                return select_input(matched)
+                return _select_input(matched)
             case _:
                 terms = answer.split(" ")
                 narrowed = matched.search(terms, match_any=True)
                 if narrowed.empty():
                     print(MATCH_ERR(terms))
-                    return select_input(matched)
+                    return _select_input(matched)
                 else:
-                    return select_input(narrowed)
+                    return _select_input(narrowed)
 
 '''                         ''
     RPC command line calls

@@ -56,7 +56,7 @@ class RPCClient:
                     return PROXY_FATAL
 
     def dev_name(self) -> str:
-        return self._call_by_name("dev.name")
+        return self.dict["dev.name"].__call__()
 
     def validate_device(self) -> bool:
         # Test our device connection by calling a universal RPC
