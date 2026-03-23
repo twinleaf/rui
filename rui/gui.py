@@ -8,6 +8,7 @@ from rui.rpc import RPC, RPCList, RPCClient
 from rui.cli import search_select
 
 def gui(dev, args):
+    """ RUI GUI main script """
     client = RPCClient(dev)
     if args.terms:
         selected = search_select(client.list, args.terms, args.exact, args.all, args.multisearch)
@@ -15,10 +16,10 @@ def gui(dev, args):
         selected = []
 
     # Need to know which RPCs we can slide
-    numeric_selected= RPCList([r for r in selected if r.arg_type in {int, float}])
+    numeric_selected = RPCList([r for r in selected if r.is_numeric()])
 
     # If user selected a non-numeric RPC, tell them
-    non_numeric = RPCList([r for r in selected if r.arg_type not in {int, float}])
+    non_numeric = RPCList([r for r in selected if not r.is_numeric()])
     for rpc in non_numeric: print(f"{rpc} has type {rpc.arg_type}, can't make a slider")
 
     # Enable ctrl+C in terminal to exit
@@ -36,10 +37,11 @@ def gui(dev, args):
     sys.exit(app.exec()) 
 
 class MainWindow(QWidget):
+    """ RUI GUI main window class """
     def __init__(self, client: RPCClient, rpcs: RPCList):
         super().__init__()
 
-        self.slider_configs = RuiConfigs(client.call_by_name("dev.name"))
+        self.slider_configs = RuiConfigs(client.dev_name())
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
         self.setWindowTitle('RUI GUI')
@@ -48,7 +50,7 @@ class MainWindow(QWidget):
         self.rpc_layout = QVBoxLayout()
         self.rpc_layout.setSpacing(0)
         self.rpc_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignVCenter)
-        self.rpc_list = RPCList([r for r in client.list if r.arg_type in {int, float}])
+        self.rpc_list = RPCList([r for r in client.list if r.is_numeric()])
 
         self.tool_bar = ToolBar(self.rpc_list)
         self.tool_bar.completer.activated.connect(self.display_rpc_slider)
@@ -61,8 +63,7 @@ class MainWindow(QWidget):
         self.main_layout.addLayout(self.tool_bar.menu, 1)
         self.main_layout.addWidget(self.rpc_box)
         for rpc in rpcs:
-            current_value = rpc.call()
-            min_val, max_val = self.get_rpc_min_max(rpc.name, current_value)
+            min_val, max_val = self.get_rpc_min_max(rpc)
        
             self.display = RPCDisplay(rpc, min_val, max_val, self.slider_configs)
             self.rpc_layout.addLayout(self.display.grid_layout)
@@ -70,34 +71,30 @@ class MainWindow(QWidget):
             self.rpcs_displayed.append(self.display)
 
     def display_rpc_slider(self):
-        try:
-            index = self.tool_bar.rpc_names.index(self.tool_bar.text())
+        """ Add a slider to display or show a hidden slider """
+        if text := self.tool_bar.text():
+            index = self.tool_bar.rpc_names.index(text)
             value = self.tool_bar.text()
             self.tool_bar.clearFocus()
-            #check if rpc slider already displayed
+            # check if rpc slider already displayed
             idx = next((i for i, rpc in enumerate(self.rpcs_displayed) if rpc.name == value), None)
             if idx is not None:
                 if not self.rpcs_displayed[idx].widget_visible:
                     self.rpcs_displayed[idx].show_slider_box()
                 self.rpcs_displayed[idx].slider.setFocus()
             elif value in self.tool_bar.rpc_names: #else make new slider
-                current_value = self.rpc_list[index].call()
-                min_val, max_val = self.get_rpc_min_max(self.rpc_list[index].name, current_value)
+                min_val, max_val = self.get_rpc_min_max(self.rpc_list[index])
                 new_rpc = RPCDisplay(self.rpc_list[index], min_val, max_val, self.slider_configs)
                 self.rpc_layout.addLayout(new_rpc.grid_layout)
                 self.rpc_layout.setSpacing(8)
                 new_rpc.slider.setFocus()
                 self.rpcs_displayed.append(new_rpc)
-        except:
-            pass
 
-    def get_rpc_min_max(self, name, current_value):
-        if isinstance(current_value, int): 
-            min_val = min(current_value, int(self.slider_configs.get_rpc_min(name)))
-            max_val = max(current_value, int(self.slider_configs.get_rpc_max(name)))
-        else: 
-            min_val = min(current_value, float(self.slider_configs.get_rpc_min(name)))
-            max_val = max(current_value, float(self.slider_configs.get_rpc_max(name)))
+    def get_rpc_min_max(self, rpc):
+        """ Get min/max values for RPC from slider config's cache """
+        current_value = rpc.value()
+        min_val = min(current_value, rpc.to_arg_type(self.slider_configs.get_rpc_min(rpc.name)))
+        max_val = max(current_value, rpc.to_arg_type(self.slider_configs.get_rpc_max(rpc.name)))
         return min_val, max_val
         
     def keyPressEvent(self, event):

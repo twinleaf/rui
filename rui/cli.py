@@ -3,6 +3,7 @@ from rui.rpc import RPCList, RPCClient, rpc_type
 from rui.rpc import RPC_ERROR, PROXY_FATAL
 
 def cli(dev, args):
+    """ RUI CLI main script """
     client = RPCClient(dev)
     selected = search_select(client.list, args.terms, args.exact, args.all, args.multisearch)
     input_call_output(selected, args.default_arg, args.peek)
@@ -13,6 +14,7 @@ def cli(dev, args):
 def search_select(full_list: RPCList, search_terms: list[str],
                   exact: bool=False, select_all: bool=False, multisearch: bool=False
                   ) -> RPCList:
+    """ Search RPCList for terms and select call list, taking input as necessary """
     terms = search_terms
     while not terms:
         terms = input(SEARCH_PROMPT).split(" ")
@@ -28,9 +30,10 @@ def search_select(full_list: RPCList, search_terms: list[str],
         print() # spacer
         return matched
     else:
-        return select_input(matched)
+        return _select_input(matched)
 
-def select_input(matched: RPCList) -> RPCList:
+def _select_input(matched: RPCList) -> RPCList:
+    """ Prompt and parse input for selecting RPCs from search result """
     if matched.lonely(): 
         return matched
     else: 
@@ -58,21 +61,8 @@ def select_input(matched: RPCList) -> RPCList:
     RPC command line calls
 ''                         '''
 
-def is_rui_fatal(rpc_value: rpc_type) -> bool:
-    if str(rpc_value) == PROXY_FATAL:
-        print(rpc_value)
-        return True
-    else:
-        return False
-
-def is_rui_error(rpc_value: rpc_type) -> bool:
-    if str(rpc_value).startswith(RPC_ERROR()):
-        print(rpc_value)
-        return True
-    else:
-        return False
-
 def input_call_output(selected: RPCList, cli_arg: rpc_type=None, peek: bool=False):
+    """ Call selected RPCs and prompt for arguments as necessary """
     for rpc in selected:
         if selected.list.index(rpc) > 0:
             print() # spacer
@@ -86,9 +76,9 @@ def input_call_output(selected: RPCList, cli_arg: rpc_type=None, peek: bool=Fals
             arg = None
         else:
             current = rpc.call()
-            if is_rui_fatal(current):
+            if _is_rui_fatal(current):
                 return
-            elif is_rui_error(current):
+            elif _is_rui_error(current):
                 continue
             else:
                 print(CURRENT_VAL_MSG(cli_arg, current))
@@ -111,12 +101,26 @@ def input_call_output(selected: RPCList, cli_arg: rpc_type=None, peek: bool=Fals
 
         # Make call and print new value
         output = rpc.call(arg)
-        if is_rui_fatal(output):
+        if _is_rui_fatal(output):
             return
-        elif is_rui_error(output):
+        elif _is_rui_error(output):
             continue
         else:
             print("Reply:", output)
+
+def _is_rui_fatal(rpc_value: rpc_type) -> bool:
+    if str(rpc_value) == PROXY_FATAL:
+        print(rpc_value)
+        return True
+    else:
+        return False
+
+def _is_rui_error(rpc_value: rpc_type) -> bool:
+    if str(rpc_value).startswith(RPC_ERROR()):
+        print(rpc_value)
+        return True
+    else:
+        return False
 
 SEARCH_PROMPT = "Enter search terms: "
 MATCH_ERR = lambda t: f"Couldn't find {t[0] if len(t)==1 else 'a match'}"

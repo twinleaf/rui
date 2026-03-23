@@ -9,8 +9,9 @@ from .test.record import record
 from .test.playback import playback
 from .test.rerecord import rerecord
 
-def parser_setup(p: argparse.ArgumentParser, *, flags: str='',
+def _parser_setup(p: argparse.ArgumentParser, *, flags: str='',
                  func: Callable[[argparse.ArgumentParser], None]):
+    """ Add TIO and optional RUI options to a subcommand parser """
     p.set_defaults(func=func)
     if flags:
         # global flags
@@ -38,7 +39,8 @@ def parser_setup(p: argparse.ArgumentParser, *, flags: str='',
             p.add_argument('cli_args', nargs='*', metavar="search terms [+arg]",
                            help="RPC search terms and argument to call with")
 
-def parse_cli_args(args: argparse.Namespace):
+def _parse_cli_args(args: argparse.Namespace):
+    """ Iterate through non-flag options to find search terms and rpc arg for CLI """
     default_arg, search_terms = None, []
     for arg in args.cli_args:
         try: default_arg = float(arg)
@@ -46,35 +48,37 @@ def parse_cli_args(args: argparse.Namespace):
     setattr(args, 'default_arg', default_arg)
     setattr(args, 'terms', search_terms)
 
-def rui_record(*args): record(rui, sys.argv[2:], default_args=['--test'])
-def rui_playback(*args): playback(rui, default_args=['--test'])
-def rui_rerecord(*args): rerecord(rui, default_args=['--test'])
-
 def rui_parse_args() -> argparse.Namespace:
+    """ Define parsers for RUI, parse sys.argv, and return created namespace """
     ### parser setup ###
     parser = argparse.ArgumentParser(
             description="RUI - Rpc User Interface for easy control of Twinleaf devices")
+
     subparsers = parser.add_subparsers(dest='command', help="Available subcommands")
 
     ### main subparsers ###
-    cli_parser = subparsers.add_parser('cli', help="Command line RPC search/call")
-    parser_setup(cli_parser, flags='taemp*', func=cli)
+    cli_parser = subparsers.add_parser('cli', help="[default] Command line RPC search/call")
+    _parser_setup(cli_parser, flags='taemp*', func=cli)
 
     gui_parser = subparsers.add_parser('gui', help="RPC slider pop-out")
-    parser_setup(gui_parser, flags='taem*', func=gui)
+    _parser_setup(gui_parser, flags='taem*', func=gui)
 
     itl_parser = subparsers.add_parser('itl', help="Twinleaf IPython with RPC cache")
-    parser_setup(itl_parser, flags='t', func=lambda d, _a: d._interact())
+    _parser_setup(itl_parser, flags='t', func=lambda d, _a: d._interact())
 
     ## hidden test subparsers ###
+    record_func = lambda _d, _a: record(rui, sys.argv[2:], default_args=['--test'])
+    playback_func = lambda _d, _a: playback(rui, default_args=['--test'])
+    rerecord_func = lambda _d, _a: rerecord(rui, default_args=['--test'])
+
     record_parser = subparsers.add_parser('record', help="[dev] Record a test")
-    parser_setup(record_parser, flags='aemp*', func=rui_record)
+    _parser_setup(record_parser, flags='aemp*', func=record_func)
 
     playback_parser = subparsers.add_parser('playback', help="[dev] Playback tests")
-    parser_setup(playback_parser, func=rui_playback)
+    _parser_setup(playback_parser, func=playback_func)
 
     rerecord_parser = subparsers.add_parser('rerecord', help="[dev] Rerecord tests")
-    parser_setup(rerecord_parser, func=rui_rerecord)
+    _parser_setup(rerecord_parser, func=rerecord_func)
 
     # CLI is default arg
     subcommands = ['-h', '--help',
@@ -85,11 +89,12 @@ def rui_parse_args() -> argparse.Namespace:
 
     args = parser.parse_args()
     if hasattr(args, 'cli_args'):
-        parse_cli_args(args)
+        _parse_cli_args(args)
 
     return args
 
 def get_device(args):
+    """ Get a Device or TestDevice based on RUI options """
     if hasattr(args, 'test') and not args.test:
         try:
             return Device(args.root, args.sensor)
@@ -103,6 +108,11 @@ def get_device(args):
         return TestDevice()
 
 def rui():
+    """ RUI main script """
     args = rui_parse_args()
     dev = get_device(args)
-    args.func(dev, args)
+
+    try:
+        args.func(dev, args)
+    except (EOFError, KeyboardInterrupt):
+        print("\nInterrupted, exiting")

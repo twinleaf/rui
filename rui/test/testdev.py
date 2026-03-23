@@ -39,8 +39,8 @@ def call_test_rpc(rpc, arg: int | float | None) -> int | float | None:
     else:
         # simulate errors
         if arg == 404:
-             rpc._dev.die()
-             raise RuntimeError
+            rpc._dev.die()
+            raise RuntimeError
         elif arg == 444:
             raise RuntimeError
 

@@ -21,7 +21,7 @@ class RPCClient:
         self.dict = {node.__name__: node for node in nodes}
         self.list = RPCList([RPC.from_node(self, node) for node in nodes])
 
-    def call_by_name(self, name: str, arg: rpc_type=None) -> rpc_type:
+    def _call_by_name(self, name: str, arg: rpc_type=None) -> rpc_type:
         try:
             rpc = self.dict[name]
             if arg is None:
@@ -39,7 +39,7 @@ class RPCClient:
                 try:
                     self._device.reinit()
                     self.__init__(self._device)
-                    return self.call_by_name(name, arg)
+                    return self._call_by_name(name, arg)
                 except:
                     return PROXY_FATAL
 
@@ -51,22 +51,25 @@ class RPCClient:
                 try:
                     self._device.reinit()
                     self.__init__(self._device)
-                    return self.call_by_name(name, arg)
+                    return self._call_by_name(name, arg)
                 except:
                     return PROXY_FATAL
+
+    def dev_name(self) -> str:
+        return self._call_by_name("dev.name")
 
     def validate_device(self) -> bool:
         # Test our device connection by calling a universal RPC
         # If it fails
         try:
-            self.dict["dev.name"].__call__()
+            self.dev_name()
         except RuntimeError:
-            self.reset_device()
+            self._reset_device()
             return False
         else:
             return True
 
-    def reset_device(self):
+    def _reset_device(self):
         self.dict = {}
         self.list = RPCList()
 
@@ -93,7 +96,7 @@ class RPC:
         return cls(client, name, arg_type, ret_type)
 
     def call(self, arg: rpc_type=None) -> rpc_type:
-        return self._client.call_by_name(self.name, self.to_arg_type(arg))
+        return self._client._call_by_name(self.name, self.to_arg_type(arg))
     def value(self) -> rpc_type:
         return self.call()
 
@@ -102,6 +105,9 @@ class RPC:
             return None
         else:
             return self.arg_type(arg)
+
+    def is_numeric(self) -> bool:
+        return self.arg_type in { int, float } and self.ret_type in { int, float }
 
     def __repr__(self): return self.name + '(' + type_name(self.arg_type) + ')'
     def __len__(self): return len(self.name)
@@ -188,4 +194,3 @@ def rpc_dfs(parent) -> list["rpc"]:
         if is_rpc(node): rpcs += [node]
         rpcs += rpc_dfs(node)
     return rpcs
-

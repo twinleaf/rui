@@ -7,6 +7,7 @@ from rui.guilib.min_max import RuiConfigs
 from rui.rpc import RPC, RPC_ERROR, PROXY_FATAL
 
 class RPCDisplay():
+    """ Display for a single RPC slider, including name, min/max, and current value """
     def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float, config: RuiConfigs): 
         self.config = config
         self.widget_visible = True

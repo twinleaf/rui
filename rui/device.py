@@ -2,7 +2,7 @@ import twinleaf
 import os, sys, struct, inspect, platform
 
 class Device(twinleaf.Device):
-    class InitError(Exception): pass
+    """ Wrapper for twinleaf.Device to enable RPC cacheing if user's twinleaf-python install doesn't have the new Rust cache code """
     def __init__(self, url, route):
         self._url, self._route = url, route
         super().__init__(url=url, route=route, instantiate=False)
@@ -20,7 +20,10 @@ class Device(twinleaf.Device):
 
         self._instantiate_samples()
 
+    class InitError(Exception): pass
+
     def reinit(self):
+        """ Create a new Device and set this object to (all but) become it """
         self.settings.__dict__ = {}
         self.__dict__ = Device(self._url, self._route).__dict__
 

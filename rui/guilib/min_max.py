@@ -1,6 +1,7 @@
 import os, sys, platform
 
 class RuiConfigs():
+    """ Interface with cache file to store min and max values for RUI GUI sliders """
     def __init__(self, dev_name):
         self.dev_name = dev_name
         self.rpc_configs = dict()
@@ -61,18 +62,15 @@ class RuiConfigs():
                     self._write_rpc_cache(f)        
         except OSError as e:
             sys.exit(f"Something went wrong with the cache path: {e}")
-        except ValueError as e:
-            sys.exit(f"Invalid cache at {file_path}, consider inspecting or removing: {e}")
+        except ValueError:
+            sys.exit(f"Invalid cache at {file_path}, consider inspecting or removing")
 
     def _read_rpc_cache(self, file):
         lines = file.readlines()
         if not lines: pass 
         for line in lines:
-            try:
-                name, min, max = line.strip().split(' ')
-                self._update_dict(name, min, max)
-            except ValueError:
-                continue
+            name, min, max = line.strip().split(' ')
+            self._update_dict(name, min, max)
 
     def _write_rpc_cache(self, file):
         for rpc_name in self.rpc_configs["rpc_names"]:
