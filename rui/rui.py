@@ -54,7 +54,7 @@ def rui_parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
             description="RUI - Rpc User Interface for easy control of Twinleaf devices")
 
-    subparsers = parser.add_subparsers(dest='command', help="Available subcommands")
+    subparsers = parser.add_subparsers(dest='command', help="Subcommands")
 
     ### main subparsers ###
     cli_parser = subparsers.add_parser('cli', help="[default] Command line RPC search/call")
@@ -65,6 +65,16 @@ def rui_parse_args() -> argparse.Namespace:
 
     itl_parser = subparsers.add_parser('itl', help="Twinleaf IPython with RPC cache")
     _parser_setup(itl_parser, flags='t', func=lambda d, _a: d._interact())
+
+    ### aux subparsers ###
+    cache_parser = subparsers.add_parser('cache', help="RPC cache functions")
+    cache_subparsers = cache_parser.add_subparsers(dest='cache_command', help="Actions")
+
+    print_parser = cache_subparsers.add_parser('print', help="Print device RPC cache")
+    _parser_setup(print_parser, flags='t', func=lambda d, _a: d.print_cache())
+
+    remove_parser = cache_subparsers.add_parser('remove', help="Remove device RPC cache")
+    _parser_setup(remove_parser, flags='t', func=lambda d, _a: d.remove_cache())
 
     ## hidden test subparsers ###
     record_func = lambda _d, _a: record(rui, sys.argv[2:], default_args=['--test'])
@@ -81,11 +91,14 @@ def rui_parse_args() -> argparse.Namespace:
     _parser_setup(rerecord_parser, func=rerecord_func)
 
     # CLI is default arg
-    subcommands = ['-h', '--help',
-                   'cli', 'gui', 'itl',
-                   'record', 'playback', 'rerecord']
-    if not any([arg in sys.argv for arg in subcommands]):
+    subcommands = {'-h', '--help',
+                   'cli', 'gui', 'itl', 'cache',
+                   'record', 'playback', 'rerecord'}
+    if not sys.argv[1:] or not any([sys.argv[1] == arg for arg in subcommands]):
         sys.argv.insert(1, 'cli')
+    if sys.argv[1:] and sys.argv[1] == 'cache':
+        if not sys.argv[2:] or sys.argv[2] not in { 'print', 'remove', '-h', '--help', }:
+            sys.argv.insert(2, '--help')
 
     args = parser.parse_args()
     if hasattr(args, 'cli_args'):
@@ -95,9 +108,10 @@ def rui_parse_args() -> argparse.Namespace:
 
 def get_device(args):
     """ Get a Device or TestDevice based on RUI options """
+    instantiate = args.command != 'cache' # don't instantiate cache in cache subcommand
     if hasattr(args, 'test') and not args.test:
         try:
-            return Device(args.root, args.sensor)
+            return Device(args.root, args.sensor, instantiate)
         except Device.InitError as e:
             print(str(e), file=sys.stderr)
             print("RUI: Couldn't initialize a device.\n" +

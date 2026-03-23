@@ -3,22 +3,23 @@ import os, sys, struct, inspect, platform
 
 class Device(twinleaf.Device):
     """ Wrapper for twinleaf.Device to enable RPC cacheing if user's twinleaf-python install doesn't have the new Rust cache code """
-    def __init__(self, url, route):
+    def __init__(self, url, route, instantiate=True):
         self._url, self._route = url, route
         super().__init__(url=url, route=route, instantiate=False)
 
         # Check out instantiate code
-        which_instantiate = inspect.getsource(super()._instantiate_rpcs)
-        if "rpc.listinfo" in which_instantiate:
-            # Instantiate code would try to query RPCs, let's do that with cache instead
-            self._instantiate_rpcs()
-        elif "self._rpc_list()" in which_instantiate:
-            # Instatiate code can call new Rust cacheing RPC list, use it
-            super()._instantiate_rpcs()
-        else:
-            raise DevInitError("Can't recognize device code, check your twinleaf pip install?")
+        if instantiate:
+            which_instantiate = inspect.getsource(super()._instantiate_rpcs)
+            if "rpc.listinfo" in which_instantiate:
+                # Instantiate code would try to query RPCs, let's do that with cache instead
+                self._instantiate_rpcs()
+            elif "self._rpc_list()" in which_instantiate:
+                # Instatiate code can call new Rust cacheing RPC list, use it
+                super()._instantiate_rpcs()
+            else:
+                raise DevInitError("Can't recognize device code, check your twinleaf pip install?")
 
-        self._instantiate_samples()
+            self._instantiate_samples()
 
     class InitError(Exception): pass
 
@@ -26,6 +27,23 @@ class Device(twinleaf.Device):
         """ Create a new Device and set this object to (all but) become it """
         self.settings.__dict__ = {}
         self.__dict__ = Device(self._url, self._route).__dict__
+
+    def print_cache(self):
+        try:
+            file_path = self._cache_path()
+            print(file_path)
+            with open(file_path, 'r') as f:
+                for line in f.readlines():
+                    print(line, end='')
+        except OSError as e:
+            print(f"Something went wrong with the cache path: {e}")
+
+    def remove_cache(self):
+        try:
+            file_path = self._cache_path()
+            os.remove(file_path)
+        except OSError as e:
+            print(f"Something went wrong with the cache path: {e}")
 
     def _instantiate_rpcs(self):
         cls = self._get_obj_survey(self)
@@ -40,7 +58,7 @@ class Device(twinleaf.Device):
                 with open(file_path, 'w') as f:
                     self._write_rpc_cache(f)
         except OSError as e:
-            raise Device.InitError(f"Something went wrong with the cache path: {e}")
+            raise Device.InitError(f"Something went wrong with cache path {cache_path}: {e}")
         except RuntimeError as e:
             raise Device.InitError(f"Aborting device init on RPC failure: {e}")
         except ValueError:
