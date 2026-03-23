@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from test.record import list_recorded
+from .record import list_recorded
 
 class Playback:
     ''' Sends stdin from transcript, reads stdout and asserts against transcript '''

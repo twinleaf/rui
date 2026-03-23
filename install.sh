@@ -1,27 +1,31 @@
-# source install.sh to set up rui for bash or zsh
-# currently no support for any other shell that don't conveniently use ~/.*shrc
-
-if ! [ -d $HOME/python ]; then
-	echo "python3 -m venv $HOME/python ..."
-	python3 -m venv $HOME/python
-fi
-$HOME/python/bin/pip install twinleaf
-$HOME/python/bin/pip install pyqt6
-
-rui_alias="$HOME/python/bin/python $( pwd )/rui.py"
-shellname="$( ps cp "$$" -o command= )"
-shellname=${shellname#-}
-rc="$HOME/.${shellname}rc"
-
-if ! cat "$rc" | grep -qe "$rui_alias"; then
-	cat << EOF >> "$rc"
-
-# >>>>> RUI >>>>>
-# !! Contents within this block are managed by RUI
-alias rui="$rui_alias"
-# <<<<< RUI <<<<<
-EOF
+#!/usr/bin/sh
+if /usr/bin/grep -q "alias rui" ~/.zshrc; then
+	echo "rui/scripts/install.sh: removing zsh rui alias"
+	sed -i '/# >>>>> RUI >>>>>/d' 									~/.zshrc
+	sed -i '/# !! Contents within this block are managed by RUI/d' 	~/.zshrc
+	sed -i '/alias rui=.*$/d'										~/.zshrc
+	sed -i '/# <<<<< RUI <<<<</d' 									~/.zshrc
+	unalias rui 2>/dev/null
 fi
 
-# enable alias in this shell
-alias rui="$rui_alias"
+if /usr/bin/grep -q "alias rui" ~/.bashrc; then
+	echo "rui/scripts/install.sh: removing bash rui alias"
+	sed -i '/# >>>>> RUI >>>>>/d' 									~/.bashrc
+	sed -i '/# !! Contents within this block are managed by RUI/d' 	~/.bashrc
+	sed -i '/alias rui=.*$/d'										~/.bashrc
+	sed -i '/# <<<<< RUI <<<<</d' 									~/.bashrc
+	unalias rui 2>/dev/null
+fi
+
+if [ ! -d ~/python ]; then
+	echo "rui/scripts/install.sh: creating python virtual environment..."
+	python3 -m venv ~/python
+fi
+
+if [ ! -f ~/python/bin/pipx ]; then
+	echo "rui/scripts/install.sh: installing pipx..."
+	~/python/bin/pip install pipx
+fi
+
+echo "rui/scripts/install.sh: installing RUI..."
+~/python/bin/pipx install . --force

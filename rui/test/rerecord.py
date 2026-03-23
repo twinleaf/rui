@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
-from test.record import Recorder, list_recorded
-from test.playback import run_transcript
+from .record import Recorder, list_recorded
+from .playback import run_transcript
 
 class ReRecorder(Recorder):
     ''' Sends stdin from transcript, reads stdout and asks if it's right '''

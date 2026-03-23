@@ -1,14 +1,13 @@
-#!/usr/bin/env -S bash -c 'exec "$HOME/python/bin/python" "$0" "$@"'
 import sys, argparse
 from typing import Callable
-from rui.cli import cli
-from rui.gui import gui
-from rui.device import Device
+from .cli import cli
+from .gui import gui
+from .device import Device
 
-from test.testdev import TestDevice
-from test.record import record
-from test.playback import playback
-from test.rerecord import rerecord
+from .test.testdev import TestDevice
+from .test.record import record
+from .test.playback import playback
+from .test.rerecord import rerecord
 
 def parser_setup(p: argparse.ArgumentParser, *, flags: str='',
                  func: Callable[[argparse.ArgumentParser], None]):
@@ -47,9 +46,9 @@ def parse_cli_args(args: argparse.Namespace):
     setattr(args, 'default_arg', default_arg)
     setattr(args, 'terms', search_terms)
 
-def record_main(*args): record(main, sys.argv[2:], default_args=['--test'])
-def playback_main(*args): playback(main, default_args=['--test'])
-def rerecord_main(*args): rerecord(main, default_args=['--test'])
+def rui_record(*args): record(rui, sys.argv[2:], default_args=['--test'])
+def rui_playback(*args): playback(rui, default_args=['--test'])
+def rui_rerecord(*args): rerecord(rui, default_args=['--test'])
 
 def rui_parse_args() -> argparse.Namespace:
     ### parser setup ###
@@ -69,13 +68,13 @@ def rui_parse_args() -> argparse.Namespace:
 
     ## hidden test subparsers ###
     record_parser = subparsers.add_parser('record', help="[dev] Record a test")
-    parser_setup(record_parser, flags='aemp*', func=record_main)
+    parser_setup(record_parser, flags='aemp*', func=rui_record)
 
     playback_parser = subparsers.add_parser('playback', help="[dev] Playback tests")
-    parser_setup(playback_parser, func=playback_main)
+    parser_setup(playback_parser, func=rui_playback)
 
     rerecord_parser = subparsers.add_parser('rerecord', help="[dev] Rerecord tests")
-    parser_setup(rerecord_parser, func=rerecord_main)
+    parser_setup(rerecord_parser, func=rui_rerecord)
 
     # CLI is default arg
     subcommands = ['-h', '--help',
@@ -103,13 +102,7 @@ def get_device(args):
     else:
         return TestDevice()
 
-def main():
+def rui():
     args = rui_parse_args()
     dev = get_device(args)
     args.func(dev, args)
-
-if __name__ == "__main__":
-    try:
-        main()
-    except (EOFError, KeyboardInterrupt):
-        print("\nInterrupted, exiting")
