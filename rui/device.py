@@ -62,6 +62,7 @@ class Device(twinleaf.Device):
         percent=0
 
         n = int.from_bytes(self._rpc("rpc.listinfo", b""), "little")
+        write_str = ""
         for i in range(n):
             if i / n > percent:
                 print('█', end='', flush=True)
@@ -71,7 +72,8 @@ class Device(twinleaf.Device):
             meta = int.from_bytes(res[0:2], "little")
             name = res[2:].decode()
             self._metaprogram_rpc(meta, name)
-            file.write(f"{hex(meta)[2:].zfill(4)} {name}\n")
+            write_str += f"{hex(meta)[2:].zfill(4)} {name}\n"
+        file.write(write_str)
         print("\nDone!")
 
     def _metaprogram_rpc(self, meta, name):
