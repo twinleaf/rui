@@ -1,0 +1,42 @@
+$ [-mae]
+Enter search terms: \
+> dev data
+1. dev.name()
+2. dev.port.rate(int)
+3. dev.port.rate.default(int)
+4. test.data.cutoff(float)
+5. test.data.decimation(int)
+6. test.data.enable(int)
+
+dev.name()
+Reply: TEST
+
+dev.port.rate(int)
+Current value: 100000
+Enter argument: \
+> 
+Reply: 100000
+
+dev.port.rate.default(int)
+Current value: 100000
+Enter argument: \
+> 
+Reply: 100000
+
+test.data.cutoff(float)
+Current value: 0
+Enter argument: \
+> 
+Reply: 0
+
+test.data.decimation(int)
+Current value: 0
+Enter argument: \
+> 
+Reply: 0
+
+test.data.enable(int)
+Current value: 0
+Enter argument: \
+> 2
+Reply: 2

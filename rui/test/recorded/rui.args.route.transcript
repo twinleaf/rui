@@ -1,0 +1,17 @@
+$ [-r tcp://localhost]
+Enter search terms: \
+> .
+1. dev.name()
+2. dev.port.rate(int)
+3. dev.port.rate.default(int)
+4. rpc.hash()
+5. rpc.id(bytes)
+6. sw.start()
+7. test.data.cutoff(float)
+8. test.data.decimation(int)
+9. test.data.enable(int)
+Select rpc(s) by #, or enter terms to narrow search: \
+> 1
+
+dev.name()
+Reply: TEST

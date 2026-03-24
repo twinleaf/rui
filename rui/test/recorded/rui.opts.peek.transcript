@@ -1,0 +1,11 @@
+$ [-p]
+Enter search terms: \
+> dev
+1. dev.name()
+2. dev.port.rate(int)
+3. dev.port.rate.default(int)
+Select rpc(s) by #, or enter terms to narrow search: \
+> 2
+
+dev.port.rate(int)
+Reply: 100000

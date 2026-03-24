@@ -1,8 +1,0 @@
-$ []
-Enter search terms: \
-> autostart
-mode.autostart(int)
-Current value: 0
-Enter argument: \
-> 1
-Reply: 1

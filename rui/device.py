@@ -2,26 +2,10 @@ import twinleaf
 import os, sys, struct, inspect, platform
 
 class Device(twinleaf.Device):
-    """ Wrapper for twinleaf.Device to enable RPC cacheing if user's twinleaf-python install doesn't have the new Rust cache code """
+    """ Wrapper for twinleaf.Device to support some cache manipulation """
     def __init__(self, url, route, instantiate=True):
         self._url, self._route = url, route
-        super().__init__(url=url, route=route, instantiate=False)
-
-        # Check out instantiate code
-        if instantiate:
-            which_instantiate = inspect.getsource(super()._instantiate_rpcs)
-            if "rpc.listinfo" in which_instantiate:
-                # Instantiate code would try to query RPCs, let's do that with cache instead
-                self._instantiate_rpcs()
-            elif "self._rpc_list()" in which_instantiate:
-                # Instatiate code can call new Rust cacheing RPC list, use it
-                super()._instantiate_rpcs()
-            else:
-                raise DevInitError("Can't recognize device code, check your twinleaf pip install?")
-
-            self._instantiate_samples()
-
-    class InitError(Exception): pass
+        super().__init__(url=url, route=route, instantiate=instantiate)
 
     def reinit(self):
         """ Create a new Device and set this object to (all but) become it """
@@ -36,89 +20,161 @@ class Device(twinleaf.Device):
                 for line in f.readlines():
                     print(line, end='')
         except OSError as e:
-            print(f"Something went wrong with the cache path: {e}")
+            print(f"Something went wrong with the cache path: {e}", file=sys.stderr)
+        except RuntimeError as e:
+            print(f"Couldn't connect to the board: {e}", file=sys.stderr)
 
     def remove_cache(self):
         try:
             file_path = self._cache_path()
             os.remove(file_path)
         except OSError as e:
-            print(f"Something went wrong with the cache path: {e}")
-
-    def _instantiate_rpcs(self):
-        cls = self._get_obj_survey(self)
-        setattr(self, 'settings', cls())
-
-        try:
-            try:
-                file_path = self._cache_path()
-                with open(file_path, 'r') as f:
-                    self._read_rpc_cache(f)
-            except FileNotFoundError:
-                with open(file_path, 'w') as f:
-                    self._write_rpc_cache(f)
-        except OSError as e:
-            raise Device.InitError(f"Something went wrong with cache path {cache_path}: {e}")
+            print(f"Something went wrong with the cache path: {e}", file=sys.stderr)
         except RuntimeError as e:
-            raise Device.InitError(f"Aborting device init on RPC failure: {e}")
-        except ValueError:
-            raise Device.InitError(f"Invalid cache at {file_path}, fix or remove")
-
-    def _read_rpc_cache(self, file):
-        lines = file.readlines()
-        if not lines: raise OSError("Empty cache file!")
-        for line in lines:
-            # Not going to bother to replicate rust hash, we'll just ignore it if we see it
-            if len(line.strip()) == 16 and all(char in '0123456789abcdef\n' for char in line):
-                return
-            meta, name = line.strip().split(' ')
-            meta_hex = int(meta, 16)
-            self._metaprogram_rpc(meta_hex, name)
-
-    def _write_rpc_cache(self, file):
-        print("Generating RPC cache.... ", end='', flush=True)
-        percent=0
-
-        n = int.from_bytes(self._rpc("rpc.listinfo", b""), "little")
-        write_str = ""
-        for i in range(n):
-            if i / n > percent:
-                print('█', end='', flush=True)
-                percent += 0.02
-
-            res = self._rpc("rpc.listinfo", i.to_bytes(2, "little"))
-            meta = int.from_bytes(res[0:2], "little")
-            name = res[2:].decode()
-            self._metaprogram_rpc(meta, name)
-            write_str += f"{hex(meta)[2:].zfill(4)} {name}\n"
-        file.write(write_str)
-        print("\nDone!")
-
-    def _metaprogram_rpc(self, meta, name):
-        parent = self.settings
-        *prefix, mname = name.split('.')
-        if prefix and (prefix[0] == "rpc"): prefix[0] = "_rpc"
-        for token in prefix:
-            if not hasattr(parent, token):
-                cls = self._get_obj_survey(token)
-                setattr(parent, token, cls())
-            parent = getattr(parent, token)
-
-        cls = self._get_rpc_obj(name, meta)
-        setattr(parent, mname, cls())
+            print(f"Couldn't connect to the board: {e}", file=sys.stderr)
 
     def _cache_path(self):
         if platform.system() == "Linux":
             cache_dir = os.path.expanduser("~/.cache/twinleaf")
         elif platform.system() == "Darwin":
             cache_dir = os.path.expanduser("~/Library/Caches/twinleaf")
-        elif platform.system() == "Windows":
-            cache_dir = os.path.expanduser("~\\AppData\\Local")
         else:
-            cache_dir = input("Couldn't determine where to look for cache, input cache directory path: ")
+            raise OSError(platform.system() + " not supported for RUI cache")
         os.makedirs(cache_dir, exist_ok=True)
 
         dev_name = self._rpc("dev.name", b"").decode()
         rpc_hash = hex(struct.unpack('<I', self._rpc("rpc.hash", b""))[0])[2:].zfill(8)
         base_name = f"{dev_name}.{rpc_hash}.rpcs"
         return os.path.join(cache_dir, base_name)
+
+class TestDevice:
+    """ Device that doesn't actually connect to any proxy """
+    def __init__(self, url, route, instantiate=True):
+        self._url, self._route = url, route
+        self._dead = False
+        self._instantiate_test()
+
+    def reinit(self):
+        if self._dead:
+            self._dead = False
+        else:
+            self.settings.__dict__ = {}
+            self.__dict__ = TestDevice(self._url, self._route).__dict__
+
+    def _instantiate_test(self):
+        self.settings = Survey("settings")
+        self.samples = None
+        for rpc in self._test_rpcs():
+            rpc._setup_test_rpc(self)
+            self.settings._add_rpc(self, rpc)
+        self._write_test_cache()
+
+    def _test_rpcs(self):
+        return [
+            Rpc("dev.name", None, str, value=b".TEST"),
+            Rpc("dev.port.rate", int, int, value=100000),
+            Rpc("dev.port.rate.default", int, int, value=100000),
+            Rpc("test.data.enable", int, int, value=0),
+            Rpc("test.data.decimation", int, int, value=0),
+            Rpc("test.data.cutoff", float, float, value=0),
+            Rpc("sw.start", None, None, value=b""),
+            Rpc("rpc.hash", None, int, value=1234567890),
+            Rpc("rpc.id", bytes, bytes),
+        ]
+
+    def _die(self):
+        self._dead = True
+
+    def _call_test_rpc(self, rpc, arg: int | float | None) -> int | float | None:
+        if self._dead:
+            raise RuntimeError("TESTDEVICE: Device dead!")
+
+        if arg is None:
+            return rpc._value
+        else:
+            # simulate errors
+            if arg == 404:
+                raise RuntimeError("TESTDEVICE: RPC failed!")
+            elif arg == 444:
+                self._die()
+                raise RuntimeError("TESTDEVICE: Killing device!")
+
+            rpc._value = rpc._ret_type(arg)
+            return rpc._value
+
+    def print_cache(self):
+        try:
+            file_path = self._cache_path()
+            print(file_path)
+            with open(file_path, 'r') as f:
+                for line in f.readlines():
+                    print(line, end='')
+        except OSError as e:
+            print(f"Something went wrong with the cache path: {e}", file=sys.stderr)
+
+    def remove_cache(self):
+        try:
+            file_path = self._cache_path()
+            os.remove(file_path)
+        except OSError as e:
+            print(f"Something went wrong with the cache path: {e}", file=sys.stderr)
+
+    def _write_test_cache(self):
+        try:
+            file_path = self._cache_path()
+            with open(file_path, 'w') as f:
+                f.write("RUI TestDevice cache\n")
+        except OSError as e:
+            print(f"Something went wrong with the cache path: {e}", file=sys.stderr)
+
+    def _cache_path(self):
+        if platform.system() == "Linux":
+            cache_dir = os.path.expanduser("~/.cache/twinleaf")
+        elif platform.system() == "Darwin":
+            cache_dir = os.path.expanduser("~/Library/Caches/twinleaf")
+        else:
+            raise OSError(platform.system() + " not supported for RUI cache")
+        os.makedirs(cache_dir, exist_ok=True)
+
+        dev_name = ".TEST"
+        rpc_hash = "1234567890"
+        base_name = f"{dev_name}.{rpc_hash}.rpcs"
+        return os.path.join(cache_dir, base_name)
+
+class Rpc:
+    """ Fake dev.settings... RPC object """
+    def __init__(self, name: str, arg_type: type, ret_type: type, value=0):
+        self.__name__ = name
+        self._arg_type = arg_type
+        self._ret_type  = ret_type
+        self._value = value
+
+    def _setup_test_rpc(self, dev: TestDevice):
+        self.__call__ = lambda arg=None: dev._call_test_rpc(self, arg)
+        self.__call__.__annotations__['arg'] = self._arg_type
+        self.__call__.__annotations__['return'] = self._ret_type
+
+class Survey:
+    """ Fake dev.settings... survey object """
+    def __init__(self, name: str):
+        self.__name__ = name
+
+    def _get_path(self, name: str):
+        path = name.split('.')
+        parent = self
+        for survey in path[:-1]:
+            try:
+                parent = getattr(parent, survey)
+            except AttributeError:
+                parent._add_survey(survey)
+                parent = getattr(parent, survey)
+        return parent, path[-1]
+
+    def _add_survey(self, path: str):
+        parent, child = self._get_path(path)
+        survey = Survey(child)
+        setattr(parent, child, survey)
+
+    def _add_rpc(self, dev: TestDevice, rpc: Rpc):
+        parent, child = self._get_path(rpc.__name__)
+        setattr(parent, child, rpc)

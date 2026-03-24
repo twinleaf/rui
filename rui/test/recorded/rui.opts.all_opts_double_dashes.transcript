@@ -1,0 +1,41 @@
+$ [--peek --exact --multisearch --all]
+Enter search terms: \
+> .
+1. dev.name()
+2. dev.port.rate(int)
+3. dev.port.rate.default(int)
+4. rpc.hash()
+5. rpc.id(bytes)
+6. sw.start()
+7. test.data.cutoff(float)
+8. test.data.decimation(int)
+9. test.data.enable(int)
+
+dev.name()
+Reply: TEST
+
+dev.port.rate(int)
+Reply: 100000
+
+dev.port.rate.default(int)
+Reply: 100000
+
+rpc.hash()
+Reply: 1234567890
+
+rpc.id(bytes)
+Bytes RPCs not yet supported
+
+sw.start()
+Send RPC? y/[n] \
+> y
+Reply: OK
+
+test.data.cutoff(float)
+Reply: 0
+
+test.data.decimation(int)
+Reply: 0
+
+test.data.enable(int)
+Reply: 0

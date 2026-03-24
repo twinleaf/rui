@@ -1,0 +1,17 @@
+$ [-ae]
+Enter search terms: \
+> port
+1. dev.port.rate(int)
+2. dev.port.rate.default(int)
+
+dev.port.rate(int)
+Current value: 100000
+Enter argument: \
+> 2
+Reply: 2
+
+dev.port.rate.default(int)
+Current value: 100000
+Enter argument: \
+> 2
+Reply: 2

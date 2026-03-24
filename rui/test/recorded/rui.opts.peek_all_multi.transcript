@@ -1,0 +1,27 @@
+$ [-map]
+Enter search terms: \
+> dev data
+1. dev.name()
+2. dev.port.rate(int)
+3. dev.port.rate.default(int)
+4. test.data.cutoff(float)
+5. test.data.decimation(int)
+6. test.data.enable(int)
+
+dev.name()
+Reply: TEST
+
+dev.port.rate(int)
+Reply: 100000
+
+dev.port.rate.default(int)
+Reply: 100000
+
+test.data.cutoff(float)
+Reply: 0
+
+test.data.decimation(int)
+Reply: 0
+
+test.data.enable(int)
+Reply: 0

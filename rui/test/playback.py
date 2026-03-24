@@ -1,4 +1,4 @@
-import sys
+import sys, time
 from pathlib import Path
 from .record import list_recorded
 

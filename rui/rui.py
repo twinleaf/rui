@@ -2,9 +2,8 @@ import sys, argparse
 from typing import Callable
 from .cli import cli
 from .gui import gui
-from .device import Device
+from .device import Device, TestDevice
 
-from .test.testdev import TestDevice
 from .test.record import record
 from .test.playback import playback
 from .test.rerecord import rerecord
@@ -13,31 +12,31 @@ def _parser_setup(p: argparse.ArgumentParser, *, flags: str='',
                  func: Callable[[argparse.ArgumentParser], None]):
     """ Add TIO and optional RUI options to a subcommand parser """
     p.set_defaults(func=func)
-    if flags:
-        # global flags
-        p.add_argument('-r', '--root', action='store', default="tcp://localhost",
-                       help="Sensor root address")
-        p.add_argument('-s', '--sensor', default='/',
-                       help="Sensor path in the sensor tree")
 
-        # optional flags
-        if 't' in flags:
-            p.add_argument('--test', action='store_true', help=argparse.SUPPRESS)
-        if 'a' in flags:
-            p.add_argument('-a', '--all', action='store_true',
-                           help="Select all matched RPCs")
-        if 'e' in flags:
-            p.add_argument('-e', '--exact', action='store_true',
-                           help="Search exactly instead of fuzzily")
-        if 'm' in flags:
-            p.add_argument('-m', '--multisearch',  action='store_true',
-                           help="Search multiple terms at once")
-        if 'p' in flags:
-            p.add_argument('-p', '--peek', action='store_true',
-                           help="Don't prompt to change RPC value")
-        if '*' in flags:
-            p.add_argument('cli_args', nargs='*', metavar="search terms [+arg]",
-                           help="RPC search terms and argument to call with")
+    # global flags
+    p.add_argument('-r', '--root', action='store', default="tcp://localhost",
+                   help="Sensor root address")
+    p.add_argument('-s', '--sensor', default='/',
+                   help="Sensor path in the sensor tree")
+
+    # optional flags
+    if 't' in flags:
+        p.add_argument('--test', action='store_true', help=argparse.SUPPRESS)
+    if 'a' in flags:
+        p.add_argument('-a', '--all', action='store_true',
+                       help="Select all matched RPCs")
+    if 'e' in flags:
+        p.add_argument('-e', '--exact', action='store_true',
+                       help="Search exactly instead of fuzzily")
+    if 'm' in flags:
+        p.add_argument('-m', '--multisearch',  action='store_true',
+                       help="Search multiple terms at once")
+    if 'p' in flags:
+        p.add_argument('-p', '--peek', action='store_true',
+                       help="Don't prompt to change RPC value")
+    if '*' in flags:
+        p.add_argument('cli_args', nargs='*', metavar="search terms [+arg]",
+                       help="RPC search terms and argument to call with")
 
 def _parse_cli_args(args: argparse.Namespace):
     """ Iterate through non-flag options to find search terms and rpc arg for CLI """
@@ -109,14 +108,14 @@ def get_device(args):
     if hasattr(args, 'test') and not args.test:
         try:
             return Device(args.root, args.sensor, instantiate)
-        except Device.InitError as e:
-            print(str(e), file=sys.stderr)
-            print("RUI: Couldn't initialize a device.\n" +
+        except RuntimeError as e:
+            print(str(e) + '\n' +
+                 "RUI: Couldn't initialize a device.\n" +
                  f"Might want to check root: {args.root} & sensor: {args.sensor}",
                   file=sys.stderr)
             sys.exit()
     else:
-        return TestDevice()
+        return TestDevice(args.root, args.sensor, instantiate)
 
 def rui():
     """ RUI main script """

@@ -1,0 +1,13 @@
+$ []
+Enter search terms: \
+> .port
+1. dev.port.rate(int)
+2. dev.port.rate.default(int)
+Select rpc(s) by #, or enter terms to narrow search: \
+> 1
+
+dev.port.rate(int)
+Current value: 100000
+Enter argument: \
+> 1
+Reply: 1

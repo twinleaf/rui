@@ -1,0 +1,26 @@
+$ []
+Enter search terms: \
+> .
+1. dev.name()
+2. dev.port.rate(int)
+3. dev.port.rate.default(int)
+4. rpc.hash()
+5. rpc.id(bytes)
+6. sw.start()
+7. test.data.cutoff(float)
+8. test.data.decimation(int)
+9. test.data.enable(int)
+Select rpc(s) by #, or enter terms to narrow search: \
+> 2
+
+dev.port.rate(int)
+Current value: 100000
+Enter argument: \
+> 2.7
+Invalid. Argument should be of class 'int'.
+Enter argument: \
+> 2.0
+Invalid. Argument should be of class 'int'.
+Enter argument: \
+> -1000
+Reply: -1000

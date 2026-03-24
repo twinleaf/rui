@@ -1,0 +1,16 @@
+$ [-am]
+Enter search terms: \
+> start default
+1. dev.port.rate.default(int)
+2. sw.start()
+
+dev.port.rate.default(int)
+Current value: 100000
+Enter argument: \
+> 2
+Reply: 2
+
+sw.start()
+Send RPC? y/[n] \
+> y
+Reply: OK
