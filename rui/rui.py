@@ -29,18 +29,24 @@ def _parser_setup(p: argparse.ArgumentParser, *, flags: str='',
     if 'p' in flags:
         p.add_argument('-p', '--peek', action='store_true',
                        help="Don't prompt to change RPC value")
-    if '*' in flags:
+    if 'c' in flags:
         p.add_argument('cli_args', nargs='*', metavar="search terms [+arg]",
                        help="RPC search terms and argument to call with")
+    if 'g' in flags:
+        p.add_argument('gui_args', nargs='*', metavar="search terms",
+                       help="RPC search terms to start with")
 
-def _parse_cli_args(args: argparse.Namespace):
+def _parse_search(args: argparse.Namespace):
     """ Iterate through non-flag options to find search terms and rpc arg for CLI """
     default_arg, search_terms = None, []
-    for arg in args.cli_args:
-        try: default_arg = float(arg)
-        except ValueError: search_terms.append(arg)
-    setattr(args, 'default_arg', default_arg)
-    setattr(args, 'terms', search_terms)
+    if hasattr(args, 'cli_args'):
+        for arg in args.cli_args:
+            try: default_arg = float(arg)
+            except ValueError: search_terms.append(arg)
+        setattr(args, 'default_arg', default_arg)
+        setattr(args, 'terms', search_terms)
+    elif hasattr(args, 'gui_args'):
+        setattr(args, 'terms', args.gui_args)
 
 def rui_parse_args() -> argparse.Namespace:
     """ Define parsers for RUI, parse sys.argv, and return created namespace """
@@ -51,10 +57,12 @@ def rui_parse_args() -> argparse.Namespace:
     subparsers = parser.add_subparsers(dest='command', help="Subcommands")
 
     ### main subparsers ###
-    cli_parser = subparsers.add_parser('cli', help="[default] Command line RPC search/call")
+    cli_parser = subparsers.add_parser('cli', help="[default] Command line RPC search/call. `rui cli -h` for help.",
+                                       description="Search, select, and call RPCs. Call `rui` with no arguments for full prompt.")
     _parser_setup(cli_parser, flags='taemp*', func=cli)
 
-    gui_parser = subparsers.add_parser('gui', help="RPC slider pop-out")
+    gui_parser = subparsers.add_parser('gui', help="RPC slider pop-out",
+                                       description="Slider control panel for RPCs. Use args to search or call `rui gui` by itself to launch empty GUI.")
     _parser_setup(gui_parser, flags='taem*', func=gui)
 
     ### aux subparsers ###
@@ -77,7 +85,7 @@ def rui_parse_args() -> argparse.Namespace:
 
     args = parser.parse_args()
     if hasattr(args, 'cli_args'):
-        _parse_cli_args(args)
+        _parse_search(args)
 
     return args
 
