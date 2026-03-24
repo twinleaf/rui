@@ -63,9 +63,6 @@ def rui_parse_args() -> argparse.Namespace:
     gui_parser = subparsers.add_parser('gui', help="RPC slider pop-out")
     _parser_setup(gui_parser, flags='taem*', func=gui)
 
-    itl_parser = subparsers.add_parser('itl', help="Twinleaf IPython with RPC cache")
-    _parser_setup(itl_parser, flags='t', func=lambda d, _a: d._interact())
-
     ### aux subparsers ###
     cache_parser = subparsers.add_parser('cache', help="RPC cache functions")
     cache_subparsers = cache_parser.add_subparsers(dest='cache_command', help="Actions")
@@ -92,7 +89,7 @@ def rui_parse_args() -> argparse.Namespace:
 
     # CLI is default arg
     subcommands = {'-h', '--help',
-                   'cli', 'gui', 'itl', 'cache',
+                   'cli', 'gui', 'cache',
                    'record', 'playback', 'rerecord'}
     if not sys.argv[1:] or not any([sys.argv[1] == arg for arg in subcommands]):
         sys.argv.insert(1, 'cli')

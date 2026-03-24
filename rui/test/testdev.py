@@ -25,10 +25,6 @@ class TestDevice:
         self.settings.__dict__ = {}
         self.__init__()
 
-    def _interact(self):
-        print("RUI test PTY: executing zsh")
-        os.execvp("zsh", ["zsh"])
-
     def die(self):
         self.dead = True
 
