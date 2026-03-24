@@ -30,6 +30,7 @@ class RPCClient:
                 value = rpc.__call__(arg)
             if type(value) is float: value = round(value, 2)
             if type(value) is bytes: value = value.decode() # TODO: what about real bytes rpcs
+            if type(value) is str and value == "": value = "OK"
             return value
 
         except KeyError:
