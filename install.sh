@@ -1,20 +1,24 @@
-#!/usr/bin/sh
-if /usr/bin/grep -q "alias rui" ~/.zshrc; then
-	echo "rui/scripts/install.sh: removing zsh rui alias"
-	sed -i '/# >>>>> RUI >>>>>/d' 									~/.zshrc
-	sed -i '/# !! Contents within this block are managed by RUI/d' 	~/.zshrc
-	sed -i '/alias rui=.*$/d'										~/.zshrc
-	sed -i '/# <<<<< RUI <<<<</d' 									~/.zshrc
-	unalias rui 2>/dev/null
+#!/bin/sh
+if [ -f ~/.zshrc ]; then
+	if grep -q "alias rui" ~/.zshrc; then
+		echo "rui/scripts/install.sh: removing zsh rui alias"
+		sed -i '.bak' '/# >>>>> RUI >>>>>/d' 									~/.zshrc
+		sed -i '.bak' '/# !! Contents within this block are managed by RUI/d' 	~/.zshrc
+		sed -i '.bak' '/alias rui=.*$/d'										~/.zshrc
+		sed -i '.bak' '/# <<<<< RUI <<<<</d' 									~/.zshrc
+		unalias rui 2>/dev/null
+	fi
 fi
 
-if /usr/bin/grep -q "alias rui" ~/.bashrc; then
-	echo "rui/scripts/install.sh: removing bash rui alias"
-	sed -i '/# >>>>> RUI >>>>>/d' 									~/.bashrc
-	sed -i '/# !! Contents within this block are managed by RUI/d' 	~/.bashrc
-	sed -i '/alias rui=.*$/d'										~/.bashrc
-	sed -i '/# <<<<< RUI <<<<</d' 									~/.bashrc
-	unalias rui 2>/dev/null
+if [ -f ~/.bashrc ]; then
+	if grep -q "alias rui" ~/.bashrc; then
+		echo "rui/scripts/install.sh: removing bash rui alias"
+		sed -i '.bak' '/# >>>>> RUI >>>>>/d' 									~/.bashrc
+		sed -i '.bak' '/# !! Contents within this block are managed by RUI/d' 	~/.bashrc
+		sed -i '.bak' '/alias rui=.*$/d'										~/.bashrc
+		sed -i '.bak' '/# <<<<< RUI <<<<</d' 									~/.bashrc
+		unalias rui 2>/dev/null
+	fi
 fi
 
 if [ ! -d ~/python ]; then
@@ -28,4 +32,5 @@ if [ ! -f ~/python/bin/pipx ]; then
 fi
 
 echo "rui/scripts/install.sh: installing RUI..."
+~/python/bin/pipx ensurepath
 ~/python/bin/pipx install . --force
