@@ -4,10 +4,6 @@ from .cli import cli
 from .gui import gui
 from .device import Device, TestDevice
 
-from .test.record import record
-from .test.playback import playback
-from .test.rerecord import rerecord
-
 def _parser_setup(p: argparse.ArgumentParser, *, flags: str='',
                  func: Callable[[argparse.ArgumentParser], None]):
     """ Add TIO and optional RUI options to a subcommand parser """
@@ -18,10 +14,9 @@ def _parser_setup(p: argparse.ArgumentParser, *, flags: str='',
                    help="Sensor root address")
     p.add_argument('-s', '--sensor', default='/',
                    help="Sensor path in the sensor tree")
+    p.add_argument('--test', action='store_true', help=argparse.SUPPRESS)
 
     # optional flags
-    if 't' in flags:
-        p.add_argument('--test', action='store_true', help=argparse.SUPPRESS)
     if 'a' in flags:
         p.add_argument('-a', '--all', action='store_true',
                        help="Select all matched RPCs")
@@ -72,24 +67,8 @@ def rui_parse_args() -> argparse.Namespace:
     remove_parser = cache_subparsers.add_parser('remove', help="Remove device RPC cache")
     _parser_setup(remove_parser, flags='t', func=lambda d, _a: d.remove_cache())
 
-    ## hidden test subparsers ###
-    record_func = lambda _d, _a: record(rui, sys.argv[2:], default_args=['--test'])
-    playback_func = lambda _d, _a: playback(rui, default_args=['--test'])
-    rerecord_func = lambda _d, _a: rerecord(rui, default_args=['--test'])
-
-    record_parser = subparsers.add_parser('record', help="[dev] Record a test")
-    _parser_setup(record_parser, flags='aemp*', func=record_func)
-
-    playback_parser = subparsers.add_parser('playback', help="[dev] Playback tests")
-    _parser_setup(playback_parser, func=playback_func)
-
-    rerecord_parser = subparsers.add_parser('rerecord', help="[dev] Rerecord tests")
-    _parser_setup(rerecord_parser, func=rerecord_func)
-
     # CLI is default arg
-    subcommands = {'-h', '--help',
-                   'cli', 'gui', 'cache',
-                   'record', 'playback', 'rerecord'}
+    subcommands = {'-h', '--help', 'cli', 'gui', 'cache', }
     if not sys.argv[1:] or not any([sys.argv[1] == arg for arg in subcommands]):
         sys.argv.insert(1, 'cli')
     if sys.argv[1:] and sys.argv[1] == 'cache':
@@ -105,7 +84,7 @@ def rui_parse_args() -> argparse.Namespace:
 def get_device(args):
     """ Get a Device or TestDevice based on RUI options """
     instantiate = args.command != 'cache' # don't instantiate cache in cache subcommand
-    if hasattr(args, 'test') and not args.test:
+    if not args.test:
         try:
             return Device(args.root, args.sensor, instantiate)
         except RuntimeError as e:

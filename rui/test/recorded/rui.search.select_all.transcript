@@ -8,7 +8,7 @@ Select rpc(s) by #, or enter terms to narrow search: \
 > *
 
 dev.name()
-Reply: TEST
+Reply: .TEST
 
 dev.port.rate(int)
 Current value: 100000

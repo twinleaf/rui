@@ -9,7 +9,7 @@ Enter search terms: \
 6. test.data.enable(int)
 
 dev.name()
-Reply: TEST
+Reply: .TEST
 
 dev.port.rate(int)
 Reply: 100000
