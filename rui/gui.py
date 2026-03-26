@@ -10,8 +10,14 @@ from rui.cli import search_select
 def gui(dev, args):
     """ RUI GUI main script """
     client = RPCClient(dev)
+    slider_configs = RuiConfigs(client.dev_name())
     if args.terms:
         selected = search_select(client.list, args.terms, args.exact, args.all, args.multisearch)
+    elif args.restore:
+        selected = []
+        for rpc in client.list: 
+            if slider_configs.show_slider(rpc.name):
+                selected.append(rpc)
     else:
         selected = []
 
@@ -27,7 +33,7 @@ def gui(dev, args):
 
     # Make app window
     app = QApplication([sys.argv[0]])
-    window = MainWindow(client, numeric_selected)
+    window = MainWindow(client, slider_configs, numeric_selected)
     window.show()
 
     # make slider floating for i3wm, doesn't do anything if you're not Chris
@@ -38,10 +44,10 @@ def gui(dev, args):
 
 class MainWindow(QWidget):
     """ RUI GUI main window class """
-    def __init__(self, client: RPCClient, rpcs: RPCList):
+    def __init__(self, client: RPCClient, slider_configs: RuiConfigs, rpcs: RPCList):
         super().__init__()
 
-        self.slider_configs = RuiConfigs(client.dev_name())
+        self.slider_configs = slider_configs 
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
         self.setWindowTitle('RUI GUI')
@@ -55,8 +61,6 @@ class MainWindow(QWidget):
         self.tool_bar = ToolBar(self.rpc_list)
         self.tool_bar.completer.activated.connect(self.display_rpc_slider)
         self.tool_bar.returnPressed.connect(self.display_rpc_slider)
-        self.tool_bar.returnPressed.connect(lambda: self.tool_bar.clear())
-        
         self.rpcs_displayed = []
 
         self.rpc_box.setLayout(self.rpc_layout)
@@ -64,16 +68,18 @@ class MainWindow(QWidget):
         self.main_layout.addWidget(self.rpc_box)
         for rpc in rpcs:
             min_val, max_val = self.get_rpc_min_max(rpc)
-       
-            self.display = RPCDisplay(rpc, min_val, max_val, self.slider_configs)
-            self.rpc_layout.addLayout(self.display.grid_layout)
+            new_rpc = RPCDisplay(rpc, min_val, max_val)
+            self.rpc_layout.addLayout(new_rpc.grid_layout)
             self.rpc_layout.setSpacing(8)
-            self.rpcs_displayed.append(self.display)
+            self.rpcs_displayed.append(new_rpc)
 
     def display_rpc_slider(self):
         """ Add a slider to display or show a hidden slider """
         if text := self.tool_bar.text():
-            index = self.tool_bar.rpc_names.index(text)
+            try: 
+                index = self.tool_bar.rpc_names.index(text)
+            except ValueError: 
+                pass
             value = self.tool_bar.text()
             self.tool_bar.clearFocus()
             # check if rpc slider already displayed
@@ -84,7 +90,8 @@ class MainWindow(QWidget):
                 self.rpcs_displayed[idx].slider.setFocus()
             elif value in self.tool_bar.rpc_names: #else make new slider
                 min_val, max_val = self.get_rpc_min_max(self.rpc_list[index])
-                new_rpc = RPCDisplay(self.rpc_list[index], min_val, max_val, self.slider_configs)
+                self.slider_configs.update_displayed_rpcs(self.rpc_list[index].name, min_val, max_val, 1)
+                new_rpc = RPCDisplay(self.rpc_list[index], min_val, max_val)
                 self.rpc_layout.addLayout(new_rpc.grid_layout)
                 self.rpc_layout.setSpacing(8)
                 new_rpc.slider.setFocus()
@@ -96,7 +103,7 @@ class MainWindow(QWidget):
         min_val = min(current_value, rpc.to_arg_type(self.slider_configs.get_rpc_min(rpc.name)))
         max_val = max(current_value, rpc.to_arg_type(self.slider_configs.get_rpc_max(rpc.name)))
         return min_val, max_val
-        
+    
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
             self.close()
@@ -111,3 +118,9 @@ class MainWindow(QWidget):
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.RightButton or event.button() == Qt.MouseButton.LeftButton: 
             self.focusWidget().clearFocus() if self.focusWidget() else None
+
+    def closeEvent(self, event):
+        self.slider_configs.clear_visibility()
+        for i, rpc in enumerate(self.rpcs_displayed): 
+            if self.slider_configs.rpc_name_exists(rpc.name): 
+                self.slider_configs.update_displayed_rpcs(rpc.name, rpc.min_label.text(), rpc.max_label.text(), rpc.widget_visible)

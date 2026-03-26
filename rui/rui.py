@@ -35,6 +35,8 @@ def _parser_setup(p: argparse.ArgumentParser, *, flags: str='',
     if 'g' in flags:
         p.add_argument('terms', nargs='*', metavar="search terms",
                        help="RPC search terms to start with")
+        p.add_argument('--restore', action='store_true', 
+                       help = "Restore previous rui gui configuration")
 
 def _parse_cli_args(args: argparse.Namespace):
     """ Iterate through non-flag options to find search terms and rpc arg for CLI """
@@ -60,7 +62,7 @@ def rui_parse_args() -> argparse.Namespace:
     _parser_setup(cli_parser, flags='taempc', func=cli)
 
     gui_parser = subparsers.add_parser('gui', help="RPC slider pop-out",
-                                       description="Slider control panel for RPCs. Use args to search or call `rui gui` by itself to launch empty GUI.")
+                                       description="Slider control panel for RPCs. Use args to search, --restore for last gui setup, or call `rui gui` by itself to launch empty GUI.")
     _parser_setup(gui_parser, flags='taemg', func=gui)
 
     ### aux subparsers ###

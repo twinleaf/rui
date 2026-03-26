@@ -8,11 +8,9 @@ from rui.rpc import RPC, RPC_ERROR, PROXY_FATAL
 
 class RPCDisplay():
     """ Display for a single RPC slider, including name, min/max, and current value """
-    def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float, config: RuiConfigs): 
-        self.config = config
-        self.widget_visible = True
+    def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float): 
         self.name = rpc.name
-
+        self.widget_visible = 1
         self.slider = Sliderz(rpc, min_val, max_val)
         self.name_label = RPCLabel(self.name)
         self.result_label = RPCLabel(self.__result_display())
@@ -20,18 +18,13 @@ class RPCDisplay():
         self.max_label = EditBox(str(max_val))
         self.delete_button = RPCButton()
 
-        if (self.widget_visible == True):
-            self.delete_button.clicked.connect(self.hide_slider_box)
+        self.delete_button.clicked.connect(lambda: self.hide_slider_box() if self.widget_visible else None)
         self.slider.valueChanged.connect(lambda: self.result_label.setText(self.__result_display()))
         self.min_label.returnPressed.connect(lambda: self.slider.setMinimum(self.slider._Sliderz__scale(self.min_label.text())))
         self.max_label.returnPressed.connect(lambda: self.slider.setMaximum(self.slider._Sliderz__scale(self.max_label.text())))
         self.min_label.returnPressed.connect(lambda: self.slider.setFocus())
         self.max_label.returnPressed.connect(lambda: self.slider.setFocus())
-        self.min_label.returnPressed.connect(lambda: self.config.update_displayed_rpcs(self.name, self.min_label.text(), self.max_label.text())) 
-        self.max_label.returnPressed.connect(lambda: self.config.update_displayed_rpcs(self.name, self.min_label.text(), self.max_label.text())) 
-
         self.setup_layout()
-        self.config.update_displayed_rpcs(self.name, self.min_label.text(), self.max_label.text())
 
     def setup_layout(self):
         self.grid_layout = QVBoxLayout()
@@ -46,6 +39,8 @@ class RPCDisplay():
         self.second_row.addWidget(self.max_label)
         self.grid_layout.addLayout(self.first_row)
         self.grid_layout.addLayout(self.second_row)
+        if self.widget_visible == 0:
+            self.hide_slider_box() 
 
     def hide_slider_box(self):
         self.first_row.removeWidget(self.name_label)
@@ -60,7 +55,7 @@ class RPCDisplay():
         self.slider.hide()
         self.min_label.hide()
         self.max_label.hide()
-        self.widget_visible = False
+        self.widget_visible = 0
 
     def show_slider_box(self):
         self.name_label.show()
@@ -80,7 +75,7 @@ class RPCDisplay():
 
         self.first_row.setAlignment(Qt.AlignmentFlag.AlignBottom)
         self.second_row.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.widget_visible = True
+        self.widget_visible = 1
 
     def __result_display(self):
         return f"Current value: {self.slider.rpc_value}"
