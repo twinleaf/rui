@@ -13,7 +13,7 @@ class RPCDisplay():
         self.widget_visible = True
         self.name = rpc.name
 
-        self.slider = Sliderz(rpc, min_val, max_val)
+        self.slider = RPCSlider(rpc, min_val, max_val)
         self.name_label = RPCLabel(self.name)
         self.result_label = RPCLabel(self.__result_display())
         self.min_label = EditBox(str(min_val))
@@ -23,8 +23,8 @@ class RPCDisplay():
         if (self.widget_visible == True):
             self.delete_button.clicked.connect(self.hide_slider_box)
         self.slider.valueChanged.connect(lambda: self.result_label.setText(self.__result_display()))
-        self.min_label.returnPressed.connect(lambda: self.slider.setMinimum(self.slider._Sliderz__scale(self.min_label.text())))
-        self.max_label.returnPressed.connect(lambda: self.slider.setMaximum(self.slider._Sliderz__scale(self.max_label.text())))
+        self.min_label.returnPressed.connect(lambda: self.slider.setMinimum(self.slider.scale(self.min_label.text())))
+        self.max_label.returnPressed.connect(lambda: self.slider.setMaximum(self.slider.scale(self.max_label.text())))
         self.min_label.returnPressed.connect(lambda: self.slider.setFocus())
         self.max_label.returnPressed.connect(lambda: self.slider.setFocus())
         self.min_label.returnPressed.connect(lambda: self.config.update_displayed_rpcs(self.name, self.min_label.text(), self.max_label.text())) 
@@ -109,7 +109,7 @@ class EditBox(QLineEdit):
         self.setStyleSheet(generate_qss())
         self.returnPressed.connect(lambda: self.clearFocus())
 
-class Sliderz(QSlider):
+class RPCSlider(QSlider):
     def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float, parent=None):
         self.rpc = rpc
         self.scale = 100 if rpc.arg_type == float else 1 
