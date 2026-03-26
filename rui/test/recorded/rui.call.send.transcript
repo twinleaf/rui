@@ -1,7 +1,0 @@
-$ []
-Enter search terms: \
-> sw
-sw.start()
-Send RPC? y/[n] \
-> y
-Reply: OK
