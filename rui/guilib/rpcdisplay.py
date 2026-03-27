@@ -8,11 +8,9 @@ from rui.rpc import RPC, RPC_ERROR, PROXY_FATAL
 
 class RPCDisplay():
     """ Display for a single RPC slider, including name, min/max, and current value """
-    def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float, config: RuiConfigs): 
-        self.config = config
-        self.widget_visible = True
+    def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float): 
         self.name = rpc.name
-
+        self.widget_visible = 1
         self.slider = RPCSlider(rpc, min_val, max_val)
         self.name_label = RPCLabel(self.name)
         self.result_label = RPCLabel(self.__result_display())
@@ -20,18 +18,13 @@ class RPCDisplay():
         self.max_label = EditBox(str(max_val))
         self.delete_button = RPCButton()
 
-        if (self.widget_visible == True):
-            self.delete_button.clicked.connect(self.hide_slider_box)
+        self.delete_button.clicked.connect(lambda: self.hide_slider_box() if self.widget_visible else None)
         self.slider.valueChanged.connect(lambda: self.result_label.setText(self.__result_display()))
         self.min_label.returnPressed.connect(lambda: self.slider.setMinimum(self.slider.scale(self.min_label.text())))
         self.max_label.returnPressed.connect(lambda: self.slider.setMaximum(self.slider.scale(self.max_label.text())))
         self.min_label.returnPressed.connect(lambda: self.slider.setFocus())
         self.max_label.returnPressed.connect(lambda: self.slider.setFocus())
-        self.min_label.returnPressed.connect(lambda: self.config.update_displayed_rpcs(self.name, self.min_label.text(), self.max_label.text())) 
-        self.max_label.returnPressed.connect(lambda: self.config.update_displayed_rpcs(self.name, self.min_label.text(), self.max_label.text())) 
-
         self.setup_layout()
-        self.config.update_displayed_rpcs(self.name, self.min_label.text(), self.max_label.text())
 
     def setup_layout(self):
         self.grid_layout = QVBoxLayout()
@@ -46,6 +39,8 @@ class RPCDisplay():
         self.second_row.addWidget(self.max_label)
         self.grid_layout.addLayout(self.first_row)
         self.grid_layout.addLayout(self.second_row)
+        if self.widget_visible == 0:
+            self.hide_slider_box() 
 
     def hide_slider_box(self):
         self.first_row.removeWidget(self.name_label)
@@ -60,7 +55,7 @@ class RPCDisplay():
         self.slider.hide()
         self.min_label.hide()
         self.max_label.hide()
-        self.widget_visible = False
+        self.widget_visible = 0
 
     def show_slider_box(self):
         self.name_label.show()
@@ -80,7 +75,7 @@ class RPCDisplay():
 
         self.first_row.setAlignment(Qt.AlignmentFlag.AlignBottom)
         self.second_row.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.widget_visible = True
+        self.widget_visible = 1
 
     def __result_display(self):
         return f"Current value: {self.slider.rpc_value}"
@@ -112,14 +107,14 @@ class EditBox(QLineEdit):
 class RPCSlider(QSlider):
     def __init__(self, rpc: RPC, min_val: int | float, max_val: int | float, parent=None):
         self.rpc = rpc
-        self.scale = 100 if rpc.arg_type == float else 1 
+        self.int_scale = 100 if rpc.arg_type == float else 1 
         self.rpc_value = self.rpc.value()
-        self.value_scaled = self.__scale(self.rpc_value)
+        self.value_scaled = self.scale(self.rpc_value)
         self.updating = False
 
         QSlider.__init__(self, parent)
         self.setOrientation(Qt.Orientation.Horizontal)
-        self.setRange(self.__scale(min_val), self.__scale(max_val))
+        self.setRange(self.scale(min_val), self.scale(max_val))
         self.setValue(self.value_scaled)
         self.setSingleStep(1)
         self.setPageStep(10)
@@ -131,7 +126,7 @@ class RPCSlider(QSlider):
     def update_slider(self, value: int | str):
         if not self.updating: # don't recursively call this
             self.updating = True
-            value_real = self.__descale(value)
+            value_real = self.descale(value)
             value = self.rpc.call(value_real)
 
             if type(value) is str:
@@ -143,7 +138,7 @@ class RPCSlider(QSlider):
                     self.rpc_value = "FATAL"
             else:
                 self.rpc_value = value
-                self.value_scaled = self.__scale(self.rpc_value)
+                self.value_scaled = self.scale(self.rpc_value)
                 self.setValue(self.value_scaled)
 
             self.updating = False
@@ -157,7 +152,7 @@ class RPCSlider(QSlider):
         elif event.key() == Qt.Key.Key_Escape or event.text().isalpha():
             self.clearFocus()
     
-    def __scale(self, val: int | float | str) -> int:
-        return min(round(self.rpc.to_arg_type(val) * self.scale), 2**31-1)
-    def __descale(self, val: int) -> int | float:
-        return self.rpc.to_arg_type(val / self.scale)
+    def scale(self, val: int | float | str) -> int:
+        return min(round(self.rpc.to_arg_type(val) * self.int_scale), 2**31-1)
+    def descale(self, val: int) -> int | float:
+        return self.rpc.to_arg_type(val / self.int_scale)

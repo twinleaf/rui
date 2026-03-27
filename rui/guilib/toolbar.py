@@ -17,9 +17,16 @@ class ToolBar(QLineEdit):
         self.menu = QVBoxLayout()
         self.menu.addWidget(self)
 
+    def mousePressEvent(self, event):
+        self.completer.setCompletionPrefix("")
+        self.completer.complete()
+
     def keyPressEvent(self, event):
-        event.accept()
-        QLineEdit.keyPressEvent(self, event)
+        if event.key() == Qt.Key.Key_Escape: 
+            self.clearFocus()
+        else:        
+            event.accept()
+            QLineEdit.keyPressEvent(self, event)
 
 class CustomCompleter(QCompleter):
     def __init__(self, rpc_names, parent=None):
@@ -27,3 +34,16 @@ class CustomCompleter(QCompleter):
         self.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.setFilterMode(Qt.MatchFlag.MatchContains)
         self.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+        self.popup().setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Tab:
+            self.popup.setFocus()
+            cur_index = self.currentRow()
+            if (cur_index is None):
+                cur_index = 0
+            self.setCurrentRow(cur_index+1)
+        elif event.key() == Qt.Key.Key_Escape: 
+            self.popup.clearFocus()
+
+

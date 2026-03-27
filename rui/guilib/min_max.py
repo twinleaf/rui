@@ -8,20 +8,23 @@ class RuiConfigs():
         self.rpc_configs.setdefault("rpc_names", [])
         self.rpc_configs.setdefault("rpc_min", [])
         self.rpc_configs.setdefault("rpc_max", [])
+        self.rpc_configs.setdefault("visible", [])
         self._instantiate_rpc_sliders()
 
-    def _update_dict(self, name, min, max):
+    def _update_dict(self, name, min, max, show):
         if not name in self.rpc_configs["rpc_names"]:
             self.rpc_configs["rpc_names"].append(name)
             self.rpc_configs["rpc_min"].append(min)
             self.rpc_configs["rpc_max"].append(max)
+            self.rpc_configs["visible"].append(show)
         else:
             idx = list(self.rpc_configs["rpc_names"]).index(name)
             self.rpc_configs["rpc_min"][idx] = min
             self.rpc_configs["rpc_max"][idx] = max
-    
-    def update_displayed_rpcs(self, name, min, max):
-        self._update_dict(name, min, max)
+            self.rpc_configs["visible"][idx] = show
+
+    def update_displayed_rpcs(self, name, min, max, visible):
+        self._update_dict(name, min, max, visible)
         try:
             file_path = self._cache_path()
             with open(file_path, 'w') as f:
@@ -30,36 +33,52 @@ class RuiConfigs():
             sys.exit(f"Something went wrong with the cache path: {e}")
         except ValueError as e:
             sys.exit(f"Invalid cache at {file_path}, consider inspecting or removing: {e}")
-    
+
+    def rpc_name_exists(self, name):
+        return name in self.rpc_configs["rpc_names"]
+
     def get_rpc_min(self, name):
         try:
             idx = list(self.rpc_configs["rpc_names"]).index(name)
         except ValueError:
             idx = None
-        if idx is not None: 
-            return  self.rpc_configs["rpc_min"][idx]
+        if idx is not None:
+            return self.rpc_configs["rpc_min"][idx]
         else:
-            return 0            
+            return 0
 
     def get_rpc_max(self, name):
         try:
             idx = list(self.rpc_configs["rpc_names"]).index(name)
         except ValueError:
             idx = None
-        if idx is not None: 
+        if idx is not None:
             return self.rpc_configs["rpc_max"][idx]
         else:
-            return 1            
+            return 1
+
+    def show_slider(self, name) -> int:
+        try:
+            idx = list(self.rpc_configs["rpc_names"]).index(name)
+        except ValueError:
+            idx = None
+        if idx is not None:
+            return int(self.rpc_configs["visible"][idx])
+        else:
+            return 0
+
+    def clear_visibility(self):
+        self.rpc_configs["visible"] = [0] * len(self.rpc_configs["visible"])
 
     def _instantiate_rpc_sliders(self):
         try:
-            try: 
+            try:
                 file_path = self._cache_path()
                 with open(file_path, 'r') as f:
                     self._read_rpc_cache(f)
             except FileNotFoundError:
                 with open(file_path, "w") as f:
-                    self._write_rpc_cache(f)        
+                    self._write_rpc_cache(f)
         except OSError as e:
             sys.exit(f"Something went wrong with the cache path: {e}")
         except ValueError:
@@ -67,16 +86,16 @@ class RuiConfigs():
 
     def _read_rpc_cache(self, file):
         lines = file.readlines()
-        if not lines: pass 
+        if not lines: pass
         for line in lines:
-            name, min, max = line.strip().split(' ')
-            self._update_dict(name, min, max)
+            name, min, max, visible = line.strip().split(' ')
+            self._update_dict(name, min, max, visible)
 
     def _write_rpc_cache(self, file):
         for rpc_name in self.rpc_configs["rpc_names"]:
             idx = list(self.rpc_configs["rpc_names"]).index(rpc_name)
-            file.write(f"{rpc_name} {self.rpc_configs["rpc_min"][idx]} {self.rpc_configs["rpc_max"][idx]}\n")
-    
+            file.write(f"{rpc_name} {self.rpc_configs["rpc_min"][idx]} {self.rpc_configs["rpc_max"][idx]} {self.rpc_configs["visible"][idx]}\n")
+
     def _cache_path(self):
         if platform.system() == "Linux":
             cache_dir = os.path.expanduser("~/.cache/rui")
