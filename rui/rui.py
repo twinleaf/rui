@@ -57,13 +57,13 @@ def rui_parse_args() -> argparse.Namespace:
     subparsers = parser.add_subparsers(dest='command', help="Subcommands")
 
     ### main subparsers ###
-    cli_parser = subparsers.add_parser('cli', help="[default] Command line RPC search/call. `rui cli -h` for help.",
-                                       description="Search, select, and call RPCs. Call `rui` with no arguments for full prompt.")
-    _parser_setup(cli_parser, flags='taempc', func=cli)
-
-    gui_parser = subparsers.add_parser('gui', help="RPC slider pop-out",
+    gui_parser = subparsers.add_parser('gui', help="[default] RPC slider pop-out",
                                        description="Slider control panel for RPCs. Use args to search, --restore for last gui setup, or call `rui gui` by itself to launch empty GUI.")
     _parser_setup(gui_parser, flags='taemg', func=gui)
+
+    cli_parser = subparsers.add_parser('cli', help="Command line RPC search/call. `rui cli -h` for help.",
+                                       description="Search, select, and call RPCs. Call `rui` with no arguments for full prompt.")
+    _parser_setup(cli_parser, flags='taempc', func=cli)
 
     ### aux subparsers ###
     cache_parser = subparsers.add_parser('cache', help="RPC cache functions")
@@ -75,10 +75,10 @@ def rui_parse_args() -> argparse.Namespace:
     remove_parser = cache_subparsers.add_parser('remove', help="Remove device RPC cache")
     _parser_setup(remove_parser, flags='t', func=lambda d, _a: d.remove_cache())
 
-    # CLI is default arg
+    # gui is default arg
     subcommands = {'-h', '--help', 'cli', 'gui', 'cache', }
     if not sys.argv[1:] or not any([sys.argv[1] == arg for arg in subcommands]):
-        sys.argv.insert(1, 'cli')
+        sys.argv.insert(1, 'gui')
     if sys.argv[1:] and sys.argv[1] == 'cache':
         if not sys.argv[2:] or sys.argv[2] not in { 'print', 'remove', '-h', '--help', }:
             sys.argv.insert(2, '--help')
