@@ -1,10 +1,13 @@
 from itertools import cycle
-from PyQt6.QtWidgets import QVBoxLayout, QComboBox, QCompleter, QLineEdit
+
 from PyQt6.QtCore import Qt
-from rui.guilib.style import qfont 
+from PyQt6.QtWidgets import QComboBox, QCompleter, QLineEdit, QVBoxLayout
+
+from rui.guilib.style import qfont
+
 
 class ToolBar(QLineEdit):
-    def __init__(self, rpc_full_list, parent = None):
+    def __init__(self, rpc_full_list, parent=None):
         QLineEdit.__init__(self, parent)
         self.setFont(qfont())
 
@@ -22,11 +25,12 @@ class ToolBar(QLineEdit):
         self.completer.complete()
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_Escape: 
+        if event.key() == Qt.Key.Key_Escape:
             self.clearFocus()
-        else:        
+        else:
             event.accept()
             QLineEdit.keyPressEvent(self, event)
+
 
 class CustomCompleter(QCompleter):
     def __init__(self, rpc_names, parent=None):
@@ -40,10 +44,8 @@ class CustomCompleter(QCompleter):
         if event.key() == Qt.Key.Key_Tab:
             self.popup.setFocus()
             cur_index = self.currentRow()
-            if (cur_index is None):
+            if cur_index is None:
                 cur_index = 0
-            self.setCurrentRow(cur_index+1)
-        elif event.key() == Qt.Key.Key_Escape: 
+            self.setCurrentRow(cur_index + 1)
+        elif event.key() == Qt.Key.Key_Escape:
             self.popup.clearFocus()
-
-

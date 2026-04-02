@@ -1,14 +1,21 @@
+import inspect
+import os
+import platform
+import struct
+import sys
+
 import twinleaf
-import os, sys, struct, inspect, platform
+
 
 class Device(twinleaf.Device):
-    """ Wrapper for twinleaf.Device to support some cache manipulation """
+    """Wrapper for twinleaf.Device to support some cache manipulation"""
+
     def __init__(self, url, route, instantiate=True):
         self._url, self._route = url, route
         super().__init__(url=url, route=route, instantiate=instantiate)
 
     def reinit(self):
-        """ Create a new Device and set this object to (all but) become it """
+        """Create a new Device and set this object to (all but) become it"""
         self.settings.__dict__ = {}
         self.__dict__ = Device(self._url, self._route).__dict__
 
@@ -16,9 +23,9 @@ class Device(twinleaf.Device):
         try:
             file_path = self._cache_path()
             print(file_path)
-            with open(file_path, 'r') as f:
+            with open(file_path, "r") as f:
                 for line in f.readlines():
-                    print(line, end='')
+                    print(line, end="")
         except OSError as e:
             print(f"Something went wrong with the cache path: {e}", file=sys.stderr)
         except RuntimeError as e:
@@ -43,12 +50,14 @@ class Device(twinleaf.Device):
         os.makedirs(cache_dir, exist_ok=True)
 
         dev_name = self._rpc("dev.name", b"").decode()
-        rpc_hash = hex(struct.unpack('<I', self._rpc("rpc.hash", b""))[0])[2:].zfill(8)
+        rpc_hash = hex(struct.unpack("<I", self._rpc("rpc.hash", b""))[0])[2:].zfill(8)
         base_name = f"{dev_name}.{rpc_hash}.rpcs"
         return os.path.join(cache_dir, base_name)
 
+
 class TestDevice:
-    """ Device that doesn't actually connect to any proxy """
+    """Device that doesn't actually connect to any proxy"""
+
     def __init__(self, url, route, instantiate=True):
         self._url, self._route = url, route
         self._dead = False
@@ -106,9 +115,9 @@ class TestDevice:
         try:
             file_path = self._cache_path()
             print(file_path)
-            with open(file_path, 'r') as f:
+            with open(file_path, "r") as f:
                 for line in f.readlines():
-                    print(line, end='')
+                    print(line, end="")
         except OSError as e:
             print(f"Something went wrong with the cache path: {e}", file=sys.stderr)
 
@@ -122,7 +131,7 @@ class TestDevice:
     def _write_test_cache(self):
         try:
             file_path = self._cache_path()
-            with open(file_path, 'w') as f:
+            with open(file_path, "w") as f:
                 f.write("RUI TestDevice cache\n")
         except OSError as e:
             print(f"Something went wrong with the cache path: {e}", file=sys.stderr)
@@ -141,26 +150,30 @@ class TestDevice:
         base_name = f"{dev_name}.{rpc_hash}.rpcs"
         return os.path.join(cache_dir, base_name)
 
+
 class Rpc:
-    """ Fake dev.settings... RPC object """
+    """Fake dev.settings... RPC object"""
+
     def __init__(self, name: str, arg_type: type, ret_type: type, value=0):
         self.__name__ = name
         self._arg_type = arg_type
-        self._ret_type  = ret_type
+        self._ret_type = ret_type
         self._value = value
 
     def _setup_test_rpc(self, dev: TestDevice):
         self.__call__ = lambda arg=None: dev._call_test_rpc(self, arg)
-        self.__call__.__annotations__['arg'] = self._arg_type
-        self.__call__.__annotations__['return'] = self._ret_type
+        self.__call__.__annotations__["arg"] = self._arg_type
+        self.__call__.__annotations__["return"] = self._ret_type
+
 
 class Survey:
-    """ Fake dev.settings... survey object """
+    """Fake dev.settings... survey object"""
+
     def __init__(self, name: str):
         self.__name__ = name
 
     def _get_path(self, name: str):
-        path = name.split('.')
+        path = name.split(".")
         parent = self
         for survey in path[:-1]:
             try:

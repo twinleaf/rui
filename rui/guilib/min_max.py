@@ -1,7 +1,11 @@
-import os, sys, platform
+import os
+import platform
+import sys
 
-class RuiConfigs():
-    """ Interface with cache file to store min and max values for RUI GUI sliders """
+
+class RuiConfigs:
+    """Interface with cache file to store min and max values for RUI GUI sliders"""
+
     def __init__(self, dev_name):
         self.dev_name = dev_name
         self.rpc_configs = dict()
@@ -27,12 +31,14 @@ class RuiConfigs():
         self._update_dict(name, min, max, visible)
         try:
             file_path = self._cache_path()
-            with open(file_path, 'w') as f:
+            with open(file_path, "w") as f:
                 self._write_rpc_cache(f)
         except OSError as e:
             sys.exit(f"Something went wrong with the cache path: {e}")
         except ValueError as e:
-            sys.exit(f"Invalid cache at {file_path}, consider inspecting or removing: {e}")
+            sys.exit(
+                f"Invalid cache at {file_path}, consider inspecting or removing: {e}"
+            )
 
     def rpc_name_exists(self, name):
         return name in self.rpc_configs["rpc_names"]
@@ -74,7 +80,7 @@ class RuiConfigs():
         try:
             try:
                 file_path = self._cache_path()
-                with open(file_path, 'r') as f:
+                with open(file_path, "r") as f:
                     self._read_rpc_cache(f)
             except FileNotFoundError:
                 with open(file_path, "w") as f:
@@ -86,15 +92,18 @@ class RuiConfigs():
 
     def _read_rpc_cache(self, file):
         lines = file.readlines()
-        if not lines: pass
+        if not lines:
+            pass
         for line in lines:
-            name, min, max, visible = line.strip().split(' ')
+            name, min, max, visible = line.strip().split(" ")
             self._update_dict(name, min, max, visible)
 
     def _write_rpc_cache(self, file):
         for rpc_name in self.rpc_configs["rpc_names"]:
             idx = list(self.rpc_configs["rpc_names"]).index(rpc_name)
-            file.write(f"{rpc_name} {self.rpc_configs["rpc_min"][idx]} {self.rpc_configs["rpc_max"][idx]} {self.rpc_configs["visible"][idx]}\n")
+            file.write(
+                f"{rpc_name} {self.rpc_configs['rpc_min'][idx]} {self.rpc_configs['rpc_max'][idx]} {self.rpc_configs['visible'][idx]}\n"
+            )
 
     def _cache_path(self):
         if platform.system() == "Linux":
@@ -104,7 +113,9 @@ class RuiConfigs():
         elif platform.system() == "Windows":
             cache_dir = os.path.expanduser("~\\AppData\\Local")
         else:
-            cache_dir = input("Couldn't determine where to look for cache, input cache directory path: ")
+            cache_dir = input(
+                "Couldn't determine where to look for cache, input cache directory path: "
+            )
         os.makedirs(cache_dir, exist_ok=True)
 
         base_name = f"{self.dev_name}.minmax"

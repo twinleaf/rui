@@ -1,7 +1,12 @@
 import random
+
 from PyQt6.QtGui import QFont
 
-def qfont(size: int=14): return QFont('Ubuntu', size)
+
+def qfont(size: int = 14):
+    return QFont("Ubuntu", size)
+
+
 def generate_qss() -> str:
     return f"""
     QComboBox {{
@@ -67,6 +72,7 @@ def generate_qss() -> str:
         border-radius: 5px;
     }}
     """
+
 
 def _random_hex(total: int) -> str:
     ret = "#"
