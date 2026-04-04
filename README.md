@@ -1,5 +1,11 @@
-# RUI: Rpc User Interface
-RUI is a multitool for controlling Twinleaf board RPCs, featuring fuzzy searching RPC names for easy command line use and a slider GUI popup.
+# Twinleaf RUI: Rpc User Interface
+RUI is a multitool for controlling Twinleaf sensor RPCs, featuring fuzzy searching RPC names for easy command line use and a Qt slider GUI popup. It is based on the [twinleaf Python library](https://github.com/twinleaf/twinleaf-python).
+
+## Installation
+Install with PyPi using:
+
+   pip install twinleaf-rui 
+
 
 ## RUI GUI
 Usage:

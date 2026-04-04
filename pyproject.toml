@@ -1,5 +1,5 @@
 [project]
-name = "rui"
+name = "twinleaf-rui"
 version = "1.0.0"
 authors = [
 	{ name= "Chris Zhao", email= "zhao@twinleaf.com" },
@@ -19,5 +19,8 @@ license-files = [
 requires = ["hatchling >= 1.26"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build.targets.wheel]
+packages = ["rui"]
+
 [project.scripts]
-rui = "rui.rui:rui"
+rui = "twinleaf-rui.rui:rui"

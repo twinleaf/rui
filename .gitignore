@@ -1,2 +1,9 @@
+# python stuff
 __pycache__/
 *.py[cod]
+dist/
+
+# vim swap files
+*.swp
+*.swo
+*~
