@@ -4,7 +4,7 @@ from PyQt6.QtGui import QFont
 
 
 def qfont(size: int = 14):
-    return QFont("Ubuntu", size)
+    return QFont("Arial", size)
 
 
 def generate_qss() -> str:

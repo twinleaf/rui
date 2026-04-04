@@ -96,15 +96,15 @@ def rui_parse_args() -> argparse.Namespace:
     ### main subparsers ###
     gui_parser = subparsers.add_parser(
         "gui",
-        help="[default] RPC slider pop-out",
-        description="Slider control panel for RPCs. Use args to search, --restore for last gui setup, or call `rui gui` by itself to launch empty GUI.",
+        help="[default] RPC slider pop-out. rui gui -h for help.",
+        description="Slider control panel for RPCs. Use args to search, --restore for last gui setup, or call `rui` by itself to launch empty GUI.",
     )
     _parser_setup(gui_parser, flags="taemg", func=gui)
 
     cli_parser = subparsers.add_parser(
         "cli",
-        help="Command line RPC search/call. `rui cli -h` for help.",
-        description="Search, select, and call RPCs. Call `rui` with no arguments for full prompt.",
+        help="Command line RPC search/call. rui cli -h for help.",
+        description="Search, select, and call RPCs. Call rui cli with no arguments for full prompt.",
     )
     _parser_setup(cli_parser, flags="taempc", func=cli)
 
