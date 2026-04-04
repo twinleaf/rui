@@ -1,6 +1,6 @@
 [project]
 name = "twinleaf-rui"
-version = "1.0.0"
+version = "1.0.1"
 authors = [
 	{ name= "Chris Zhao", email= "zhao@twinleaf.com" },
 	{ name= "Ilysia Krzywonos", email= "krzywonos@twinleaf.com" },
