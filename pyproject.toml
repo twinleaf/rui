@@ -9,6 +9,11 @@ description = "Rpc User Interface for Twinleaf RPCS"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = ["twinleaf", "pyqt6", ]
+license = "MIT AND Apache-2.0"
+license-files = [
+  "LICENSE-APACHE.txt",
+  "LICENSE-MIT.txt"
+]
 
 [build-system]
 requires = ["hatchling >= 1.26"]
