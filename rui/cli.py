@@ -1,4 +1,4 @@
-from typing import Callable
+import sys, builtins
 
 from rui.rpc import PROXY_FATAL, RPC_ERROR, RPCClient, RPCList, rpc_type
 
@@ -139,6 +139,14 @@ def _is_rui_error(rpc_value: rpc_type) -> bool:
         return True
     else:
         return False
+
+
+def input(*args, **kwargs) -> str:
+    ret = builtins.input(*args, **kwargs)
+    if ret.lower() in { 'quit', 'exit' }:
+        print("Quitting RUI")
+        sys.exit()
+    return ret
 
 
 SEARCH_PROMPT = "Enter search terms: "
