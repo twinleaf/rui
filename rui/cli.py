@@ -1,6 +1,8 @@
 import sys, builtins
 
-from rui.rpc import PROXY_FATAL, RPC_ERROR, RPCClient, RPCList, rpc_type
+from rui.rpc import PROXY_FATAL, RPC_ERROR, RPCClient, RPCList
+
+from twinleaf import _rpc_type
 
 
 def cli(dev, args):
@@ -77,7 +79,7 @@ def _select_input(matched: RPCList) -> RPCList:
 ''                         """
 
 
-def input_call_output(selected: RPCList, cli_arg: rpc_type = None, peek: bool = False):
+def input_call_output(selected: RPCList, cli_arg: _rpc_type = None, peek: bool = False):
     """Call selected RPCs and prompt for arguments as necessary"""
     for rpc in selected:
         if selected.list.index(rpc) > 0:
@@ -125,7 +127,7 @@ def input_call_output(selected: RPCList, cli_arg: rpc_type = None, peek: bool = 
             print("Reply:", output)
 
 
-def _is_rui_fatal(rpc_value: rpc_type) -> bool:
+def _is_rui_fatal(rpc_value: _rpc_type) -> bool:
     if str(rpc_value) == PROXY_FATAL:
         print(rpc_value)
         return True
@@ -133,7 +135,7 @@ def _is_rui_fatal(rpc_value: rpc_type) -> bool:
         return False
 
 
-def _is_rui_error(rpc_value: rpc_type) -> bool:
+def _is_rui_error(rpc_value: _rpc_type) -> bool:
     if str(rpc_value).startswith(RPC_ERROR()):
         print(rpc_value)
         return True
