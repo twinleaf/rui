@@ -3,7 +3,7 @@ from itertools import cycle
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QComboBox, QCompleter, QLineEdit, QVBoxLayout
 
-from rui.guilib.style import qfont
+from rui.app.guilib.style import qfont
 
 
 class ToolBar(QLineEdit):

@@ -1,6 +1,7 @@
 import sys, builtins
 
-from rui.rpc import PROXY_FATAL, RPC_ERROR, RPCClient, RPCList
+from rui.lib.client import PROXY_FATAL, RPC_ERROR, RPCClient
+from rui.lib.list import RPCList
 
 from twinleaf import _rpc_type
 

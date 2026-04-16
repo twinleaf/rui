@@ -3,8 +3,8 @@ import sys
 from typing import Callable
 
 from .cli import cli
-from .device import Device, TestDevice
 from .gui import gui
+from ..lib.device import Device, TestDevice
 
 
 def _parser_setup(

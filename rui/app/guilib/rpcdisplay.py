@@ -11,9 +11,10 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
 )
 
-from rui.guilib.min_max import RuiConfigs
-from rui.guilib.style import generate_qss, qfont
-from rui.rpc import PROXY_FATAL, RPC, RPC_ERROR
+from rui.app.guilib.min_max import RuiConfigs
+from rui.app.guilib.style import generate_qss, qfont
+from rui.lib.client import PROXY_FATAL, RPC_ERROR
+from rui.lib.rpc import RPC
 
 
 class RPCDisplay:
@@ -147,7 +148,7 @@ class RPCSlider(QSlider):
     ):
         self.rpc = rpc
         self.int_scale = 100 if rpc.arg_type == float else 1
-        self.rpc_value = self.rpc.value()
+        self.rpc_value = self.rpc.call()
         self.value_scaled = self.scale(self.rpc_value)
         self.updating = False
 
@@ -186,7 +187,7 @@ class RPCSlider(QSlider):
         if event.key() == Qt.Key.Key_Right or event.key() == Qt.Key.Key_Left:
             slider_width = self.width() * self.devicePixelRatioF()
             step_size = (self.maximum() - self.minimum()) // slider_width + 1
-            step_value = self.value() + (
+            step_value = self.call() + (
                 step_size if event.key() == Qt.Key.Key_Right else -step_size
             )
             self.update_slider(step_value)

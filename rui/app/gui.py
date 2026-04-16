@@ -5,11 +5,13 @@ import sys
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QVBoxLayout, QWidget
 
-from rui.cli import search_select
-from rui.guilib.min_max import RuiConfigs
-from rui.guilib.rpcdisplay import RPCDisplay
-from rui.guilib.toolbar import ToolBar
-from rui.rpc import RPC, RPCClient, RPCList
+from rui.app.cli import search_select
+from rui.app.guilib.min_max import RuiConfigs
+from rui.app.guilib.rpcdisplay import RPCDisplay
+from rui.app.guilib.toolbar import ToolBar
+from rui.lib.rpc import RPC
+from rui.lib.list import RPCList
+from rui.lib.client import RPCClient
 
 
 def gui(dev, args):
@@ -118,7 +120,7 @@ class MainWindow(QWidget):
 
     def get_rpc_min_max(self, rpc):
         """Get min/max values for RPC from slider config's cache"""
-        current_value = rpc.value()
+        current_value = rpc.call()
         min_val = min(
             current_value, rpc.to_arg_type(self.slider_configs.get_rpc_min(rpc.name))
         )
