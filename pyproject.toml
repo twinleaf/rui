@@ -1,6 +1,6 @@
 [project]
 name = "twinleaf-rui"
-version = "1.0.2"
+version = "1.1.0"
 authors = [
 	{ name= "Chris Zhao", email= "zhao@twinleaf.com" },
 	{ name= "Ilysia Krzywonos", email= "krzywonos@twinleaf.com" },
@@ -8,7 +8,7 @@ authors = [
 description = "Rpc User Interface for Twinleaf RPCS"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["twinleaf", "pyqt6", ]
+dependencies = ["twinleaf>=0.2.0", "pyqt6", ]
 license = "MIT AND Apache-2.0"
 license-files = [
   "LICENSE-APACHE.txt",
