@@ -4,35 +4,28 @@ from difflib import get_close_matches
 from enum import Enum, auto
 from inspect import getmembers, signature
 from typing import Callable
-
-rpc_type = int | float | str | bytes | None
-PROXY_FATAL = "FATAL: Device proxy failed"
-
-
-def RPC_ERROR(e=""):
-    return f"ERROR: {e}"
-
-
-def type_name(t: type | None):
-    return t.__name__ if t is not None else ""
-
-
-class MatchResult(Enum):
-    NONE = (0,)
-    EXACT = (1,)
-    FUZZY = (2,)
-
+from twinleaf import _Rpc, _RpcNode, _rpc_type
 
 class RPCClient:
     """Calls RPCs while handling device-level tasks like proxy errors"""
 
     def __init__(self, device):
         self._device = device
-        nodes = rpc_dfs(device.settings)
+        nodes = RPCClient._rpc_dfs(device.settings)
         self.dict = {node.__name__: node for node in nodes}
         self.list = RPCList([RPC.from_node(self, node) for node in nodes])
 
-    def _call_by_name(self, name: str, arg: rpc_type = None) -> rpc_type:
+    @staticmethod
+    def _rpc_dfs(parent) -> list["rpc"]:
+        rpcs = []
+        nodes = [v for a, v in getmembers(parent) if isinstance(v, _RpcNode)]
+        for node in nodes:
+            if isinstance(node, _Rpc):
+                rpcs += [node]
+            rpcs += RPCClient._rpc_dfs(node)
+        return rpcs
+
+    def _call_by_name(self, name: str, arg: _rpc_type = None) -> _rpc_type:
         try:
             rpc = self.dict[name]
             if arg is None:
@@ -101,31 +94,19 @@ class RPC:
         self.arg_type, self.ret_type = arg_type, ret_type
 
     @classmethod
-    def from_node(cls, client: RPCClient, node: "twinleaf.rpc"):
+    def from_node(cls, client: RPCClient, node: _Rpc):
         name = node.__name__
-        sig = signature(node.__call__)
-        ret_type = sig.return_annotation
-
-        params = sig.parameters
-        try:
-            arg_type = params["arg"].annotation
-            if arg_type == int | None:
-                arg_type = int
-            if arg_type == float | None:
-                arg_type = float
-            if arg_type == str | None:
-                arg_type = str
-        except KeyError:
-            arg_type = None
+        arg_type = node._type if node._writable else None
+        ret_type = node._type
         return cls(client, name, arg_type, ret_type)
 
-    def call(self, arg: rpc_type = None) -> rpc_type:
+    def call(self, arg: _rpc_type = None) -> _rpc_type:
         return self._client._call_by_name(self.name, self.to_arg_type(arg))
 
-    def value(self) -> rpc_type:
+    def value(self) -> _rpc_type:
         return self.call()
 
-    def to_arg_type(self, arg: rpc_type) -> rpc_type:
+    def to_arg_type(self, arg: _rpc_type) -> _rpc_type:
         if arg in {None, ""}:
             return None
         else:
@@ -135,7 +116,10 @@ class RPC:
         return self.arg_type in {int, float} and self.ret_type in {int, float}
 
     def __repr__(self):
-        return self.name + "(" + type_name(self.arg_type) + ")"
+        base_str = self.name + "()"
+        if self.arg_type is not None:
+            base_str = base_str[:-1] + self.arg_type.__name__ + ')'
+        return base_str
 
     def __len__(self):
         return len(self.name)
@@ -250,22 +234,15 @@ class RPCList:
         return RPCList(self.list + other.list)
 
 
-""" dev to RPC class interface """
+# Helper stuff
+PROXY_FATAL = "FATAL: Device proxy failed"
 
 
-def is_rpc(x):
-    return type(x).__name__.lower() == "rpc"
+def RPC_ERROR(e=""):
+    return f"ERROR: {e}"
 
 
-def is_survey(x):
-    return type(x).__name__.lower() == "survey"
-
-
-def rpc_dfs(parent) -> list["rpc"]:
-    rpcs = []
-    nodes = [v for a, v in getmembers(parent) if is_rpc(v) or is_survey(v)]
-    for node in nodes:
-        if is_rpc(node):
-            rpcs += [node]
-        rpcs += rpc_dfs(node)
-    return rpcs
+class MatchResult(Enum):
+    NONE = (0,)
+    EXACT = (1,)
+    FUZZY = (2,)
