@@ -11,7 +11,6 @@ class Device(twinleaf.Device):
     """Wrapper for twinleaf.Device to support some cache manipulation"""
 
     def __init__(self, url, route, instantiate=True):
-        self._url, self._route = url, route
         super().__init__(url=url, route=route, instantiate=instantiate)
 
     def reinit(self):
